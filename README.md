@@ -1,6 +1,7 @@
-# blind_assistant_app
+# Papa Pro Vision
 
-A new Flutter project.
+An app that uses gemini 2.5 flash model and caputers surrounding images on clikc of button and listents to users prompt on that image 
+and reads out loud the response.
 
 ## Getting Started
 
