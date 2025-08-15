@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,7 +11,7 @@ import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
 import 'package:get_it/get_it.dart';
 
-const String apiKey = 'AIzaSyCLnIsM4r4ePljicEOX97KbL0h-xJ0rtFI';
+const String apiKey = '{Gemeni_API_Key}';
 
 class LogicScreen extends StatefulWidget {
   const LogicScreen({super.key});
@@ -39,6 +40,7 @@ class _LogicScreenState extends State<LogicScreen> {
   }
 
   Future<void> _initialize() async {
+    //print(dotenv.env['GEMINIAPIKEY']);
     if (apiKey == 'YOUR_API_KEY') {
       setState(() {
         _responseText =
