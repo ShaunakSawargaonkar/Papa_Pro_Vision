@@ -1,0 +1,127 @@
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+
+class HomeScreen extends StatelessWidget {
+  final CameraController? cameraController;
+  final String responseText;
+  final String recognizedWords;
+  final bool isProcessing;
+  final bool isListening;
+  final VoidCallback onToggleListening;
+
+  const HomeScreen({
+    super.key,
+    required this.cameraController,
+    required this.responseText,
+    required this.recognizedWords,
+    required this.isProcessing,
+    required this.isListening,
+    required this.onToggleListening,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Papa ProVision')),
+        body: Center(
+          child: responseText.isNotEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(responseText, textAlign: TextAlign.center),
+                )
+              : const CircularProgressIndicator(),
+        ),
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Papa ProVision')),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 5,
+            child: ClipRect(
+              child: OverflowBox(
+                alignment: Alignment.center,
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: cameraController!.value.previewSize!.height,
+                    height: cameraController!.value.previewSize!.width,
+                    child: CameraPreview(cameraController!),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: InkWell(
+                onTap: onToggleListening,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: responseText.isNotEmpty
+                          ? SingleChildScrollView(
+                              child: Text(
+                                responseText,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
+                          : Text(
+                              isProcessing
+                                  ? 'Processing...'
+                                  : isListening
+                                  ? 'Listening...'
+                                  : recognizedWords.isNotEmpty
+                                  ? 'You said: $recognizedWords'
+                                  : 'Tap the mic and speak',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                    ),
+                    Expanded(
+                      child: Transform.scale(
+                        scale: 2.0,
+                        child: FloatingActionButton(
+                          onPressed: null, // The InkWell now handles the tap
+                          backgroundColor: isListening
+                              ? Colors.white
+                              : Colors.yellow,
+                          foregroundColor: isListening
+                              ? Colors.yellow
+                              : Colors.white,
+                          tooltip: isListening
+                              ? 'Stop listening'
+                              : 'Start listening',
+                          elevation: 8.0,
+                          shape: const CircleBorder(
+                            side: BorderSide(color: Colors.yellow, width: 2),
+                          ),
+                          child: Icon(
+                            isListening ? Icons.mic_off : Icons.mic,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
