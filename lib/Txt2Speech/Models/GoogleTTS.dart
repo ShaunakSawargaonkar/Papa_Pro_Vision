@@ -16,7 +16,7 @@ class GoogleTTS implements TextToSpeechService {
   }
 }
 
-final String apiKey = 'AIzaSyB3tH0xTUCvrioj9jH_6yEmh2ySsX4eFeI';
+final String apiKey = 'GoogleAPI';
 
 class GoogleTTSService {
   final AudioPlayerService _audioPlayerService = AudioPlayerService();
