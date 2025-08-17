@@ -110,10 +110,8 @@ class _LogicScreenState extends State<LogicScreen> {
   }
 
   void _toggleListening() {
-    if (_isProcessing) _isProcessing = false;
-    if (!_speechEnabled || _isProcessing) return;
-    if (_isProcessing) _isProcessing = false;
-
+    if (!_speechEnabled) return;
+    _isProcessing = false;
     if (_speechToText.isListening) {
       _speechToText.stop();
     } else {

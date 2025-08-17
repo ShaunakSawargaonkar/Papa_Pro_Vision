@@ -4,57 +4,95 @@ import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/AudioPlayer.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 
 class GoogleTTS implements TextToSpeechService {
-  final GoogleTTSService _flutterTts = GoogleTTSService();
+  final GoogleTTSService _googleTTSService = GoogleTTSService();
   @override
   Future<void> speak(String text) async {
-    await _flutterTts.speak(text);
+    await _googleTTSService.speak(text);
   }
 
   @override
   Future<void> stop() async {
-    await _flutterTts.stop();
+    await _googleTTSService.stop();
   }
 }
 
-class GoogleTTSService {
-  final String apiKey =
-      '{Google_API_Key}'; // Replace with your actual Google API key
+final String apiKey = 'AIzaSyB3tH0xTUCvrioj9jH_6yEmh2ySsX4eFeI';
 
+class GoogleTTSService {
   final AudioPlayerService _audioPlayerService = AudioPlayerService();
+  bool get isPlaying => _audioPlayerService.isPlaying;
+
+  int _sessionId = 0;
 
   Future<void> speak(String text) async {
-    print("Inside GoogleTTSService speak method with text: $text");
-    final url = Uri.parse(
-      'https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey',
-    );
+    _audioPlayerService.reset();
+    _sessionId = DateTime.now().microsecond + DateTime.now().minute;
+    final currentSession = _sessionId;
 
-    final headers = {'Content-Type': 'application/json'};
+    final sentences = text.split('.');
 
-    final body = jsonEncode({
-      "input": {"text": text},
-      "voice": {
-        "languageCode": "en-IN",
-        "name": "en-IN-Neural2-C",
-        // "name": "en-IN-Chirp3-HD-Alnilam",
-        "ssmlGender": "MALE",
-      },
-      "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
-    });
+    for (final sentence in sentences) {
+      final trimmed = sentence.trim();
+      if (trimmed.isEmpty) continue;
 
-    final response = await http.post(url, headers: headers, body: body);
+      print("Requesting TTS for: $trimmed");
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      final audioContent = responseData['audioContent'];
-      final audioBytes = base64.decode(audioContent);
-      await _audioPlayerService.playAudio(audioBytes);
-    } else {
-      //TODO implement flutterTTS here
-      throw Exception('TTS API error: ${response.body}');
+      try {
+        final audioContent = await GetWAVFromGoogle(trimmed);
+
+        if (currentSession != _sessionId) {
+          print("Skipping old audio (session invalidated)");
+          return;
+        }
+
+        final audioBytes = base64.decode(audioContent);
+
+        print("Enqueuing audio for: $trimmed");
+        await _audioPlayerService.enqueue(audioBytes);
+      } catch (e) {
+        print("TTS error for '$trimmed': $e");
+      }
     }
   }
 
   Future<void> stop() async {
+    print("Stopping playback");
+
+    _sessionId =
+        DateTime.now().microsecond +
+        DateTime.now().minute; // new session // invalidate current session
+    _audioPlayerService.reset(); // clear any queued audio
     await _audioPlayerService.stop();
+  }
+}
+
+Future<String> GetWAVFromGoogle(String text) async {
+  print("Inside GoogleTTSService with text: $text");
+
+  final url = Uri.parse(
+    'https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey',
+  );
+
+  final headers = {'Content-Type': 'application/json'};
+
+  final body = jsonEncode({
+    "input": {"text": text},
+    "voice": {
+      "languageCode": "en-IN",
+      "name": "en-IN-Neural2-C",
+      "ssmlGender": "MALE",
+    },
+    "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+  });
+
+  final response = await http.post(url, headers: headers, body: body);
+
+  if (response.statusCode == 200) {
+    final responseData = jsonDecode(response.body);
+    return responseData['audioContent'];
+  } else {
+    throw Exception(
+      'Failed to get audio: ${response.statusCode} - ${response.body}',
+    );
   }
 }
