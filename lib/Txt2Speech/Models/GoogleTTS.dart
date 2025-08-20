@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/AudioPlayer.dart';
+import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 
 class GoogleTTS implements TextToSpeechService {
@@ -38,8 +39,12 @@ class GoogleTTSService {
       print("Requesting TTS for: $trimmed");
 
       try {
-        final audioContent = await GetWAVFromGoogle(trimmed);
-
+        dynamic audioContent;
+        if (Helper.IsDevanagari(trimmed)) {
+          audioContent = await GetWAVFromGoogle(trimmed, "mr-IN");
+        } else {
+          audioContent = await GetWAVFromGoogle(trimmed, "en-IN");
+        }
         if (currentSession != _sessionId) {
           print("Skipping old audio (session invalidated)");
           return;
@@ -66,7 +71,7 @@ class GoogleTTSService {
   }
 }
 
-Future<String> GetWAVFromGoogle(String text) async {
+Future<String> GetWAVFromGoogle(String text, String lang) async {
   print("Inside GoogleTTSService with text: $text");
 
   final url = Uri.parse(
@@ -74,16 +79,28 @@ Future<String> GetWAVFromGoogle(String text) async {
   );
 
   final headers = {'Content-Type': 'application/json'};
-
-  final body = jsonEncode({
-    "input": {"text": text},
-    "voice": {
-      "languageCode": "en-IN",
-      "name": "en-IN-Neural2-C",
-      "ssmlGender": "MALE",
-    },
-    "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
-  });
+  dynamic body;
+  if (lang == "en-IN") {
+    body = jsonEncode({
+      "input": {"text": text},
+      "voice": {
+        "languageCode": "en-IN",
+        "name": "en-IN-Neural2-C",
+        "ssmlGender": "MALE",
+      },
+      "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+    });
+  } else if (lang == "mr-IN") {
+    body = jsonEncode({
+      "input": {"text": text},
+      "voice": {
+        "languageCode": "mr-IN",
+        "name": "mr-IN-Chirp3-HD-Achird",
+        "ssmlGender": "MALE",
+      },
+      "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+    });
+  }
 
   final response = await http.post(url, headers: headers, body: body);
 
