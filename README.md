@@ -3,6 +3,8 @@
 An app that uses gemini 2.5 flash model and caputers surrounding images on clikc of button and listents to users prompt on that image 
 and reads out loud the response.
 
+Can detect and speak out marathi 
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
