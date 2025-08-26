@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:papa_pro_vision/UI/profile_page.dart';
 
 class HomeScreen extends StatelessWidget {
   final CameraController? cameraController;
@@ -8,6 +9,7 @@ class HomeScreen extends StatelessWidget {
   final bool isProcessing;
   final bool isListening;
   final VoidCallback onToggleListening;
+  final VoidCallback? onSettingsChanged;
 
   const HomeScreen({
     super.key,
@@ -17,13 +19,28 @@ class HomeScreen extends StatelessWidget {
     required this.isProcessing,
     required this.isListening,
     required this.onToggleListening,
+    this.onSettingsChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Papa ProVision')),
+        appBar: AppBar(
+          title: const Text('Papa ProVision'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
+                onSettingsChanged?.call();
+              },
+            ),
+          ],
+        ),
         body: Center(
           child: responseText.isNotEmpty
               ? Padding(
@@ -35,7 +52,20 @@ class HomeScreen extends StatelessWidget {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Papa ProVision')),
+      appBar: AppBar(
+        title: const Text('Papa ProVision'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(

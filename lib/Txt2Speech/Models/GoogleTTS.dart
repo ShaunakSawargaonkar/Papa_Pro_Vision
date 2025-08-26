@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/AudioPlayer.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleTTS implements TextToSpeechService {
   final GoogleTTSService _googleTTSService = GoogleTTSService();
@@ -74,6 +75,8 @@ class GoogleTTSService {
 Future<String> GetWAVFromGoogle(String text, String lang) async {
   print("Inside GoogleTTSService with text: $text");
 
+  final prefs = await SharedPreferences.getInstance();
+  double speechRate = prefs.getDouble('speechRate') ?? 1.0;
   final url = Uri.parse(
     'https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey',
   );
@@ -88,7 +91,7 @@ Future<String> GetWAVFromGoogle(String text, String lang) async {
         "name": "en-IN-Neural2-C",
         "ssmlGender": "MALE",
       },
-      "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+      "audioConfig": {"audioEncoding": "MP3", "speakingRate": speechRate},
     });
   } else if (lang == "mr-IN") {
     body = jsonEncode({
@@ -98,7 +101,7 @@ Future<String> GetWAVFromGoogle(String text, String lang) async {
         "name": "mr-IN-Chirp3-HD-Achird",
         "ssmlGender": "MALE",
       },
-      "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+      "audioConfig": {"audioEncoding": "MP3", "speakingRate": speechRate},
     });
   }
 

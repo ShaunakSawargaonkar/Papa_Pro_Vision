@@ -10,6 +10,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String apiKey = '{Gemeni_API_Key}';
 
@@ -109,7 +110,7 @@ class _LogicScreenState extends State<LogicScreen> {
     super.dispose();
   }
 
-  void _toggleListening() {
+  void _toggleListening() async {
     if (!_speechEnabled) return;
     _isProcessing = false;
     if (_speechToText.isListening) {
@@ -122,7 +123,9 @@ class _LogicScreenState extends State<LogicScreen> {
         _recognizedWords = '';
         _responseText = '';
       });
+      final prefs = await SharedPreferences.getInstance();
       _speechToText.listen(
+        localeId: prefs.getString('inputLanguage') ?? 'en_IN',
         onResult: (result) {
           if (!_isDisposed) {
             setState(() {
@@ -230,6 +233,11 @@ class _LogicScreenState extends State<LogicScreen> {
       isProcessing: _isProcessing,
       isListening: _speechToText.isListening,
       onToggleListening: _toggleListening,
+      //TODO make this work
+      // onSettingsChanged: () async {
+      //   // Reload language preference when returning from settings
+      //   await _loadSelectedLanguage();
+      // },
     );
   }
 }
