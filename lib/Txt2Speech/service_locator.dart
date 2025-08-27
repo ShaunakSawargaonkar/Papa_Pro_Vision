@@ -4,6 +4,7 @@ import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/GoogleTTS.dart';
 
 abstract class TextToSpeechService {
+  bool get isPlaying;
   Future<void> speak(String text);
   Future<void> stop();
 }

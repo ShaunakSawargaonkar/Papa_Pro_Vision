@@ -33,6 +33,7 @@ class _LogicScreenState extends State<LogicScreen> {
   bool _isProcessing = false;
   bool _isDisposed = false;
   bool _speechEnabled = false;
+  Uint8List _imageBytes = Uint8List(0);
 
   @override
   void initState() {
@@ -82,9 +83,9 @@ class _LogicScreenState extends State<LogicScreen> {
     _speechEnabled = await _speechToText.initialize(
       onStatus: (status) {
         print('Speech status: $status');
-        if (!_isDisposed && (status == 'done' || status == 'notListening')) {
-          if (_recognizedWords.isNotEmpty) {
-            _captureAndProcessImage();
+        if (!_isDisposed && (status == 'done')) {
+          if (_recognizedWords.isNotEmpty && _imageBytes.isNotEmpty) {
+            _processImage(_imageBytes);
           }
           setState(() {});
         }
@@ -111,34 +112,39 @@ class _LogicScreenState extends State<LogicScreen> {
   }
 
   void _toggleListening() async {
-    if (!_speechEnabled) return;
+    if (!_speechEnabled) return;  // speech to text not initialized
     _isProcessing = false;
     if (_speechToText.isListening) {
       _speechToText.stop();
     } else {
-      _ttsService.stop();
-      if (_cameraController == null || !_cameraController!.value.isInitialized)
+       if (_cameraController == null || !_cameraController!.value.isInitialized){
         return;
-      setState(() {
-        _recognizedWords = '';
-        _responseText = '';
-      });
-      final prefs = await SharedPreferences.getInstance();
-      _speechToText.listen(
-        localeId: prefs.getString('inputLanguage') ?? 'en_IN',
-        onResult: (result) {
-          if (!_isDisposed) {
-            setState(() {
-              _recognizedWords = result.recognizedWords;
-            });
-          }
-        },
-      );
+       }
+      if (_ttsService.isPlaying) {
+        _ttsService.stop();
+      }else{
+        setState(() {
+          _recognizedWords = '';
+          _responseText = '';
+        });
+        final prefs = await SharedPreferences.getInstance();
+        await _captureImage();
+        _speechToText.listen(
+          localeId: prefs.getString('inputLanguage') ?? 'en_IN',
+          onResult: (result) {
+            if (!_isDisposed) {
+              setState(() {
+                _recognizedWords = result.recognizedWords;
+              });
+            }
+          },
+        );
+      }
     }
     setState(() {});
   }
 
-  Future<void> _captureAndProcessImage() async {
+  Future<void> _captureImage() async {
     if (_isProcessing ||
         _cameraController == null ||
         !_cameraController!.value.isInitialized) {
@@ -151,10 +157,7 @@ class _LogicScreenState extends State<LogicScreen> {
 
     try {
       final XFile picture = await _cameraController!.takePicture();
-      final Uint8List imageBytes = await picture.readAsBytes();
-
-      await _ttsService.speak("Processing response");
-      await _processImage(imageBytes);
+      _imageBytes = await picture.readAsBytes();
     } catch (e) {
       print("Error taking picture or processing: $e");
     } finally {
@@ -187,6 +190,7 @@ class _LogicScreenState extends State<LogicScreen> {
       final response;
 
       //Calling Gemini
+      await _ttsService.speak("Processing response");
       if (checkIfIgnoreImage(promptText)) {
         print("went in wthout image");
         response = await _generativeModel.generateContent([

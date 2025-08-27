@@ -7,13 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleTTS implements TextToSpeechService {
   final GoogleTTSService _googleTTSService = GoogleTTSService();
+
+  bool get isPlaying => _googleTTSService._isPlaying;
   @override
   Future<void> speak(String text) async {
+    _googleTTSService._isPlaying = true;
     await _googleTTSService.speak(text);
   }
 
   @override
   Future<void> stop() async {
+    _googleTTSService._isPlaying = false;
     await _googleTTSService.stop();
   }
 }
@@ -22,7 +26,8 @@ final String apiKey = 'GoogleAPI';
 
 class GoogleTTSService {
   final AudioPlayerService _audioPlayerService = AudioPlayerService();
-  bool get isPlaying => _audioPlayerService.isPlaying;
+
+  bool _isPlaying = false;
 
   int _sessionId = 0;
 
@@ -36,6 +41,7 @@ class GoogleTTSService {
     for (final sentence in sentences) {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
+      if (!_isPlaying) return;
 
       print("Requesting TTS for: $trimmed");
 
@@ -67,7 +73,7 @@ class GoogleTTSService {
     _sessionId =
         DateTime.now().microsecond +
         DateTime.now().minute; // new session // invalidate current session
-    _audioPlayerService.reset(); // clear any queued audio
+    // _audioPlayerService.reset(); // clear any queued audio
     await _audioPlayerService.stop();
   }
 }
