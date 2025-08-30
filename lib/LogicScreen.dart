@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -11,6 +10,7 @@ import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:papa_pro_vision/agent_service.dart';
 
 const String apiKey = '{Gemeni_API_Key}';
 
@@ -24,7 +24,7 @@ class LogicScreen extends StatefulWidget {
 class _LogicScreenState extends State<LogicScreen> {
   CameraController? _cameraController;
   late List<CameraDescription> _cameras;
-  late GenerativeModel _generativeModel;
+  late AgentService _agentService;
   late TextToSpeechService _ttsService;
   final SpeechToText _speechToText = SpeechToText();
 
@@ -69,10 +69,8 @@ class _LogicScreenState extends State<LogicScreen> {
     // _ttsService = TextToSpeechService();
 
     //Initialize Generative AI model
-    _generativeModel = GenerativeModel(
-      model: 'gemini-2.5-flash',
-      apiKey: apiKey,
-    );
+    _agentService = AgentService();
+    _agentService.initialize(apiKey, Mode.normal);
     _initSpeech();
     if (mounted) {
       setState(() {});
@@ -169,62 +167,20 @@ class _LogicScreenState extends State<LogicScreen> {
     }
   }
 
-  bool checkIfIgnoreImage(String promptText) {
-    promptText.toLowerCase();
-    if (promptText.contains("ignore the image")) {
-      return true; // Placeholder logic, replace with actual condition
-    }
-    return false; // Placeholder, replace with actual logic
-  }
-
-  String CleanedResponseTxt(String responseText) {
-    return responseText.replaceAll('*', ' ');
-  }
-
   Future<void> _processImage(Uint8List imageBytes) async {
-    try {
-      final promptText = _recognizedWords.isNotEmpty
-          ? _recognizedWords
-          : "What do you see in the image? Describe it for a blind person.";
-      final prompt = TextPart(promptText);
-      final response;
+    final promptText = _recognizedWords.isNotEmpty
+        ? _recognizedWords
+        : "What do you see in the image? Describe it for a blind person.";
 
-      //Calling Gemini
-      await _ttsService.speak("Processing response");
-      if (checkIfIgnoreImage(promptText)) {
-        print("went in wthout image");
-        response = await _generativeModel.generateContent([
-          Content.multi([prompt]),
-        ]);
-      } else {
-        final imagePart = DataPart('image/jpeg', imageBytes);
+    //Calling Gemini
+    await _ttsService.speak("Processing response");
+    final response = await _agentService.generateResponse(promptText, imageBytes);
 
-        response = await _generativeModel.generateContent([
-          Content.multi([prompt, imagePart]),
-        ]);
-      }
-
-      //Calling Gemini
-
-      if (response.text != null && !_isDisposed) {
-        setState(() {
-          // _responseText = response.text!;
-          _responseText = CleanedResponseTxt(response.text!);
-        });
-        await _ttsService.speak(_responseText);
-      }
-    } on GenerativeAIException catch (e) {
-      if (!_isDisposed) {
-        setState(() {
-          _responseText = 'Error from AI Service: ${e.message}';
-        });
-      }
-    } catch (e) {
-      if (!_isDisposed) {
-        setState(() {
-          _responseText = 'An unexpected error occurred: $e';
-        });
-      }
+    if (response.isNotEmpty && !_isDisposed) {
+      setState(() {
+        _responseText = response;
+      });
+      await _ttsService.speak(_responseText);
     }
   }
 
