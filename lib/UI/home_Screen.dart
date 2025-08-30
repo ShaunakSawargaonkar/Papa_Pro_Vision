@@ -8,7 +8,9 @@ class HomeScreen extends StatelessWidget {
   final String recognizedWords;
   final bool isProcessing;
   final bool isListening;
-  final VoidCallback onToggleListening;
+  final VoidCallback nonHistoryMode;
+  final VoidCallback readingMode;
+  final VoidCallback historyToggleListen;
   final VoidCallback? onSettingsChanged;
 
   const HomeScreen({
@@ -18,7 +20,9 @@ class HomeScreen extends StatelessWidget {
     required this.recognizedWords,
     required this.isProcessing,
     required this.isListening,
-    required this.onToggleListening,
+    required this.readingMode,
+    required this.historyToggleListen,
+    required this.nonHistoryMode,
     this.onSettingsChanged,
   });
 
@@ -68,28 +72,60 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Expanded(
-            flex: 5,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: cameraController!.value.previewSize!.height,
+          Container(
+                // width: cameraController!.value.previewSize!.height,
+                height: MediaQuery.of(context).size.height * 0.55,
+            child: Row(
+              children: [
+                // LEFT clickable border
+                InkWell(
+                    onTap:readingMode,                        
+                    child: Container(
+                    child: RotatedBox(quarterTurns: 1,child: Text("Reading Mode",textAlign: TextAlign.center, style: TextStyle(fontSize: 40),)),
+                    width: MediaQuery.of(context).size.width * 0.15,
                     height: cameraController!.value.previewSize!.width,
-                    child: CameraPreview(cameraController!),
+                    color: Colors.blue, // full-height clickable blue area
+                            ),
                   ),
-                ),
+            
+                // CENTER Camera feed
+                Expanded(
+                  flex: 8, // take maximum space
+                  child: ClipRect(
+                    child: OverflowBox(
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: cameraController!.value.previewSize!.height,
+                height: cameraController!.value.previewSize!.width,
+                child: CameraPreview(cameraController!),
               ),
             ),
-          ),
+                    ),
+                  ),
+                ),
+            
+                // RIGHT clickable border
+                InkWell(
+                    onTap:readingMode,   
+                    child: Container(
+                    child: RotatedBox(quarterTurns: 3,child: Text("Reading Mode",textAlign: TextAlign.center, style: TextStyle(fontSize: 40),)),
+                    height: cameraController!.value.previewSize!.width,
+                    width: MediaQuery.of(context).size.width * 0.15,
+                    color: Colors.blue, // full-height clickable blue area
+                    ),
+                  ),
+              ],
+            ),
+          ),        
           Expanded(
             flex: 3,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               child: InkWell(
-                onTap: onToggleListening,
+                onTap: nonHistoryMode,
+                onDoubleTap: historyToggleListen,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/secrets.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
@@ -12,7 +13,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/agent_service.dart';
 
-const String apiKey = '{Gemeni_API_Key}';
+const String apiKey = Secrets.geminiApiKey;
 
 class LogicScreen extends StatefulWidget {
   const LogicScreen({super.key});
@@ -34,6 +35,7 @@ class _LogicScreenState extends State<LogicScreen> {
   bool _isDisposed = false;
   bool _speechEnabled = false;
   Uint8List _imageBytes = Uint8List(0);
+  bool isHistoryMode = false;
 
   @override
   void initState() {
@@ -109,6 +111,30 @@ class _LogicScreenState extends State<LogicScreen> {
     super.dispose();
   }
 
+
+  void _readingMode()async{
+    print("OnClick readingMode");
+    if(_agentService.currentMode == Mode.normal){
+    _agentService.initialize(apiKey, Mode.reading);
+   await _ttsService.speak("reading mode on");
+
+    }else{
+      _agentService.initialize(apiKey, Mode.normal);
+   await _ttsService.speak("reading mode off");
+    }
+  }
+
+  void _historyToggleListen() async {
+    isHistoryMode = true;
+    print("Double tapped");
+    _toggleListening();
+  }
+
+  void _nonHistoryMode() async {
+    isHistoryMode = false;
+    _toggleListening();
+  }
+
   void _toggleListening() async {
     if (!_speechEnabled) return;  // speech to text not initialized
     _isProcessing = false;
@@ -126,8 +152,14 @@ class _LogicScreenState extends State<LogicScreen> {
           _responseText = '';
         });
         final prefs = await SharedPreferences.getInstance();
-        await _captureImage();
-        _speechToText.listen(
+        
+        
+
+          if(_agentService.currentMode == Mode.normal){
+            if(!isHistoryMode){
+           _captureImage();
+        }
+          _speechToText.listen(
           localeId: prefs.getString('inputLanguage') ?? 'en_IN',
           onResult: (result) {
             if (!_isDisposed) {
@@ -137,6 +169,13 @@ class _LogicScreenState extends State<LogicScreen> {
             }
           },
         );
+      }
+      else{
+        if(!isHistoryMode){
+         await _captureImage();
+        }
+        _processImage(_imageBytes);
+      }
       }
     }
     setState(() {});
@@ -174,6 +213,9 @@ class _LogicScreenState extends State<LogicScreen> {
 
     //Calling Gemini
     await _ttsService.speak("Processing response");
+    if(!isHistoryMode){
+      _agentService.reset();
+    }
     final response = await _agentService.generateResponse(promptText, imageBytes);
 
     if (response.isNotEmpty && !_isDisposed) {
@@ -192,7 +234,9 @@ class _LogicScreenState extends State<LogicScreen> {
       recognizedWords: _recognizedWords,
       isProcessing: _isProcessing,
       isListening: _speechToText.isListening,
-      onToggleListening: _toggleListening,
+      nonHistoryMode: _nonHistoryMode,
+      historyToggleListen: _historyToggleListen,
+      readingMode:_readingMode
       //TODO make this work
       // onSettingsChanged: () async {
       //   // Reload language preference when returning from settings

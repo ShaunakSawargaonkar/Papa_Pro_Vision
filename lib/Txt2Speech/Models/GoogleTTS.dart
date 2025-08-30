@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/AudioPlayer.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/secrets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleTTS implements TextToSpeechService {
@@ -22,7 +23,7 @@ class GoogleTTS implements TextToSpeechService {
   }
 }
 
-final String apiKey = 'GoogleAPI';
+final String apiKey =  Secrets.googleApiKey;
 
 class GoogleTTSService {
   final AudioPlayerService _audioPlayerService = AudioPlayerService();
@@ -65,6 +66,7 @@ class GoogleTTSService {
         print("TTS error for '$trimmed': $e");
       }
     }
+    _isPlaying =false;
   }
 
   Future<void> stop() async {

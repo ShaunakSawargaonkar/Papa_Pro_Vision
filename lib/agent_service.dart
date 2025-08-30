@@ -11,12 +11,13 @@ enum Mode{
 class AgentService{
   late GenerativeModel _generativeModel;
   late ChatSession _chat;
+  late Mode mode;
   final _generationConfig = GenerationConfig(temperature: 0);
 
   final String _systemPrompt = """
   You are a helpful, friendly assistant for blind users. Always respond in a warm and conversational tone, using simple and concise language.
-  Keep answers short, clear, and easy to follow—like speaking to a friend.
-  Avoid long lists or unnecessary details. Never be robotic—be natural, engaging, and supportive.
+  Keep answers clear, and easy to follow—like speaking to a friend.
+  Never be robotic—be natural, engaging, and supportive.
   """;
 
   final String _readingModeSystemPrompt = """
@@ -25,9 +26,10 @@ class AgentService{
   Do not describe every small visual detail—focus only on what helps the user understand what they are reading.
   Read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details.
   Be conversational and smart: infer context if possible.
+  If you think the page is not visible or is cut off, guide the user to adjust the camera for a better view.
 
   Examples:
-  - If it's a book page: "Reading page number 5. [content]"
+  - If it's a book page: "Reading book/chapter Fourth Estate/Chapter 2, page number 5 [content]". Do not forget to mention the page number if visible.
   - If it's a newspaper: "Reading newspaper dated July 20, 2023, section Sports. [content]"
   - If it's a prescription: "Reading prescription by Dr. Mehta, probably for cough and cold. [content]"
   - If it's a set of labels: "Reading labels on a cupboard starting from top left towards bottom right: [labels]"
@@ -38,10 +40,13 @@ class AgentService{
   String _getSystemPrompt(Mode mode){
     return mode == Mode.reading ? _readingModeSystemPrompt : _systemPrompt;
   }
+  
+ Mode get currentMode => mode;
 
   AgentService();
 
   void initialize(String apiKey, Mode mode){
+    this.mode = mode; 
     _generativeModel = GenerativeModel(
       model: 'gemini-2.0-flash',
       apiKey: apiKey,

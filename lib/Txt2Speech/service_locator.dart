@@ -2,7 +2,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/GoogleTTS.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/EdgeTTS.dart';
+// import 'package:papa_pro_vision/Txt2Speech/Models/EdgeTTS.dart';
 
 abstract class TextToSpeechService {
   bool get isPlaying;
@@ -24,9 +24,9 @@ void setupTTSService(String selectedModel) {
     case 'fluttertts':
       locator.registerSingleton<TextToSpeechService>(FlutterTTS());
       break;
-    case 'edgetts':
-      locator.registerSingleton<TextToSpeechService>(EdgeTTS());
-      break;
+    // case 'edgetts':
+    //   locator.registerSingleton<TextToSpeechService>(EdgeTTS());
+    //   break;
     default:
       throw Exception('Unknown TTS model: $selectedModel');
   }
