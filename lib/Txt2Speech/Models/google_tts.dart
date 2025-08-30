@@ -1,38 +1,30 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/AudioPlayer.dart';
+import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/audio_player.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:papa_pro_vision/secrets.dart';
+import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
-class GoogleTTS implements TextToSpeechService {
-  final GoogleTTSService _googleTTSService = GoogleTTSService();
+class GoogleTTSService implements TextToSpeechService {
+ AudioPlayerService? _audioPlayerService = AudioPlayerService();
+  late AppContentState _appContentState;
 
-  bool get isPlaying => _googleTTSService._isPlaying;
-  @override
-  Future<void> speak(String text) async {
-    _googleTTSService._isPlaying = true;
-    await _googleTTSService.speak(text);
+  GoogleTTSService(ConversationController controller){
+    controller.addListener(() {
+      _appContentState = controller.state;
+    });
   }
-
-  @override
-  Future<void> stop() async {
-    _googleTTSService._isPlaying = false;
-    await _googleTTSService.stop();
-  }
-}
-
-final String apiKey = 'GoogleAPI';
-
-class GoogleTTSService {
-  final AudioPlayerService _audioPlayerService = AudioPlayerService();
-
-  bool _isPlaying = false;
 
   int _sessionId = 0;
 
+  @override
   Future<void> speak(String text) async {
-    _audioPlayerService.reset();
+    if(_appContentState.conversationState != ConversationState.speaking) return;
+
+    print('Resetting audio player');
+    _audioPlayerService?.reset();
     _sessionId = DateTime.now().microsecond + DateTime.now().minute;
     final currentSession = _sessionId;
 
@@ -41,16 +33,16 @@ class GoogleTTSService {
     for (final sentence in sentences) {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
-      if (!_isPlaying) return;
+      if(_appContentState.conversationState != ConversationState.speaking) return;
 
       print("Requesting TTS for: $trimmed");
 
       try {
         dynamic audioContent;
         if (Helper.IsDevanagari(trimmed)) {
-          audioContent = await GetWAVFromGoogle(trimmed, "mr-IN");
+          audioContent = await getWAVFromGoogle(trimmed, "mr-IN");
         } else {
-          audioContent = await GetWAVFromGoogle(trimmed, "en-IN");
+          audioContent = await getWAVFromGoogle(trimmed, "en-IN");
         }
         if (currentSession != _sessionId) {
           print("Skipping old audio (session invalidated)");
@@ -60,13 +52,15 @@ class GoogleTTSService {
         final audioBytes = base64.decode(audioContent);
 
         print("Enqueuing audio for: $trimmed");
-        await _audioPlayerService.enqueue(audioBytes);
+        if(_appContentState.conversationState != ConversationState.speaking) return;
+        await _audioPlayerService?.enqueue(audioBytes);
       } catch (e) {
         print("TTS error for '$trimmed': $e");
       }
     }
   }
 
+  @override
   Future<void> stop() async {
     print("Stopping playback");
 
@@ -74,11 +68,16 @@ class GoogleTTSService {
         DateTime.now().microsecond +
         DateTime.now().minute; // new session // invalidate current session
     // _audioPlayerService.reset(); // clear any queued audio
-    await _audioPlayerService.stop();
+    await _audioPlayerService?.dispose();
+    _audioPlayerService = null;
+    
   }
 }
 
-Future<String> GetWAVFromGoogle(String text, String lang) async {
+final String apiKey = Secrets.googleApiKey;
+
+
+Future<String> getWAVFromGoogle(String text, String lang) async {
   print("Inside GoogleTTSService with text: $text");
 
   final prefs = await SharedPreferences.getInstance();

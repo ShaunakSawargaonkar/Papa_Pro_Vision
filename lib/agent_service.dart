@@ -1,5 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
+import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 
 enum Mode{
@@ -12,6 +13,7 @@ class AgentService{
   late GenerativeModel _generativeModel;
   late ChatSession _chat;
   final _generationConfig = GenerationConfig(temperature: 0);
+  late AppContentState _appContentState;
 
   final String _systemPrompt = """
   You are a helpful, friendly assistant for blind users. Always respond in a warm and conversational tone, using simple and concise language.
@@ -24,7 +26,7 @@ class AgentService{
   Begin with a short one-sentence description of the type of material and context (e.g., book page, newspaper, prescription, cupboard labels).
   Do not describe every small visual detail—focus only on what helps the user understand what they are reading.
   Read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details.
-  Be conversational and smart: infer context if possible.
+  Be smart: infer context if possible.
 
   Examples:
   - If it's a book page: "Reading page number 5. [content]"
@@ -39,7 +41,11 @@ class AgentService{
     return mode == Mode.reading ? _readingModeSystemPrompt : _systemPrompt;
   }
 
-  AgentService();
+  AgentService(ConversationController controller){
+    controller.addListener(() {
+      _appContentState = controller.state;
+    });
+  }
 
   void initialize(String apiKey, Mode mode){
     _generativeModel = GenerativeModel(
@@ -68,6 +74,8 @@ class AgentService{
   }
 
   Future<String> generateResponse(String prompt, Uint8List imageBytes) async {
+    if(_appContentState.conversationState != ConversationState.processing) return "";
+
     late Content content;
     
     if(checkIfIgnoreImage(prompt)){

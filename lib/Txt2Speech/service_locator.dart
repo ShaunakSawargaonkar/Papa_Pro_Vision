@@ -1,28 +1,25 @@
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get_it/get_it.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/FlutterTTS.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/GoogleTTS.dart';
+import 'package:papa_pro_vision/Txt2Speech/Models/flutter_tts.dart';
+import 'package:papa_pro_vision/Txt2Speech/Models/google_tts.dart';
+import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 abstract class TextToSpeechService {
-  bool get isPlaying;
   Future<void> speak(String text);
   Future<void> stop();
 }
 
 final GetIt locator = GetIt.instance;
 
-void setupTTSService(String selectedModel) {
-  if (locator.isRegistered<TextToSpeechService>()) {
-    locator.unregister<TextToSpeechService>();
-  }
+TextToSpeechService setupTTSService(String selectedModel, ConversationController controller) {
+  // if (locator.isRegistered<TextToSpeechService>()) {
+  //   locator.unregister<TextToSpeechService>();
+  // }
 
   switch (selectedModel.toLowerCase()) {
     case 'google':
-      locator.registerSingleton<TextToSpeechService>(GoogleTTS());
-      break;
+      return GoogleTTSService(controller);
     case 'fluttertts':
-      locator.registerSingleton<TextToSpeechService>(FlutterTTS());
-      break;
+      return FlutterTTSService(controller);
     default:
       throw Exception('Unknown TTS model: $selectedModel');
   }

@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:papa_pro_vision/LogicScreen.dart';
+import 'package:provider/provider.dart';
+import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:papa_pro_vision/UI/home_Screen.dart';
 
 // IMPORTANT: Replace with your Gemini API Key
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ConversationController(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,7 +30,7 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.blue,
       ),
-      home: const LogicScreen(),
+      home: const HomeScreen(),
     );
   }
 }
