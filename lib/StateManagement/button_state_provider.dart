@@ -28,7 +28,7 @@ class ConversationController extends ChangeNotifier {
   AgentService? _agentService;
   TextToSpeechService? _ttsService;
   SpeechToText? _speechToText;
-  final AppContentState _appContentState = AppContentState();
+  AppContentState _appContentState = AppContentState();
   Uint8List _imageBytes = Uint8List(0);
 
   Future<void> initialize() async {
@@ -48,9 +48,9 @@ class ConversationController extends ChangeNotifier {
             print('Processing input');
             print('Image bytes: ${_imageBytes.isNotEmpty} ${state.isHistoryMode}');
             if(state.isHistoryMode){
-              _processInput();
+              processInput();
             }else if(_imageBytes.isNotEmpty){
-              _processInput(imageBytes: _imageBytes);
+              processInput(imageBytes: _imageBytes);
             }
           }
         }
@@ -66,10 +66,15 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  Future<void> _processInput({Uint8List? imageBytes}) async {
-    final promptText = state.userRecognisedWords.isNotEmpty
+  Future<void> processInput({Uint8List? imageBytes}) async {
+    var promptText = state.userRecognisedWords.isNotEmpty
         ? state.userRecognisedWords
         : "What do you see in the image? Describe it for a blind person.";
+
+    if(_appContentState.interactionMode == InteractionMode.reading){
+      promptText = "Read the text in the image. If the text appears cut off, let me know how to adjust the camera for a better view";
+      _appContentState.userRecognisedWords = 'READING MODE`';
+    }
 
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
@@ -136,4 +141,22 @@ class ConversationController extends ChangeNotifier {
     _appContentState.isHistoryMode = false;
     notifyListeners();
   }
+  
+
+  Future<void> toggleReadingMode() async {
+    print('Toggle reading mode: ${_appContentState.interactionMode}');
+    if(_appContentState.interactionMode == InteractionMode.normal){
+      _appContentState.interactionMode = InteractionMode.reading;
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.reading);
+      await _ttsService?.speak("Reading mode enabled", isIntermediate: true);
+      notifyListeners();
+    }else{
+      _appContentState.interactionMode = InteractionMode.normal;
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal);
+      await _ttsService?.speak("Reading mode disabled", isIntermediate: true);
+      notifyListeners();
+    }
+  }
+
+
 }

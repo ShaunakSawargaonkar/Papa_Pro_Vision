@@ -1,5 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'package:papa_pro_vision/agent_service.dart';
 import 'package:papa_pro_vision/UI/profile_page.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
@@ -55,16 +57,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _captureImage(ConversationController controller) async {
+  Future<Uint8List?> _captureImage(ConversationController controller) async {
     if (controller.state.conversationState == ConversationState.processing ||
         cameraController == null ||
         !cameraController!.value.isInitialized) {
-      return;
+      return null;
     }
 
     try {
       final XFile picture = await cameraController!.takePicture();
-      controller.setImageBytes(await picture.readAsBytes());
+      return await picture.readAsBytes();
     } catch (e) {
       print("Error taking picture or processing: $e");
     }
@@ -72,17 +74,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void onToggleListening(ConversationController controller) async {
     print('Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode}');
+    Uint8List? imageBytes = Uint8List(0);
     if (controller.state.conversationState == ConversationState.idle) {
       if(!controller.state.isHistoryMode){
-        print('Capturing image');
-        await _captureImage(controller);
+          print('Capturing image');
+          imageBytes = await _captureImage(controller);
+          if(imageBytes != null){
+            print('Setting image bytes');
+            controller.setImageBytes(imageBytes);
+          }
       }
-      await controller.startListening(prefs.getString('inputLanguage') ?? 'en_IN');
+      if(controller.state.interactionMode == InteractionMode.normal){
+        await controller.startListening(prefs.getString('inputLanguage') ?? 'en_IN');
+      }else{
+        await controller.processInput(imageBytes: imageBytes);
+      }
+      
     } else {
       print('Stopping speaking');
       await controller.stopSpeaking();
     }
     print('After toggle: ${controller.state.conversationState} ${controller.state.interactionMode}');
+  }
+
+  void onToggleReadingMode(ConversationController controller) async {
+    await controller.toggleReadingMode();
   }
 
   @override
@@ -141,20 +157,54 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
-            flex: 5,
-            child: ClipRect(
-              child: OverflowBox(
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: cameraController!.value.previewSize!.height,
+                    Container(
+                // width: cameraController!.value.previewSize!.height,
+                height: MediaQuery.of(context).size.height * 0.55,
+            child: Row(
+              children: [
+                // LEFT clickable border
+                InkWell(
+                    onTap:() => onToggleReadingMode(controller),                        
+                    child: Container(
+                    padding: EdgeInsets.only(right: 10),
+                    width: MediaQuery.of(context).size.width * 0.15,
                     height: cameraController!.value.previewSize!.width,
-                    child: CameraPreview(cameraController!),
+                    color: Colors.blue, // full-height clickable blue area
+                    child: RotatedBox(quarterTurns: 1,child: Text("Reading Mode",textAlign: TextAlign.center, style: TextStyle(fontSize: 30),)),
+                    ),
+                    
+                  ),
+            
+                // CENTER Camera feed
+                Expanded(
+                  flex: 8, // take maximum space
+                  child: ClipRect(
+                    child: OverflowBox(
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: cameraController!.value.previewSize!.height,
+                height: cameraController!.value.previewSize!.width,
+                child: CameraPreview(cameraController!),
+              ),
+            ),
+                    ),
                   ),
                 ),
-              ),
+            
+                // RIGHT clickable border
+                InkWell(
+                    onTap:() => onToggleReadingMode(controller),   
+                    child: Container(
+                    padding: EdgeInsets.only(left: 10),
+                    height: cameraController!.value.previewSize!.width,
+                    width: MediaQuery.of(context).size.width * 0.15,
+                    color: Colors.blue, // full-height clickable blue area
+                    child: RotatedBox(quarterTurns: 3,child: Text("Reading Mode",textAlign: TextAlign.center, style: TextStyle(fontSize: 30),)),
+                    ),
+                  ),
+              ],
             ),
           ),
           Expanded(

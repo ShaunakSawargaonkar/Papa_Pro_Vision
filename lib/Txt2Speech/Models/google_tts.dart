@@ -9,7 +9,7 @@ import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 class GoogleTTSService implements TextToSpeechService {
  AudioPlayerService? _audioPlayerService = AudioPlayerService();
-  late AppContentState _appContentState;
+  late AppContentState _appContentState = AppContentState();
 
   GoogleTTSService(ConversationController controller){
     controller.addListener(() {
