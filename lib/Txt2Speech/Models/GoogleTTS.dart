@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GoogleTTS implements TextToSpeechService {
   final GoogleTTSService _googleTTSService = GoogleTTSService();
 
-  bool get isPlaying => _googleTTSService._isPlaying;
+  bool get isPlaying => _googleTTSService.isPlaying;
   @override
   Future<void> speak(String text) async {
     _googleTTSService._isPlaying = true;
@@ -29,6 +29,7 @@ class GoogleTTSService {
   final AudioPlayerService _audioPlayerService = AudioPlayerService();
 
   bool _isPlaying = false;
+  bool get isPlaying => _audioPlayerService.isPlaying;
 
   int _sessionId = 0;
 
@@ -66,7 +67,7 @@ class GoogleTTSService {
         print("TTS error for '$trimmed': $e");
       }
     }
-    _isPlaying =false;
+    // _isPlaying =false;
   }
 
   Future<void> stop() async {
