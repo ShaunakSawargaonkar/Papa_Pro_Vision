@@ -3,11 +3,10 @@ import 'dart:typed_data';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 
-enum Mode{
+enum InteractionMode {
   normal,
-  reading
+  reading,
 }
-
 
 class AgentService{
   late GenerativeModel _generativeModel;
@@ -37,8 +36,8 @@ class AgentService{
   Keep the tone clear, natural, and easy to follow, like a friend reading aloud.
 """;
 
-  String _getSystemPrompt(Mode mode){
-    return mode == Mode.reading ? _readingModeSystemPrompt : _systemPrompt;
+  String _getSystemPrompt(InteractionMode mode){
+    return mode == InteractionMode.reading ? _readingModeSystemPrompt : _systemPrompt;
   }
 
   AgentService(ConversationController controller){
@@ -47,7 +46,7 @@ class AgentService{
     });
   }
 
-  void initialize(String apiKey, Mode mode){
+  void initialize(String apiKey, InteractionMode mode){
     _generativeModel = GenerativeModel(
       model: 'gemini-2.0-flash',
       apiKey: apiKey,
@@ -73,16 +72,17 @@ class AgentService{
     _chat = _generativeModel.startChat();
   }
 
-  Future<String> generateResponse(String prompt, Uint8List imageBytes) async {
+  Future<String> generateResponse(String prompt, {Uint8List? imageBytes}) async {
     if(_appContentState.conversationState != ConversationState.processing) return "";
 
     late Content content;
     
-    if(checkIfIgnoreImage(prompt)){
+    if(checkIfIgnoreImage(prompt) || imageBytes == null){
       content = Content.multi([TextPart(prompt)]);
     }else{
       content = Content.multi([DataPart('image/jpeg', imageBytes), TextPart(prompt)]);
     }
+    print('chat.history: ${_chat.history.length}');
     try{
       final response = await _chat.sendMessage(content);
       return cleanAgentResponse(response.text!);

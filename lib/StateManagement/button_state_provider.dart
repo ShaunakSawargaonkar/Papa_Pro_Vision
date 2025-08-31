@@ -9,6 +9,8 @@ class AppContentState{
   String agentResponse = '';
   String userRecognisedWords = '';
   ConversationState? conversationState = ConversationState.idle;
+  InteractionMode? interactionMode = InteractionMode.normal;
+  bool isHistoryMode = false;
 
   AppContentState();
 }
@@ -33,7 +35,7 @@ class ConversationController extends ChangeNotifier {
      _ttsService ??= setupTTSService('google', this);
     if(_agentService == null) {
       _agentService = AgentService(this);
-      _agentService?.initialize(Secrets.geminiApiKey, Mode.normal);
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal);
     }
 
     if(_speechToText == null) {
@@ -42,9 +44,14 @@ class ConversationController extends ChangeNotifier {
       onStatus: (status) {
         print('Speech status: $status');
         if (status == 'done') {
-          if (state.userRecognisedWords.isNotEmpty && _imageBytes.isNotEmpty) {
+          if (state.userRecognisedWords.isNotEmpty) {
             print('Processing input');
-            _processInput(_imageBytes);
+            print('Image bytes: ${_imageBytes.isNotEmpty} ${state.isHistoryMode}');
+            if(state.isHistoryMode){
+              _processInput();
+            }else if(_imageBytes.isNotEmpty){
+              _processInput(imageBytes: _imageBytes);
+            }
           }
         }
       },
@@ -57,11 +64,9 @@ class ConversationController extends ChangeNotifier {
       notifyListeners();
     }
     }
-
-    
   }
 
-  Future<void> _processInput(Uint8List imageBytes) async {
+  Future<void> _processInput({Uint8List? imageBytes}) async {
     final promptText = state.userRecognisedWords.isNotEmpty
         ? state.userRecognisedWords
         : "What do you see in the image? Describe it for a blind person.";
@@ -70,7 +75,10 @@ class ConversationController extends ChangeNotifier {
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
     await _ttsService?.speak("Processing response", isIntermediate: true);
-    final response = await _agentService?.generateResponse(promptText, imageBytes);
+    if(!state.isHistoryMode){
+      _agentService?.reset();
+    }
+    final response = await _agentService?.generateResponse(promptText, imageBytes: imageBytes);
 
     if (response != null && response.isNotEmpty && _appContentState.conversationState == ConversationState.processing) {
       _appContentState.agentResponse = response;
@@ -119,4 +127,13 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
+  void setHistoryMode() {
+    _appContentState.isHistoryMode = true;
+    notifyListeners();
+  }
+
+  void unsetHistoryMode() {
+    _appContentState.isHistoryMode = false;
+    notifyListeners();
+  }
 }

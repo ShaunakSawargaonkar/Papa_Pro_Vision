@@ -71,16 +71,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void onToggleListening(ConversationController controller) async {
-    print('Before toggle: ${controller.state.conversationState}');
+    print('Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode}');
     if (controller.state.conversationState == ConversationState.idle) {
-      print('Capturing image');
-      await _captureImage(controller);
+      if(!controller.state.isHistoryMode){
+        print('Capturing image');
+        await _captureImage(controller);
+      }
       await controller.startListening(prefs.getString('inputLanguage') ?? 'en_IN');
     } else {
       print('Stopping speaking');
       await controller.stopSpeaking();
     }
-    print('After toggle: ${controller.state.conversationState}');
+    print('After toggle: ${controller.state.conversationState} ${controller.state.interactionMode}');
   }
 
   @override
@@ -160,7 +162,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               child: InkWell(
-                onTap: () => onToggleListening(controller),
+                onTap: () => {
+                  controller.unsetHistoryMode(),
+                  onToggleListening(controller)
+                },
+                onDoubleTap: () => {
+                  controller.setHistoryMode(),
+                  onToggleListening(controller)
+                },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
