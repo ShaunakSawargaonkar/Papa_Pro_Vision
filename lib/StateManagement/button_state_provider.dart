@@ -67,11 +67,9 @@ class ConversationController extends ChangeNotifier {
         : "What do you see in the image? Describe it for a blind person.";
 
     //Calling Gemini
-    _appContentState.conversationState = ConversationState.speaking;
-    notifyListeners();
-    await _ttsService?.speak("Processing response");
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
+    await _ttsService?.speak("Processing response", isIntermediate: true);
     final response = await _agentService?.generateResponse(promptText, imageBytes);
 
     if (response != null && response.isNotEmpty && _appContentState.conversationState == ConversationState.processing) {
@@ -101,12 +99,24 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> stopSpeaking() async {
     _appContentState.conversationState = ConversationState.idle;
+    _appContentState.agentResponse = '';
+    _appContentState.userRecognisedWords = '';
     await _ttsService?.stop();
     notifyListeners();
   }
 
   void setImageBytes(Uint8List imageBytes) {
     _imageBytes = imageBytes;
+  }
+
+  Future<void> doneSpeaking() async {
+    if(_appContentState.conversationState == ConversationState.speaking) {
+    _appContentState.conversationState = ConversationState.idle;
+    _appContentState.agentResponse = '';
+      _appContentState.userRecognisedWords = '';
+      await _ttsService?.stop();
+      notifyListeners();
+    }
   }
 
 }

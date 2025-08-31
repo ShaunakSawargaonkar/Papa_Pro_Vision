@@ -17,6 +17,17 @@ class AudioPlayerService {
     });
   }
 
+  // Add callback function type
+  Function()? _onQueueEmptyAndComplete;
+  
+  // Add getter for the callback
+  Function()? get onQueueEmptyAndComplete => _onQueueEmptyAndComplete;
+  
+  // Add setter for the callback
+  set onQueueEmptyAndComplete(Function()? callback) {
+    _onQueueEmptyAndComplete = callback;
+  }
+
   bool get isPlaying => _isPlaying;
 
   void reset() {
@@ -38,6 +49,9 @@ class AudioPlayerService {
   Future<void> _playNext() async {
     print('Playing audio ${_isStopped}');
     if (_queue.isEmpty || _isStopped) {
+      if(_isPlaying && _queue.isEmpty){
+        _onQueueEmptyAndComplete?.call();
+      }
       _isPlaying = false;
       return;
     }

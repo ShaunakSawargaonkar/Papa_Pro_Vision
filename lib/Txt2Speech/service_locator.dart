@@ -4,7 +4,7 @@ import 'package:papa_pro_vision/Txt2Speech/Models/google_tts.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 abstract class TextToSpeechService {
-  Future<void> speak(String text);
+  Future<void> speak(String text, {bool isIntermediate = false});
   Future<void> stop();
 }
 

@@ -14,8 +14,8 @@ class FlutterTTSService implements TextToSpeechService {
   final FlutterTts _flutterTts = FlutterTts();
 
   @override
-  Future<void> speak(String text) async {
-    if(_appContentState.conversationState != ConversationState.speaking) return;
+  Future<void> speak(String text, {bool isIntermediate = false}) async {
+    if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
     await _flutterTts.speak(text);
   }
 

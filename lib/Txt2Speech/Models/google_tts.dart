@@ -15,13 +15,17 @@ class GoogleTTSService implements TextToSpeechService {
     controller.addListener(() {
       _appContentState = controller.state;
     });
+
+    _audioPlayerService?.onQueueEmptyAndComplete = () {
+      controller.doneSpeaking();
+    };
   }
 
   int _sessionId = 0;
 
   @override
-  Future<void> speak(String text) async {
-    if(_appContentState.conversationState != ConversationState.speaking) return;
+  Future<void> speak(String text, {bool isIntermediate = false}) async {
+    if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
 
     print('Resetting audio player');
     _audioPlayerService?.reset();
@@ -33,7 +37,7 @@ class GoogleTTSService implements TextToSpeechService {
     for (final sentence in sentences) {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
-      if(_appContentState.conversationState != ConversationState.speaking) return;
+      if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
 
       print("Requesting TTS for: $trimmed");
 
@@ -52,7 +56,7 @@ class GoogleTTSService implements TextToSpeechService {
         final audioBytes = base64.decode(audioContent);
 
         print("Enqueuing audio for: $trimmed");
-        if(_appContentState.conversationState != ConversationState.speaking) return;
+        if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
         await _audioPlayerService?.enqueue(audioBytes);
       } catch (e) {
         print("TTS error for '$trimmed': $e");
@@ -68,8 +72,7 @@ class GoogleTTSService implements TextToSpeechService {
         DateTime.now().microsecond +
         DateTime.now().minute; // new session // invalidate current session
     // _audioPlayerService.reset(); // clear any queued audio
-    await _audioPlayerService?.dispose();
-    _audioPlayerService = null;
+    await _audioPlayerService?.stop();
     
   }
 }
