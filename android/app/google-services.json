@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303194042908",
+    "project_id": "papaprovision",
+    "storage_bucket": "papaprovision.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303194042908:android:143326825df57be90425d9",
+        "android_client_info": {
+          "package_name": "com.example.blind_assistant_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ-ZZniMNkI3bnLeQubqrzeg4SXSYbmzk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
