@@ -63,8 +63,73 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
     try {
       final deviceId = await _getDeviceId();
-      
-      // Create user document in Firestore
+
+      // Check if device is already registered
+      final existingUsers = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('deviceId', isEqualTo: deviceId)
+          .get();
+
+      if (existingUsers.docs.isNotEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'This device is already registered. Please contact owner if you need assistance.',
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+      var keyCollection =
+          (await FirebaseFirestore.instance
+                  .collection('Referral Key')
+                  .doc('kLpFasXX3A5g9cpJsi6E')
+                  .get())
+              .data();
+
+      var keyData = keyCollection![_referralKeyController.text];
+      if (keyData == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid Referral Key'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      } else {
+        var keyDataMaxCount =
+            keyCollection![_referralKeyController.text]['MaxCount'];
+        var keyDataCount = keyCollection![_referralKeyController.text]['Count'];
+        if (keyDataCount >= keyDataMaxCount) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Referral Key usage limit reached'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+          return;
+        } else {
+          // Increment the count
+          await FirebaseFirestore.instance
+              .collection('Referral Key')
+              .doc('kLpFasXX3A5g9cpJsi6E')
+              .update({
+                '${_referralKeyController.text}.Count': FieldValue.increment(1),
+              });
+        }
+      }
+
+      // Create userif(ketDara) document in Firestore
       await FirebaseFirestore.instance.collection('Users').add({
         'name': _nameController.text,
         'contactNumber': _contactController.text,
@@ -76,6 +141,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
         'deviceId': deviceId,
         'isActive': true,
         'createdAt': FieldValue.serverTimestamp(),
+        'Analytics': {
+          'ResponseCount': 0,
+          'AutoReadSingleTap': 0,
+          'AutoReadDoubleTap': 0,
+          'DoubleTap': 0,
+          'SingleTap': 0,
+          'SmartReadSingleTap': 0,
+          'SmartReadDoubleTap': 0,
+          'TTSErrorCount': 0,
+          'STTErrorCount': 0,
+          'PromptErrorCount': 0,
+          'CancelledRequestCount': 0,
+        },
       });
 
       // Set registration status in SharedPreferences
@@ -92,9 +170,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
       print('Error saving to Firestore: $e');
       print('Stack trace: $stackTrace');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error registering user: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error registering user: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) {

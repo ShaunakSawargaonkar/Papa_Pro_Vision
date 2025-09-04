@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
-import 'package:papa_pro_vision/RegisterPage/registration_page.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,16 +23,59 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  Future<bool> _checkRegistration() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isRegistered', false);
-    return prefs.getBool('isRegistered') ?? false;
+  Future<String> _getDeviceId() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return androidInfo.id;
+  }
+
+  Future<Map<String, bool>> _checkRegistration() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      var isRegistered = prefs.getBool('isRegistered') ?? false;
+      // isRegistered = false; // For testing purposes only
+      // print("beforeee");
+      // var myMapData = (await FirebaseFirestore.instance
+      //     .collection('Referral Key')
+      //     .doc('kLpFasXX3A5g9cpJsi6E')
+      //     .get());
+      // print("afterrr");
+      // var temp3 = myMapData.data();
+
+      // print("afterrr2");
+      // // var tt = temp3!['demoTestKey'].toString();
+      // var tt2 = temp3!['demoTestKey']['MaxCount'];
+      // print("yooooooooooooooooooooooo" + tt2.toString());
+
+      if (!isRegistered) {
+        return {'isRegistered': false, 'isActive': false};
+      }
+
+      final deviceId = await _getDeviceId();
+      print('Registration check: Device ID: $deviceId');
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('deviceId', isEqualTo: deviceId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final userData = querySnapshot.docs[0].data();
+        final isActive = userData['isActive'] ?? false;
+        print('User status: $userData');
+        return {'isRegistered': true, 'isActive': isActive};
+      }
+      return {'isRegistered': true, 'isActive': false};
+    } catch (e) {
+      print('Error checking registration status: $e');
+      return {'isRegistered': false, 'isActive': false};
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Papa ProVision',
+      title: 'Papa ProVisionn',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
@@ -39,7 +85,7 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.blue,
       ),
-      home: FutureBuilder<bool>(
+      home: FutureBuilder<Map<String, bool>>(
         future: _checkRegistration(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -48,8 +94,16 @@ class MyApp extends StatelessWidget {
             );
           }
 
-          if (snapshot.hasData && snapshot.data!) {
-            return const HomeScreen();
+          if (snapshot.hasData) {
+            final data = snapshot.data!;
+            final isRegistered = data['isRegistered'] ?? false;
+            final isActive = data['isActive'] ?? false;
+
+            if (isRegistered && !isActive) {
+              return const AlasPage();
+            } else if (isRegistered && isActive) {
+              return const HomeScreen();
+            }
           }
 
           return const RegistrationPage();
