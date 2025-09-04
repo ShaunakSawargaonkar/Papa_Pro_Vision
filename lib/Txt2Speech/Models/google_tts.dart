@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:papa_pro_vision/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/audio_player.dart';
 import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
@@ -8,10 +9,10 @@ import 'package:papa_pro_vision/secrets.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 class GoogleTTSService implements TextToSpeechService {
- AudioPlayerService? _audioPlayerService = AudioPlayerService();
+  AudioPlayerService? _audioPlayerService = AudioPlayerService();
   late AppContentState _appContentState = AppContentState();
 
-  GoogleTTSService(ConversationController controller){
+  GoogleTTSService(ConversationController controller) {
     controller.addListener(() {
       _appContentState = controller.state;
     });
@@ -25,7 +26,9 @@ class GoogleTTSService implements TextToSpeechService {
 
   @override
   Future<void> speak(String text, {bool isIntermediate = false}) async {
-    if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
+    if (_appContentState.conversationState != ConversationState.speaking &&
+        !isIntermediate)
+      return;
 
     print('Resetting audio player');
     _audioPlayerService?.reset();
@@ -37,7 +40,9 @@ class GoogleTTSService implements TextToSpeechService {
     for (final sentence in sentences) {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
-      if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
+      if (_appContentState.conversationState != ConversationState.speaking &&
+          !isIntermediate)
+        return;
 
       print("Requesting TTS for: $trimmed");
 
@@ -56,9 +61,12 @@ class GoogleTTSService implements TextToSpeechService {
         final audioBytes = base64.decode(audioContent);
 
         print("Enqueuing audio for: $trimmed");
-        if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
+        if (_appContentState.conversationState != ConversationState.speaking &&
+            !isIntermediate)
+          return;
         await _audioPlayerService?.enqueue(audioBytes);
       } catch (e) {
+        await Analyticshelper.updateResponseCount("TTSErrorCount");
         print("TTS error for '$trimmed': $e");
       }
     }
@@ -73,12 +81,10 @@ class GoogleTTSService implements TextToSpeechService {
         DateTime.now().minute; // new session // invalidate current session
     // _audioPlayerService.reset(); // clear any queued audio
     await _audioPlayerService?.stop();
-    
   }
 }
 
 final String apiKey = Secrets.googleApiKey;
-
 
 Future<String> getWAVFromGoogle(String text, String lang) async {
   print("Inside GoogleTTSService with text: $text");

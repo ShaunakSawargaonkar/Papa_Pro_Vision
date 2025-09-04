@@ -1,14 +1,13 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
+enum InteractionMode { normal, smartReading, autoReading }
 
-enum InteractionMode {
-  normal,
-  reading,
-}
-
-class AgentService{
+class AgentService {
   late GenerativeModel _generativeModel;
   late ChatSession _chat;
   final _generationConfig = GenerationConfig(temperature: 0);
@@ -18,6 +17,10 @@ class AgentService{
   You are a helpful, friendly assistant for blind users. Always respond in a warm and conversational tone, using simple and concise language.
   Keep answers clear, and easy to follow—like speaking to a friend.
   Never be robotic—be natural, engaging, and supportive.
+  """;
+  final String _autoReadingSystemPrompt = """
+  You are in Auto Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud in a natural, friendly, and helpful way. 
+  Dont begin with a description of the type of material or context. Just read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details.
   """;
 
   final String _readingModeSystemPrompt = """
@@ -38,22 +41,29 @@ class AgentService{
   Keep the tone clear, natural, and easy to follow, like a friend reading aloud.
 """;
 
-  String _getSystemPrompt(InteractionMode mode){
-    return mode == InteractionMode.reading ? _readingModeSystemPrompt : _systemPrompt;
+  String _getSystemPrompt(InteractionMode mode) {
+    switch (mode) {
+      case InteractionMode.normal:
+        return _systemPrompt;
+      case InteractionMode.smartReading:
+        return _readingModeSystemPrompt;
+      case InteractionMode.autoReading:
+        return _autoReadingSystemPrompt;
+    }
   }
 
-  AgentService(ConversationController controller){
+  AgentService(ConversationController controller) {
     controller.addListener(() {
       _appContentState = controller.state;
     });
   }
 
-  void initialize(String apiKey, InteractionMode mode){
+  void initialize(String apiKey, InteractionMode mode) {
     _generativeModel = GenerativeModel(
       model: 'gemini-2.0-flash',
       apiKey: apiKey,
       generationConfig: _generationConfig,
-      systemInstruction: Content.system(_getSystemPrompt(mode))
+      systemInstruction: Content.system(_getSystemPrompt(mode)),
     );
     _chat = _generativeModel.startChat();
   }
@@ -70,29 +80,61 @@ class AgentService{
     return responseText.replaceAll('*', ' ');
   }
 
-  void reset(){
+  void reset() {
     _chat = _generativeModel.startChat();
   }
 
-  Future<String> generateResponse(String prompt, {Uint8List? imageBytes}) async {
-    if(_appContentState.conversationState != ConversationState.processing) return "";
+  Future<String> generateResponse(
+    String prompt, {
+    Uint8List? imageBytes,
+  }) async {
+    if (_appContentState.conversationState != ConversationState.processing)
+      return "";
 
     late Content content;
-    
-    if(checkIfIgnoreImage(prompt) || imageBytes == null){
+
+    if (checkIfIgnoreImage(prompt) || imageBytes == null) {
       content = Content.multi([TextPart(prompt)]);
-    }else{
-      content = Content.multi([DataPart('image/jpeg', imageBytes), TextPart(prompt)]);
+    } else {
+      content = Content.multi([
+        DataPart('image/jpeg', imageBytes),
+        TextPart(prompt),
+      ]);
     }
     print('chat.history: ${_chat.history.length}');
-    try{
+    try {
       final response = await _chat.sendMessage(content);
+      await updateResponseCount();
       return cleanAgentResponse(response.text!);
-    }on GenerativeAIException catch (e){
+    } on GenerativeAIException catch (e) {
+      await Analyticshelper.updateResponseCount("PromptErrorCount");
+      print("Error from AI Service: $e");
+      print(_chat.history);
       return "Error from AI Service: $e";
     } catch (e) {
       return "An unexpected error occurred: $e";
     }
   }
 
+  Future<void> updateResponseCount() async {
+    var deviceId = await _getDeviceId();
+    var temp = await FirebaseFirestore.instance
+        .collection('Users')
+        .where('deviceId', isEqualTo: deviceId)
+        .get();
+
+    var temp2 = temp.docs[0].data();
+
+    for (var doc in temp.docs) {
+      await doc.reference.update({
+        'Analytics.ResponseCount': FieldValue.increment(1),
+      });
+    }
+  }
+
+  Future<String> _getDeviceId() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return androidInfo.id;
+  }
 }
