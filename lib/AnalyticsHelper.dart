@@ -9,8 +9,6 @@ class Analyticshelper {
         .where('deviceId', isEqualTo: deviceId)
         .get();
 
-    var temp2 = temp.docs[0].data();
-
     for (var doc in temp.docs) {
       await doc.reference.update({'Analytics.$type': FieldValue.increment(1)});
     }
