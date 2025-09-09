@@ -33,20 +33,8 @@ class MyApp extends StatelessWidget {
     try {
       final prefs = await SharedPreferences.getInstance();
       var isRegistered = prefs.getBool('isRegistered') ?? false;
-      // isRegistered = false; // For testing purposes only
-      // print("beforeee");
-      // var myMapData = (await FirebaseFirestore.instance
-      //     .collection('Referral Key')
-      //     .doc('kLpFasXX3A5g9cpJsi6E')
-      //     .get());
-      // print("afterrr");
-      // var temp3 = myMapData.data();
-
-      // print("afterrr2");
-      // // var tt = temp3!['demoTestKey'].toString();
-      // var tt2 = temp3!['demoTestKey']['MaxCount'];
-      // print("yooooooooooooooooooooooo" + tt2.toString());
-
+      // prefs.setBool('isRegistered', false);
+      // isRegistered = false;
       if (!isRegistered) {
         return {'isRegistered': false, 'isActive': false};
       }
