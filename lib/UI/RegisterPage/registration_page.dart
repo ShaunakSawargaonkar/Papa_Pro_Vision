@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -37,15 +37,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  Future<String> _getDeviceId() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    print(
-      'android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}',
-    );
-    return 'android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}';
-  }
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate() || _selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +50,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     });
 
     try {
-      final deviceId = await _getDeviceId();
+      final deviceId = await Devicehelper.getDeviceId();
 
       // Check if device is already registered
       final existingUsers = await FirebaseFirestore.instance
@@ -102,8 +93,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
         return;
       } else {
         var keyDataMaxCount =
-            keyCollection![_referralKeyController.text]['MaxCount'];
-        var keyDataCount = keyCollection![_referralKeyController.text]['Count'];
+            keyCollection[_referralKeyController.text]['MaxCount'];
+        var keyDataCount = keyCollection[_referralKeyController.text]['Count'];
         if (keyDataCount >= keyDataMaxCount) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
