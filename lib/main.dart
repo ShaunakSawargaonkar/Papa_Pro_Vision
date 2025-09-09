@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,23 +22,9 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  Future<String> _getDeviceId() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return androidInfo.id;
-  }
-
   Future<Map<String, bool>> _checkRegistration() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      var isRegistered = prefs.getBool('isRegistered') ?? false;
-      // prefs.setBool('isRegistered', false);
-      // isRegistered = false;
-      if (!isRegistered) {
-        return {'isRegistered': false, 'isActive': false};
-      }
-
-      final deviceId = await _getDeviceId();
+      final deviceId = await Devicehelper.getDeviceId();
       print('Registration check: Device ID: $deviceId');
 
       final querySnapshot = await FirebaseFirestore.instance
@@ -53,7 +38,7 @@ class MyApp extends StatelessWidget {
         print('User status: $userData');
         return {'isRegistered': true, 'isActive': isActive};
       }
-      return {'isRegistered': true, 'isActive': false};
+      return {'isRegistered': false, 'isActive': false};
     } catch (e) {
       print('Error checking registration status: $e');
       return {'isRegistered': false, 'isActive': false};
@@ -63,7 +48,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Papa ProVisionn',
+      title: 'Papa ProVision',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,

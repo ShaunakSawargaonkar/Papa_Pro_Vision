@@ -1,9 +1,9 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:papa_pro_vision/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 enum InteractionMode { normal, smartReading, autoReading }
 
@@ -117,7 +117,7 @@ class AgentService {
   }
 
   Future<void> updateResponseCount() async {
-    var deviceId = await _getDeviceId();
+    var deviceId = await Devicehelper.getDeviceId();
     var temp = await FirebaseFirestore.instance
         .collection('Users')
         .where('deviceId', isEqualTo: deviceId)
@@ -128,11 +128,5 @@ class AgentService {
         'Analytics.ResponseCount': FieldValue.increment(1),
       });
     }
-  }
-
-  Future<String> _getDeviceId() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return androidInfo.id;
   }
 }

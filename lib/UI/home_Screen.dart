@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:papa_pro_vision/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'dart:typed_data';
 import 'package:papa_pro_vision/agent_service.dart';
 import 'package:papa_pro_vision/UI/profile_page.dart';
