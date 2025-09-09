@@ -123,8 +123,6 @@ class AgentService {
         .where('deviceId', isEqualTo: deviceId)
         .get();
 
-    var temp2 = temp.docs[0].data();
-
     for (var doc in temp.docs) {
       await doc.reference.update({
         'Analytics.ResponseCount': FieldValue.increment(1),

@@ -85,27 +85,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void onToggleListening(ConversationController controller) async {
     print(
-      'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
+      'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ',
     );
 
-    Uint8List? imageBytes = Uint8List(0);
     if (controller.state.conversationState == ConversationState.idle) {
-      if (!controller.state.isHistoryMode) {
-        print('Capturing image');
-        imageBytes = await _captureImage(controller);
-        if (imageBytes != null) {
-          print('Setting image bytes');
-          controller.setImageBytes(imageBytes);
-        }
-      }
       if (controller.state.interactionMode == InteractionMode.normal) {
+        //Capture image
+        if (!controller.state.isHistoryMode) {
+          _captureImage(controller).then((imageBytes) {
+            if (imageBytes != null) {
+              controller.setImageBytes(imageBytes);
+            }
+          });
+        }
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
-      } else {
+      }
+      // Reading modes
+      else {
+        print('Capturing image in smart');
+        // For non-normal interaction modes, process immediately
         if (controller.state.isHistoryMode) {
           await controller.processInput();
         } else {
+          // Wait a bit for the background image capture to complete before processing
+          Uint8List? imageBytes = Uint8List(0);
+          print('Capturing image ss');
+          imageBytes = await _captureImage(controller);
+          if (imageBytes != null) {
+            print('Setting image bytes ss');
+            controller.setImageBytes(imageBytes);
+          }
+
           await controller.processInput(imageBytes: imageBytes);
         }
       }

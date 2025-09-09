@@ -10,8 +10,6 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _contactController;
   late TextEditingController _emergencyContactController;
   double _speechRate = 1.0;
   String _selectedLanguage = 'en_IN';
@@ -19,16 +17,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _contactController = TextEditingController();
     _emergencyContactController = TextEditingController();
     _loadUserData();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _contactController.dispose();
     _emergencyContactController.dispose();
     super.dispose();
   }
@@ -36,8 +30,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nameController.text = prefs.getString('userName') ?? '';
-      _contactController.text = prefs.getString('userContact') ?? '';
       _emergencyContactController.text =
           prefs.getString('emergencyContact') ?? '';
       _speechRate = prefs.getDouble('speechRate') ?? 1.0;
@@ -48,8 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _saveUserData() async {
     if (_formKey.currentState!.validate()) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userName', _nameController.text);
-      await prefs.setString('userContact', _contactController.text);
       await prefs.setString(
         'emergencyContact',
         _emergencyContactController.text,
@@ -61,18 +51,10 @@ class _ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
         );
+        // Pop the page after successful save
+        Navigator.pop(context);
       }
     }
-  }
-
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter a phone number';
-    }
-    if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-      return 'Please enter a valid 10-digit phone number';
-    }
-    return null;
   }
 
   @override
@@ -89,37 +71,6 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleAvatar(
-                radius: 50,
-                child: Icon(Icons.person, size: 50),
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contactController,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: _validatePhoneNumber,
-              ),
-              const SizedBox(height: 16),
               TextFormField(
                 controller: _emergencyContactController,
                 decoration: const InputDecoration(
@@ -128,7 +79,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   prefixIcon: Icon(Icons.emergency),
                 ),
                 keyboardType: TextInputType.phone,
-                validator: _validatePhoneNumber,
               ),
               const SizedBox(height: 24),
               const Text(
