@@ -6,7 +6,6 @@ import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,29 +21,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  Future<Map<String, bool>> _checkRegistration() async {
-    try {
-      final deviceId = await Devicehelper.getDeviceId();
-      print('Registration check: Device ID: $deviceId');
-
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Users')
-          .where('deviceId', isEqualTo: deviceId)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final userData = querySnapshot.docs[0].data();
-        final isActive = userData['isActive'] ?? false;
-        print('User status: $userData');
-        return {'isRegistered': true, 'isActive': isActive};
-      }
-      return {'isRegistered': false, 'isActive': false};
-    } catch (e) {
-      print('Error checking registration status: $e');
-      return {'isRegistered': false, 'isActive': false};
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -59,7 +35,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: FutureBuilder<Map<String, bool>>(
-        future: _checkRegistration(),
+        future: Devicehelper.checkRegistration(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
