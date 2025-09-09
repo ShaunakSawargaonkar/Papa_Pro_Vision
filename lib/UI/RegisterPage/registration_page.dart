@@ -189,7 +189,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Name *'),
+                      decoration: const InputDecoration(labelText: 'Name/नाव *'),
                       validator: (value) =>
                           value?.isEmpty ?? true ? 'Name is required' : null,
                     ),
@@ -197,7 +197,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     TextFormField(
                       controller: _contactController,
                       decoration: const InputDecoration(
-                        labelText: 'Contact Number *',
+                        labelText: 'Contact Number/संपर्क क्रमांक *',
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) => value?.isEmpty ?? true
@@ -207,10 +207,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email *'),
+                      decoration: const InputDecoration(labelText: 'Email'),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Email is required';
+                        if (value?.isEmpty ?? true) return null;
                         if (!RegExp(
                           r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                         ).hasMatch(value!)) {
@@ -222,7 +222,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedGender,
-                      decoration: const InputDecoration(labelText: 'Gender *'),
+                      decoration: const InputDecoration(labelText: 'Gender/लिंग *'),
                       items: ['Male', 'Female', 'Other']
                           .map(
                             (gender) => DropdownMenuItem(
@@ -241,7 +241,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ListTile(
                       title: Text(
                         _selectedDate == null
-                            ? 'Select Date of Birth *'
+                            ? 'Select Date of Birth/जन्मतारीख निवडा'
                             : 'DoB: ${_selectedDate.toString().split(' ')[0]}',
                       ),
                       trailing: const Icon(Icons.calendar_today),
@@ -251,18 +251,18 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     TextFormField(
                       controller: _occupationController,
                       decoration: const InputDecoration(
-                        labelText: 'Occupation *',
+                        labelText: 'Occupation/व्यवसाय',
                       ),
-                      validator: (value) => value?.isEmpty ?? true
-                          ? 'Occupation is required'
-                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _referralKeyController,
                       decoration: const InputDecoration(
-                        labelText: 'Referral Key',
+                        labelText: 'Referral Key/ संदर्भ कोड *',
                       ),
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Referral Key is required'
+                          : null,
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
