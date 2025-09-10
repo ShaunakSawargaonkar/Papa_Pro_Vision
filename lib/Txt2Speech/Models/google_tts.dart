@@ -7,6 +7,7 @@ import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/secrets.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:papa_pro_vision/enums.dart';
 
 class GoogleTTSService implements TextToSpeechService {
   AudioPlayerService? _audioPlayerService = AudioPlayerService();
@@ -35,7 +36,22 @@ class GoogleTTSService implements TextToSpeechService {
     _sessionId = DateTime.now().microsecond + DateTime.now().minute;
     final currentSession = _sessionId;
 
-    final sentences = text.split('.');
+    // Split text into sentences, then further split long sentences (>20 words)
+    final List<String> sentences = [];
+    for (var sentence in text.split('.')) {
+      final trimmed = sentence.trim();
+      if (trimmed.isEmpty) continue;
+      final words = trimmed.split(RegExp(r'\s+'));
+      if (words.length > 20) {
+        // Split into chunks of 20 words
+        for (var i = 0; i < words.length; i += 20) {
+          final chunk = words.sublist(i, (i + 20 < words.length) ? i + 20 : words.length).join(' ');
+          sentences.add(chunk);
+        }
+      } else {
+        sentences.add(trimmed);
+      }
+    }
 
     for (final sentence in sentences) {
       final trimmed = sentence.trim();

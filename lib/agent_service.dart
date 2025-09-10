@@ -4,34 +4,34 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:papa_pro_vision/enums.dart';
 
-enum InteractionMode { normal, smartReading, autoReading }
 
 class AgentService {
   late GenerativeModel _generativeModel;
   late ChatSession _chat;
-  final _generationConfig = GenerationConfig(temperature: 0);
   late AppContentState _appContentState;
 
   final String _systemPrompt = """
-  You are a helpful, friendly assistant for blind users. Always respond in a warm and conversational tone, using simple and concise language.
-  Keep answers clear, and easy to follow—like speaking to a friend.
-  Never be robotic—be natural, engaging, and supportive.
+  You are a helpful, friendly assistant for blind users. Be descriptive so that the user can get a clear understanding of their surrounding.
+  Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
   """;
   final String _autoReadingSystemPrompt = """
-  You are in Auto Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud in a natural, friendly, and helpful way. 
-  Dont begin with a description of the type of material or context. Just read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details.
+  You are in Auto Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud. 
+  Just read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details. Dont begin with a any salutation or description of the type of material or context.
   """;
 
   final String _readingModeSystemPrompt = """
-  You are in Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud in a natural, friendly, and helpful way.
-  Begin with a short one-sentence description of the type of material and context (e.g., book page, newspaper, prescription, cupboard labels).
+  You are in Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud.
+  Begin with a short one-sentence description of the type of material and context (e.g., book page, newspaper, prescription, cupboard labels) in the communication language.
   Do not describe every small visual detail—focus only on what helps the user understand what they are reading.
   Read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details.
   Be conversational and smart: infer context if possible.
+  Communication language: {communicationLanguage}. Use this language for all interactions, except when reading text, which should be read in its original language.
+  
   If the page is not visible completely or is cut off, guide the user to adjust the camera for a better view.
 
-  Examples:
+  Examples: (assuming communication language is English)
   - If it's a book page: "Reading book/chapter Fourth Estate/Chapter 2, page number 5 [content]". Do not forget to mention the page number if visible.
   - If it's a newspaper: "Reading newspaper dated July 20, 2023, section Sports. [content]"
   - If it's a prescription: "Reading prescription by Dr. Mehta, probably for cough and cold. [content]"
@@ -41,14 +41,14 @@ class AgentService {
   Keep the tone clear, natural, and easy to follow, like a friend reading aloud.
 """;
 
-  String _getSystemPrompt(InteractionMode mode) {
+  String _getSystemPrompt(InteractionMode mode, String communicationLanguage) {
     switch (mode) {
       case InteractionMode.normal:
-        return _systemPrompt;
+        return _systemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
       case InteractionMode.smartReading:
-        return _readingModeSystemPrompt;
+        return _readingModeSystemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
       case InteractionMode.autoReading:
-        return _autoReadingSystemPrompt;
+        return _autoReadingSystemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
     }
   }
 
@@ -58,12 +58,11 @@ class AgentService {
     });
   }
 
-  void initialize(String apiKey, InteractionMode mode) {
+  void initialize(String apiKey, InteractionMode mode, String communicationLanguage) {
     _generativeModel = GenerativeModel(
       model: 'gemini-2.0-flash',
       apiKey: apiKey,
-      generationConfig: _generationConfig,
-      systemInstruction: Content.system(_getSystemPrompt(mode)),
+      systemInstruction: Content.system(_getSystemPrompt(mode, communicationLanguage)),
     );
     _chat = _generativeModel.startChat();
   }

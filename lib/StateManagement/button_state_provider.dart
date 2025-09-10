@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/agent_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/text_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:papa_pro_vision/secrets.dart';
+import 'package:papa_pro_vision/enums.dart';
 
 class AppContentState {
   String agentResponse = '';
@@ -15,14 +17,6 @@ class AppContentState {
   AppContentState();
 }
 
-enum ConversationState {
-  idle, // waiting for user
-  listening, // recording user input
-  processing, // playing TTS audio and processing via gemini
-  speaking, // playing TTS audio
-  failed, // error occurred while setting up speech understanding
-}
-
 class ConversationController extends ChangeNotifier {
   AppContentState get state => _appContentState;
   AgentService? _agentService;
@@ -30,12 +24,13 @@ class ConversationController extends ChangeNotifier {
   SpeechToText? _speechToText;
   AppContentState _appContentState = AppContentState();
   Uint8List _imageBytes = Uint8List(0);
+  final TextService _textService = TextService();
 
-  Future<void> initialize() async {
+  Future<void> initialize(String inputLanguage) async {
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
       _agentService = AgentService(this);
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal);
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, TextService.inputLanguageToCommunicationLanguage[inputLanguage] ?? 'English');
     }
 
     if (_speechToText == null) {
@@ -50,9 +45,9 @@ class ConversationController extends ChangeNotifier {
                 'Image bytes: ${_imageBytes.isNotEmpty} ${state.isHistoryMode}',
               );
               if (state.isHistoryMode) {
-                processInput();
+                processInput(inputLanguage);
               } else if (_imageBytes.isNotEmpty) {
-                processInput(imageBytes: _imageBytes);
+                processInput(inputLanguage, imageBytes: _imageBytes);
               }
             }
           }
@@ -68,25 +63,25 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  Future<void> processInput({Uint8List? imageBytes}) async {
+  Future<void> processInput(String inputLanguage, {Uint8List? imageBytes}) async {
+    String defaultPrompt = _textService.getPromptText(inputLanguage, state.interactionMode);
     var promptText = state.userRecognisedWords.isNotEmpty
         ? state.userRecognisedWords
-        : "What do you see in the image? Describe it for a blind person.";
+        : defaultPrompt;
 
     if (_appContentState.interactionMode == InteractionMode.smartReading) {
-      promptText =
-          "Read the text in the image. If the text appears cut off, let me know how to adjust the camera for a better view";
-      _appContentState.userRecognisedWords = 'SMART READING MODE`';
+      promptText = defaultPrompt;
+      _appContentState.userRecognisedWords = 'SMART READING MODE';
     } else if (_appContentState.interactionMode ==
         InteractionMode.autoReading) {
-      promptText = "Read the text in the image.";
+      promptText = defaultPrompt;
       _appContentState.userRecognisedWords = 'AUTO READING MODE';
     }
 
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
-    await _ttsService?.speak("Processing response", isIntermediate: true);
+    await _ttsService?.speak(_textService.getProcessingResponseText(inputLanguage), isIntermediate: true);
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
@@ -174,38 +169,40 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleSmartReadingMode() async {
+  Future<void> toggleSmartReadingMode(String communicationLanguage) async {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     if (_appContentState.interactionMode != InteractionMode.smartReading) {
       _appContentState.interactionMode = InteractionMode.smartReading;
       _agentService?.initialize(
         Secrets.geminiApiKey,
         InteractionMode.smartReading,
+        communicationLanguage,
       );
-      await _ttsService?.speak("Smart Reader enabled", isIntermediate: true);
+      await _ttsService?.speak(_textService.getSmartReaderText(communicationLanguage, true), isIntermediate: true);
       notifyListeners();
     } else {
       _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal);
-      await _ttsService?.speak("Smart Reader disabled", isIntermediate: true);
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, communicationLanguage);
+      await _ttsService?.speak(_textService.getSmartReaderText(communicationLanguage, false), isIntermediate: true);
       notifyListeners();
     }
   }
 
-  Future<void> toggleAutoReadingMode() async {
+  Future<void> toggleAutoReadingMode(String communicationLanguage) async {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     if (_appContentState.interactionMode != InteractionMode.autoReading) {
       _appContentState.interactionMode = InteractionMode.autoReading;
       _agentService?.initialize(
         Secrets.geminiApiKey,
         InteractionMode.autoReading,
+        communicationLanguage,
       );
-      await _ttsService?.speak("Auto Reader enabled", isIntermediate: true);
+      await _ttsService?.speak(_textService.getAutoReaderText(communicationLanguage, true), isIntermediate: true);
       notifyListeners();
     } else {
       _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal);
-      await _ttsService?.speak("Auto Reader disabled", isIntermediate: true);
+      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, communicationLanguage);
+      await _ttsService?.speak(_textService.getAutoReaderText(communicationLanguage, false), isIntermediate: true);
       notifyListeners();
     }
   }
