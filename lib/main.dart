@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/UI/home_Screen.dart';
+import 'package:papa_pro_vision/UI/home_screen.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(
     ChangeNotifierProvider(
       create: (_) => ConversationController(),
