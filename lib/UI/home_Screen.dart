@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'dart:typed_data';
 import 'package:papa_pro_vision/UI/profile_page.dart';
 import 'package:provider/provider.dart';
@@ -107,7 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
         print('Capturing image in smart');
         // For non-normal interaction modes, process immediately
         if (controller.state.isHistoryMode) {
-          await controller.processInput(prefs?.getString('inputLanguage') ?? 'en_IN');
+          await controller.processInput(
+            prefs?.getString('inputLanguage') ?? 'en_IN',
+          );
         } else {
           // Wait a bit for the background image capture to complete before processing
           Uint8List? imageBytes = Uint8List(0);
@@ -118,7 +121,10 @@ class _HomeScreenState extends State<HomeScreen> {
             controller.setImageBytes(imageBytes);
           }
 
-          await controller.processInput(prefs?.getString('inputLanguage') ?? 'en_IN', imageBytes: imageBytes);
+          await controller.processInput(
+            prefs?.getString('inputLanguage') ?? 'en_IN',
+            imageBytes: imageBytes,
+          );
         }
       }
     } else {
@@ -131,11 +137,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void onToggleSmartReadingMode(ConversationController controller, String communicationLanguage) async {
+  void onToggleSmartReadingMode(
+    ConversationController controller,
+    String communicationLanguage,
+  ) async {
     await controller.toggleSmartReadingMode(communicationLanguage);
   }
 
-  void onToggleAutoReadingMode(ConversationController controller, String communicationLanguage) async {
+  void onToggleAutoReadingMode(
+    ConversationController controller,
+    String communicationLanguage,
+  ) async {
     await controller.toggleAutoReadingMode(communicationLanguage);
   }
 
@@ -162,7 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final AppContentState state = controller.state;
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return FutureBuilder(
-        future: controller.initialize(prefs?.getString('inputLanguage') ?? 'en_IN',),
+        future: controller.initialize(
+          prefs?.getString('inputLanguage') ?? 'en_IN',
+        ),
         builder: (context, snapshot) {
           return Scaffold(
             appBar: AppBar(
@@ -171,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () async {
+                    Devicehelper.playCameraClickSound(controller);
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -198,7 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     return FutureBuilder(
-      future: controller.initialize(prefs?.getString('inputLanguage') ?? 'en_IN'),
+      future: controller.initialize(
+        prefs?.getString('inputLanguage') ?? 'en_IN',
+      ),
       builder: (context, snapshot) {
         return Scaffold(
           appBar: AppBar(
@@ -207,6 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: const Icon(Icons.settings),
                 onPressed: () {
+                  Devicehelper.playCameraClickSound(controller);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -226,7 +244,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     // LEFT clickable border
                     InkWell(
-                      onTap: () => onToggleAutoReadingMode(controller, prefs?.getString('inputLanguage') ?? 'en_IN'),
+                      onTap: () => onToggleAutoReadingMode(
+                        controller,
+                        prefs?.getString('inputLanguage') ?? 'en_IN',
+                      ),
                       child: Container(
                         padding: EdgeInsets.only(right: 10),
                         width: MediaQuery.of(context).size.width * 0.15,
@@ -235,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: RotatedBox(
                           quarterTurns: 1,
                           child: Text(
-                            "Auto Reader",
+                            "Smart Reader",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 30),
                           ),
@@ -265,7 +286,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // RIGHT clickable border
                     InkWell(
-                      onTap: () => onToggleSmartReadingMode(controller, prefs?.getString('inputLanguage') ?? 'en_IN'),
+                      onTap: () => onToggleSmartReadingMode(
+                        controller,
+                        prefs?.getString('inputLanguage') ?? 'en_IN',
+                      ),
                       child: Container(
                         padding: EdgeInsets.only(left: 10),
                         height: cameraController!.value.previewSize!.width,
