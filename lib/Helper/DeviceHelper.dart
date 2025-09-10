@@ -1,5 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 
+import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Devicehelper {
@@ -55,5 +57,10 @@ class Devicehelper {
       print('Error checking registration status: $e');
       return {'isRegistered': false, 'isActive': false};
     }
+  }
+
+  static void playCameraClickSound(ConversationController controller) async {
+    final AudioPlayer _audioPlayer = AudioPlayer();
+    await _audioPlayer.play(AssetSource("sounds/camera-13695.mp3"));
   }
 }
