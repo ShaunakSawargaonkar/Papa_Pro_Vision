@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:papa_pro_vision/UI/home_Screen.dart';
+import 'package:papa_pro_vision/UI/home_screen.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
