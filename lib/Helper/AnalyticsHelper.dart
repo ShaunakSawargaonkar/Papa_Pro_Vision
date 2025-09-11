@@ -3,6 +3,13 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 
 class Analyticshelper {
   static Future<void> updateResponseCount(String type) async {
+    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'updateResponseCount',
+    );
+    if (!isInternetAvailable) {
+      print("No internet connection. Cannot update response count.");
+      return;
+    }
     var deviceId = await Devicehelper.getDeviceId();
     var temp = await FirebaseFirestore.instance
         .collection('Users')
