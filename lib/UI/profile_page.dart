@@ -13,6 +13,8 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _emergencyContactController;
   double _speechRate = 1.0;
   String _selectedLanguage = 'en_IN';
+  bool _enableTranslation = true;
+  bool _useFrontCamera = false;
 
   @override
   void initState() {
@@ -34,6 +36,8 @@ class _ProfilePageState extends State<ProfilePage> {
           prefs.getString('emergencyContact') ?? '';
       _speechRate = prefs.getDouble('speechRate') ?? 1.0;
       _selectedLanguage = prefs.getString('inputLanguage') ?? 'en_IN';
+      _enableTranslation = prefs.getBool('enableTranslation') ?? false;
+      _useFrontCamera = prefs.getBool('useFrontCamera') ?? false;
     });
   }
 
@@ -46,6 +50,8 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       await prefs.setDouble('speechRate', _speechRate);
       await prefs.setString('inputLanguage', _selectedLanguage);
+      await prefs.setBool('enableTranslation', _enableTranslation);
+      await prefs.setBool('useFrontCamera', _useFrontCamera);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,6 +142,35 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('Enable Translation'),
+                subtitle: const Text('Translate text to selected input language'),
+                value: _enableTranslation,
+                onChanged: (value) {
+                  setState(() {
+                    _enableTranslation = value;
+                  });
+                },
+                secondary: const Icon(Icons.translate),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'App Settings',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                title: const Text('Use Front Camera'),
+                subtitle: const Text('Switch between front and back camera'),
+                value: _useFrontCamera,
+                onChanged: (value) {
+                  setState(() {
+                    _useFrontCamera = value;
+                  });
+                },
+                secondary: const Icon(Icons.camera_front),
               ),
               const SizedBox(height: 24),
               SizedBox(
