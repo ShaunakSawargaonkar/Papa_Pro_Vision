@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
-import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'dart:typed_data';
 import 'package:papa_pro_vision/UI/profile_page.dart';
 import 'package:provider/provider.dart';
@@ -74,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
         !cameraController!.value.isInitialized) {
       return null;
     }
-
     try {
+      DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
       return await picture.readAsBytes();
     } catch (e) {
@@ -93,11 +93,15 @@ class _HomeScreenState extends State<HomeScreen> {
       if (controller.state.interactionMode == InteractionMode.normal) {
         //Capture image
         if (!controller.state.isHistoryMode) {
-          _captureImage(controller).then((imageBytes) {
-            if (imageBytes != null) {
-              controller.setImageBytes(imageBytes);
-            }
-          });
+          // _captureImage(controller).then((imageBytes) {
+          //   if (imageBytes != null) {
+          //     controller.setImageBytes(imageBytes);
+          //   }
+          // });
+          var imageBytes = await _captureImage(controller);
+          if (imageBytes != null) {
+            controller.setImageBytes(imageBytes);
+          }
         }
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
@@ -141,6 +145,9 @@ class _HomeScreenState extends State<HomeScreen> {
     ConversationController controller,
     String communicationLanguage,
   ) async {
+    print(
+      'Before toggle Smart Reading Mode: ${controller.state.interactionMode}',
+    );
     await controller.toggleSmartReadingMode(communicationLanguage);
   }
 
@@ -185,7 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () async {
-                    Devicehelper.playCameraClickSound(controller);
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -224,7 +230,6 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: const Icon(Icons.settings),
                 onPressed: () {
-                  Devicehelper.playCameraClickSound(controller);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -256,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: RotatedBox(
                           quarterTurns: 1,
                           child: Text(
-                            "Smart Reader",
+                            "Auto Reader",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 30),
                           ),

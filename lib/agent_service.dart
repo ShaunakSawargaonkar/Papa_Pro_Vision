@@ -6,14 +6,13 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/enums.dart';
 
-
 class AgentService {
   late GenerativeModel _generativeModel;
   late ChatSession _chat;
   late AppContentState _appContentState;
 
   final String _systemPrompt = """
-  You are a helpful, friendly assistant for blind users. Be descriptive so that the user can get a clear understanding of their surrounding.
+  You are a helpful, friendly assistant for blind users.
   Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
   """;
   final String _autoReadingSystemPrompt = """
@@ -44,11 +43,20 @@ class AgentService {
   String _getSystemPrompt(InteractionMode mode, String communicationLanguage) {
     switch (mode) {
       case InteractionMode.normal:
-        return _systemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
+        return _systemPrompt.replaceAll(
+          '{communicationLanguage}',
+          communicationLanguage,
+        );
       case InteractionMode.smartReading:
-        return _readingModeSystemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
+        return _readingModeSystemPrompt.replaceAll(
+          '{communicationLanguage}',
+          communicationLanguage,
+        );
       case InteractionMode.autoReading:
-        return _autoReadingSystemPrompt.replaceAll('{communicationLanguage}', communicationLanguage);
+        return _autoReadingSystemPrompt.replaceAll(
+          '{communicationLanguage}',
+          communicationLanguage,
+        );
     }
   }
 
@@ -58,13 +66,27 @@ class AgentService {
     });
   }
 
-  void initialize(String apiKey, InteractionMode mode, String communicationLanguage) {
-    _generativeModel = GenerativeModel(
-      model: 'gemini-2.0-flash',
-      apiKey: apiKey,
-      systemInstruction: Content.system(_getSystemPrompt(mode, communicationLanguage)),
-    );
-    _chat = _generativeModel.startChat();
+  void initialize(
+    String apiKey,
+    InteractionMode mode,
+    String communicationLanguage,
+  ) {
+    if (mode == InteractionMode.normal) {
+      _generativeModel = GenerativeModel(
+        model: 'gemini-2.0-flash',
+        apiKey: apiKey,
+      );
+      _chat = _generativeModel.startChat();
+    } else {
+      _generativeModel = GenerativeModel(
+        model: 'gemini-2.0-flash',
+        apiKey: apiKey,
+        systemInstruction: Content.system(
+          _getSystemPrompt(mode, communicationLanguage),
+        ),
+      );
+      _chat = _generativeModel.startChat();
+    }
   }
 
   bool checkIfIgnoreImage(String promptText) {
@@ -116,6 +138,13 @@ class AgentService {
   }
 
   Future<void> updateResponseCount() async {
+    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'updateResponseCount',
+    );
+    if (!isInternetAvailable) {
+      print("No internet connection. Cannot update response count.");
+      return;
+    }
     var deviceId = await Devicehelper.getDeviceId();
     var temp = await FirebaseFirestore.instance
         .collection('Users')

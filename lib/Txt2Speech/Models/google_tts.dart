@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/audio_player.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/helper.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/secrets.dart';
@@ -31,6 +31,14 @@ class GoogleTTSService implements TextToSpeechService {
         !isIntermediate)
       return;
 
+    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'speakGoogleTTS',
+    );
+    if (!isInternetAvailable) {
+      print("No internet connection. Cannot perform TTS.");
+      return;
+    }
+
     print('Resetting audio player');
     _audioPlayerService?.reset();
     _sessionId = DateTime.now().microsecond + DateTime.now().minute;
@@ -45,7 +53,9 @@ class GoogleTTSService implements TextToSpeechService {
       if (words.length > 20) {
         // Split into chunks of 20 words
         for (var i = 0; i < words.length; i += 20) {
-          final chunk = words.sublist(i, (i + 20 < words.length) ? i + 20 : words.length).join(' ');
+          final chunk = words
+              .sublist(i, (i + 20 < words.length) ? i + 20 : words.length)
+              .join(' ');
           sentences.add(chunk);
         }
       } else {
@@ -64,7 +74,7 @@ class GoogleTTSService implements TextToSpeechService {
 
       try {
         dynamic audioContent;
-        if (Helper.IsDevanagari(trimmed)) {
+        if (Devicehelper.IsDevanagari(trimmed)) {
           audioContent = await getWAVFromGoogle(trimmed, "mr-IN");
         } else {
           audioContent = await getWAVFromGoogle(trimmed, "en-IN");

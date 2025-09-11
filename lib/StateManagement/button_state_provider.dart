@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/agent_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
@@ -30,7 +32,12 @@ class ConversationController extends ChangeNotifier {
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
       _agentService = AgentService(this);
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, TextService.inputLanguageToCommunicationLanguage[inputLanguage] ?? 'English');
+      _agentService?.initialize(
+        Secrets.geminiApiKey,
+        InteractionMode.normal,
+        TextService.inputLanguageToCommunicationLanguage[inputLanguage] ??
+            'English',
+      );
     }
 
     if (_speechToText == null) {
@@ -39,6 +46,7 @@ class ConversationController extends ChangeNotifier {
         onStatus: (status) {
           print('Speech status: $status');
           if (status == 'done') {
+            DeviceAudioHelper.playMicOFFSound();
             if (state.userRecognisedWords.isNotEmpty) {
               print('Processing input');
               print(
@@ -53,6 +61,7 @@ class ConversationController extends ChangeNotifier {
           }
         },
         onError: (error) {
+          DeviceAudioHelper.playMicOFFSound();
           print('Speech error: $error');
         },
       );
@@ -63,8 +72,23 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  Future<void> processInput(String inputLanguage, {Uint8List? imageBytes}) async {
-    String defaultPrompt = _textService.getPromptText(inputLanguage, state.interactionMode);
+  Future<void> processInput(
+    String inputLanguage, {
+    Uint8List? imageBytes,
+  }) async {
+    var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'processInput',
+    );
+    if (!hasInternet) {
+      print('No internet connection. Cannot process input.');
+      _appContentState.conversationState = ConversationState.idle;
+      notifyListeners();
+      return;
+    }
+    String defaultPrompt = _textService.getPromptText(
+      inputLanguage,
+      state.interactionMode,
+    );
     var promptText = state.userRecognisedWords.isNotEmpty
         ? state.userRecognisedWords
         : defaultPrompt;
@@ -81,7 +105,10 @@ class ConversationController extends ChangeNotifier {
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
-    await _ttsService?.speak(_textService.getProcessingResponseText(inputLanguage), isIntermediate: true);
+    await _ttsService?.speak(
+      _textService.getProcessingResponseText(inputLanguage),
+      isIntermediate: true,
+    );
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
@@ -107,6 +134,7 @@ class ConversationController extends ChangeNotifier {
     _appContentState.agentResponse = '';
     _appContentState.userRecognisedWords = '';
     notifyListeners();
+    DeviceAudioHelper.playMicONSound();
     await _speechToText?.listen(
       localeId: inputLanguage,
       onResult: (result) {
@@ -140,6 +168,13 @@ class ConversationController extends ChangeNotifier {
   }
 
   Future<void> setHistoryMode() async {
+    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'setHistoryMode',
+    );
+    if (!isInternetAvailable) {
+      print("No internet connection. Cannot set history mode.");
+      return;
+    }
     if (_appContentState.conversationState == ConversationState.idle) {
       if (_appContentState.interactionMode == InteractionMode.smartReading) {
         await Analyticshelper.updateResponseCount("SmartReadDoubleTap");
@@ -155,6 +190,13 @@ class ConversationController extends ChangeNotifier {
   }
 
   Future<void> unsetHistoryMode() async {
+    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
+      methodCallName: 'unsetHistoryMode',
+    );
+    if (!isInternetAvailable) {
+      print("No internet connection. Cannot perform unsetHistoryMode.");
+      return;
+    }
     if (_appContentState.conversationState == ConversationState.idle) {
       if (_appContentState.interactionMode == InteractionMode.smartReading) {
         await Analyticshelper.updateResponseCount("SmartReadSingleTap");
@@ -178,12 +220,22 @@ class ConversationController extends ChangeNotifier {
         InteractionMode.smartReading,
         communicationLanguage,
       );
-      await _ttsService?.speak(_textService.getSmartReaderText(communicationLanguage, true), isIntermediate: true);
+      await _ttsService?.speak(
+        _textService.getSmartReaderText(communicationLanguage, true),
+        isIntermediate: true,
+      );
       notifyListeners();
     } else {
       _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, communicationLanguage);
-      await _ttsService?.speak(_textService.getSmartReaderText(communicationLanguage, false), isIntermediate: true);
+      _agentService?.initialize(
+        Secrets.geminiApiKey,
+        InteractionMode.normal,
+        communicationLanguage,
+      );
+      await _ttsService?.speak(
+        _textService.getSmartReaderText(communicationLanguage, false),
+        isIntermediate: true,
+      );
       notifyListeners();
     }
   }
@@ -197,12 +249,22 @@ class ConversationController extends ChangeNotifier {
         InteractionMode.autoReading,
         communicationLanguage,
       );
-      await _ttsService?.speak(_textService.getAutoReaderText(communicationLanguage, true), isIntermediate: true);
+      await _ttsService?.speak(
+        _textService.getAutoReaderText(communicationLanguage, true),
+        isIntermediate: true,
+      );
       notifyListeners();
     } else {
       _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(Secrets.geminiApiKey, InteractionMode.normal, communicationLanguage);
-      await _ttsService?.speak(_textService.getAutoReaderText(communicationLanguage, false), isIntermediate: true);
+      _agentService?.initialize(
+        Secrets.geminiApiKey,
+        InteractionMode.normal,
+        communicationLanguage,
+      );
+      await _ttsService?.speak(
+        _textService.getAutoReaderText(communicationLanguage, false),
+        isIntermediate: true,
+      );
       notifyListeners();
     }
   }

@@ -1,10 +1,14 @@
 import 'package:device_info_plus/device_info_plus.dart';
-
-import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 
 class Devicehelper {
+  static bool IsDevanagari(String text) {
+    final devanagariRegex = RegExp(r'[\u0900-\u097F]');
+    return devanagariRegex.hasMatch(text);
+  }
+
   static Future<String> getDeviceId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -17,8 +21,36 @@ class Devicehelper {
     return androidInfo.id;
   }
 
+  static Future<bool> hasInternetConnectionAndNotify({
+    String methodCallName = "JustChecking",
+  }) async {
+    try {
+      final response = await http
+          .get(Uri.parse('https://www.google.com'))
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) {
+        print("Playing Internet Not Available Sound");
+        await DeviceAudioHelper.playInternetNotAvailableSound();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      print('No internet connection, Method call : $methodCallName');
+      await DeviceAudioHelper.playInternetNotAvailableSound();
+      return false;
+    }
+  }
+
   static Future<Map<String, bool>> checkRegistration() async {
     try {
+      var isInternetAvailable =
+          await Devicehelper.hasInternetConnectionAndNotify(
+            methodCallName: 'checkRegistration',
+          );
+      if (!isInternetAvailable) {
+        print("No internet connection. Cannot perform checkRegistration.");
+        return {'isRegistered': true, 'isActive': true}; //TODO Make it False!
+      }
       final deviceId = await Devicehelper.getDeviceId();
       final oldUserDeviceId = await Devicehelper.getOldUserDeviceId();
       print('Registration check: Device ID: $deviceId');
@@ -57,10 +89,5 @@ class Devicehelper {
       print('Error checking registration status: $e');
       return {'isRegistered': false, 'isActive': false};
     }
-  }
-
-  static void playCameraClickSound(ConversationController controller) async {
-    final AudioPlayer _audioPlayer = AudioPlayer();
-    await _audioPlayer.play(AssetSource("sounds/camera-13695.mp3"));
   }
 }
