@@ -28,7 +28,7 @@ class ConversationController extends ChangeNotifier {
   Uint8List _imageBytes = Uint8List(0);
   final TextService _textService = TextService();
 
-  Future<void> initialize(String inputLanguage) async {
+  Future<void> initialize(String inputLanguage, bool enableTranslation) async {
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
       _agentService = AgentService(this);
@@ -37,6 +37,7 @@ class ConversationController extends ChangeNotifier {
         InteractionMode.normal,
         TextService.inputLanguageToCommunicationLanguage[inputLanguage] ??
             'English',
+        enableTranslation,
       );
     }
 
@@ -211,7 +212,7 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleSmartReadingMode(String communicationLanguage) async {
+  Future<void> toggleSmartReadingMode(String communicationLanguage, bool enableTranslation) async {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     if (_appContentState.interactionMode != InteractionMode.smartReading) {
       _appContentState.interactionMode = InteractionMode.smartReading;
@@ -219,6 +220,7 @@ class ConversationController extends ChangeNotifier {
         Secrets.geminiApiKey,
         InteractionMode.smartReading,
         communicationLanguage,
+        enableTranslation,
       );
       await _ttsService?.speak(
         _textService.getSmartReaderText(communicationLanguage, true),
@@ -231,6 +233,7 @@ class ConversationController extends ChangeNotifier {
         Secrets.geminiApiKey,
         InteractionMode.normal,
         communicationLanguage,
+        enableTranslation,
       );
       await _ttsService?.speak(
         _textService.getSmartReaderText(communicationLanguage, false),
@@ -240,7 +243,7 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  Future<void> toggleAutoReadingMode(String communicationLanguage) async {
+  Future<void> toggleAutoReadingMode(String communicationLanguage, bool enableTranslation) async {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     if (_appContentState.interactionMode != InteractionMode.autoReading) {
       _appContentState.interactionMode = InteractionMode.autoReading;
@@ -248,6 +251,7 @@ class ConversationController extends ChangeNotifier {
         Secrets.geminiApiKey,
         InteractionMode.autoReading,
         communicationLanguage,
+        enableTranslation,
       );
       await _ttsService?.speak(
         _textService.getAutoReaderText(communicationLanguage, true),
@@ -260,6 +264,7 @@ class ConversationController extends ChangeNotifier {
         Secrets.geminiApiKey,
         InteractionMode.normal,
         communicationLanguage,
+        enableTranslation,
       );
       await _ttsService?.speak(
         _textService.getAutoReaderText(communicationLanguage, false),

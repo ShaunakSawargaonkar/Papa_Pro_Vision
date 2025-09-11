@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
+import 'package:papa_pro_vision/text_service.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 class AgentService {
@@ -18,6 +19,12 @@ class AgentService {
   final String _autoReadingSystemPrompt = """
   You are in Auto Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud. 
   Just read the main text in order, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details. Dont begin with a any salutation or description of the type of material or context.
+  """;
+
+  final String _autoReadingSystemPromptWithTranslation = """
+  You are in Auto Reading Mode. The user is blind and has shared an image containing text. Your job is to read the text out loud. 
+  Just read the main text in translated to the communication language, skipping unnecessary formatting, ads, page numbers (unless relevant), or distracting details. Dont begin with a any salutation or description of the type of material or context.
+  Communication language: {communicationLanguage}. The user only understands the communication language. Hence translate the written text to the communication language.
   """;
 
   final String _readingModeSystemPrompt = """
@@ -40,7 +47,7 @@ class AgentService {
   Keep the tone clear, natural, and easy to follow, like a friend reading aloud.
 """;
 
-  String _getSystemPrompt(InteractionMode mode, String communicationLanguage) {
+  String _getSystemPrompt(InteractionMode mode, String communicationLanguage, bool enableTranslation) {
     switch (mode) {
       case InteractionMode.normal:
         return _systemPrompt.replaceAll(
@@ -53,6 +60,12 @@ class AgentService {
           communicationLanguage,
         );
       case InteractionMode.autoReading:
+        if (enableTranslation) {
+          return _autoReadingSystemPromptWithTranslation.replaceAll(
+            '{communicationLanguage}',
+            communicationLanguage,
+          );
+        }
         return _autoReadingSystemPrompt.replaceAll(
           '{communicationLanguage}',
           communicationLanguage,
@@ -70,7 +83,9 @@ class AgentService {
     String apiKey,
     InteractionMode mode,
     String communicationLanguage,
+    bool enableTranslation,
   ) {
+    communicationLanguage = TextService.inputLanguageToCommunicationLanguage[communicationLanguage] ?? 'English';
     if (mode == InteractionMode.normal) {
       _generativeModel = GenerativeModel(
         model: 'gemini-2.0-flash',
@@ -82,7 +97,7 @@ class AgentService {
         model: 'gemini-2.0-flash',
         apiKey: apiKey,
         systemInstruction: Content.system(
-          _getSystemPrompt(mode, communicationLanguage),
+          _getSystemPrompt(mode, communicationLanguage, enableTranslation),
         ),
       );
       _chat = _generativeModel.startChat();
@@ -98,7 +113,7 @@ class AgentService {
   }
 
   String cleanAgentResponse(String responseText) {
-    return responseText.replaceAll('*', ' ');
+    return responseText.replaceAll('*', ' ').replaceAll('"', '');
   }
 
   void reset() {

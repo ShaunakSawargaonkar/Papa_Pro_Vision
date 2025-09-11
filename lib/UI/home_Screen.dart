@@ -49,11 +49,28 @@ class _HomeScreenState extends State<HomeScreen> {
       // Initialize SharedPreferences
       prefs = await SharedPreferences.getInstance();
 
-      // Initialize camera
-      _cameras = await availableCameras();
+      final bool useFrontCamera = prefs?.getBool('useFrontCamera') ?? false;
+
+       _cameras = await availableCameras();
+      // Find the appropriate camera
+      CameraDescription selectedCamera;
+      if (useFrontCamera && _cameras!.length > 1) {
+        // Look for front camera
+        selectedCamera = _cameras!.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+          orElse: () => _cameras![0], // Fallback to first camera if front not found
+        );
+      } else {
+        // Use back camera (usually index 0)
+        selectedCamera = _cameras!.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.back,
+          orElse: () => _cameras![0], // Fallback to first camera
+        );
+      }
+     
       if (_cameras != null && _cameras!.isNotEmpty) {
         cameraController = CameraController(
-          _cameras![0],
+          selectedCamera,
           ResolutionPreset.veryHigh,
           enableAudio: false,
         );
@@ -106,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
-      }
+      } 
       // Reading modes
       else {
         print('Capturing image in smart');
@@ -148,14 +165,14 @@ class _HomeScreenState extends State<HomeScreen> {
     print(
       'Before toggle Smart Reading Mode: ${controller.state.interactionMode}',
     );
-    await controller.toggleSmartReadingMode(communicationLanguage);
+    await controller.toggleSmartReadingMode(communicationLanguage, prefs?.getBool('enableTranslation') ?? false);
   }
 
   void onToggleAutoReadingMode(
     ConversationController controller,
     String communicationLanguage,
   ) async {
-    await controller.toggleAutoReadingMode(communicationLanguage);
+    await controller.toggleAutoReadingMode(communicationLanguage, prefs?.getBool('enableTranslation') ?? false);
   }
 
   @override
@@ -183,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return FutureBuilder(
         future: controller.initialize(
           prefs?.getString('inputLanguage') ?? 'en_IN',
+          prefs?.getBool('enableTranslation') ?? false,
         ),
         builder: (context, snapshot) {
           return Scaffold(
@@ -198,6 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (context) => const ProfilePage(),
                       ),
                     );
+                    await _initialize();
                     // onSettingsChanged?.call();
                   },
                 ),
@@ -221,6 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return FutureBuilder(
       future: controller.initialize(
         prefs?.getString('inputLanguage') ?? 'en_IN',
+        prefs?.getBool('enableTranslation') ?? false,
       ),
       builder: (context, snapshot) {
         return Scaffold(
@@ -229,13 +249,14 @@ class _HomeScreenState extends State<HomeScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.settings),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ProfilePage(),
                     ),
                   );
+                  await _initialize();
                 },
               ),
             ],
