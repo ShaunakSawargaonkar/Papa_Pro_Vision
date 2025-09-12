@@ -55,7 +55,7 @@ class ConversationController extends ChangeNotifier {
               );
               if (state.isHistoryMode) {
                 processInput(inputLanguage);
-              } else if (_imageBytes != Uint8List(0)) {
+              } else if (_imageBytes.isNotEmpty) {
                 processInput(inputLanguage, imageBytes: _imageBytes);
               }
             }
@@ -112,10 +112,12 @@ class ConversationController extends ChangeNotifier {
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
+    if (_appContentState.interactionMode == InteractionMode.normal) {
     await _ttsService?.speak(
       _textService.getProcessingResponseText(inputLanguage),
-      isIntermediate: true,
-    );
+        isIntermediate: true,
+      );
+    }
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
@@ -155,7 +157,6 @@ class ConversationController extends ChangeNotifier {
   Future<void> stopSpeaking() async {
     _appContentState.conversationState = ConversationState.idle;
     _appContentState.interactionMode = InteractionMode.normal;
-    _appContentState.agentResponse = '';
     _appContentState.userRecognisedWords = '';
     await _ttsService?.stop();
     notifyListeners();
@@ -163,6 +164,7 @@ class ConversationController extends ChangeNotifier {
 
   void setImageBytes(Uint8List imageBytes) {
     _imageBytes = imageBytes;
+    notifyListeners();
   }
 
   Uint8List getImageBytes() {
@@ -173,7 +175,6 @@ class ConversationController extends ChangeNotifier {
     if (_appContentState.conversationState == ConversationState.speaking) {
       _appContentState.conversationState = ConversationState.idle;
       _appContentState.interactionMode = InteractionMode.normal;
-      _appContentState.agentResponse = '';
       _appContentState.userRecognisedWords = '';
       await _ttsService?.stop();
       notifyListeners();
