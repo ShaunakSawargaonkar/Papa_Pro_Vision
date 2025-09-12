@@ -39,9 +39,9 @@ class TextService {
   String getSmartViewText(String inputLanguage, bool isStart) {
     switch (inputLanguage) {
       case 'mr_IN':
-        return 'स्मार्ट व्ह्यू मोड ';
+        return 'प्रोसेसिंग स्मार्ट व्ह्यू ';
       default:
-        return 'Smart View Mode }';
+        return 'Processing Smart View ';
     }
   }
 
