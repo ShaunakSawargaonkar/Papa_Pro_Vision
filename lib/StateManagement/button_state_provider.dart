@@ -5,6 +5,7 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/agent_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:papa_pro_vision/secrets.dart';
 import 'package:papa_pro_vision/enums.dart';
@@ -113,8 +114,8 @@ class ConversationController extends ChangeNotifier {
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
     if (_appContentState.interactionMode == InteractionMode.normal) {
-    await _ttsService?.speak(
-      _textService.getProcessingResponseText(inputLanguage),
+      await _ttsService?.speak(
+        _textService.getProcessingResponseText(inputLanguage),
         isIntermediate: true,
       );
     }
@@ -124,6 +125,7 @@ class ConversationController extends ChangeNotifier {
     final response = await _agentService?.generateResponse(
       promptText,
       imageBytes: imageBytes,
+      inputLanguage,
     );
 
     if (response != null &&
@@ -156,7 +158,17 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> stopSpeaking() async {
     _appContentState.conversationState = ConversationState.idle;
-    _appContentState.interactionMode = InteractionMode.normal;
+    if (_appContentState.interactionMode != InteractionMode.normal) {
+      SharedPreferences? prefs = await SharedPreferences.getInstance();
+      _appContentState.interactionMode = InteractionMode.normal;
+
+      _agentService?.initialize(
+        Secrets.geminiApiKey,
+        InteractionMode.smartView,
+        prefs.getString('inputLanguage') ?? 'en_IN',
+        prefs.getBool('enableTranslation') ?? false,
+      );
+    }
     _appContentState.userRecognisedWords = '';
     await _ttsService?.stop();
     notifyListeners();
@@ -174,7 +186,18 @@ class ConversationController extends ChangeNotifier {
   Future<void> doneSpeaking() async {
     if (_appContentState.conversationState == ConversationState.speaking) {
       _appContentState.conversationState = ConversationState.idle;
-      _appContentState.interactionMode = InteractionMode.normal;
+      if (_appContentState.interactionMode != InteractionMode.normal) {
+        SharedPreferences? prefs = await SharedPreferences.getInstance();
+        _appContentState.interactionMode = InteractionMode.normal;
+
+        _agentService?.initialize(
+          Secrets.geminiApiKey,
+          InteractionMode.smartView,
+          prefs.getString('inputLanguage') ?? 'en_IN',
+          prefs.getBool('enableTranslation') ?? false,
+        );
+      }
+
       _appContentState.userRecognisedWords = '';
       await _ttsService?.stop();
       notifyListeners();
@@ -229,6 +252,7 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
+    Analyticshelper.updateResponseCount("SmartViewModeCount");
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
     _agentService?.initialize(
@@ -266,6 +290,7 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
+    Analyticshelper.updateResponseCount("ReaderModeCount");
     _appContentState.interactionMode = InteractionMode.autoReading;
     _agentService?.initialize(
       Secrets.geminiApiKey,
@@ -273,6 +298,9 @@ class ConversationController extends ChangeNotifier {
       communicationLanguage,
       enableTranslation,
     );
+    if (enableTranslation) {
+      Analyticshelper.updateResponseCount("TranslationCount");
+    }
     await _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
       isIntermediate: true,

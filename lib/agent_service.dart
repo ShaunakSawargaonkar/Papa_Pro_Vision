@@ -1,8 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
-import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:papa_pro_vision/enums.dart';
@@ -129,7 +127,8 @@ class AgentService {
   }
 
   Future<String> generateResponse(
-    String prompt, {
+    String prompt,
+    String inputLanguage, {
     Uint8List? imageBytes,
   }) async {
     if (_appContentState.conversationState != ConversationState.processing)
@@ -150,7 +149,13 @@ class AgentService {
     print('chat.history: ${_chat.history.length}');
     try {
       final response = await _chat.sendMessage(content);
-      await updateResponseCount();
+      Analyticshelper.updateResponseCount("ResponseCount");
+
+      if (inputLanguage == 'en_IN') {
+        Analyticshelper.updateResponseCount("EnglishResponseCount");
+      } else {
+        Analyticshelper.updateResponseCount("MarathiResponseCount");
+      }
       return cleanAgentResponse(response.text!);
     } on GenerativeAIException catch (e) {
       await Analyticshelper.updateResponseCount("PromptErrorCount");
@@ -159,27 +164,6 @@ class AgentService {
       return "Error from AI Service: $e";
     } catch (e) {
       return "An unexpected error occurred: $e";
-    }
-  }
-
-  Future<void> updateResponseCount() async {
-    var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
-      methodCallName: 'updateResponseCount',
-    );
-    if (!isInternetAvailable) {
-      print("No internet connection. Cannot update response count.");
-      return;
-    }
-    var deviceId = await Devicehelper.getDeviceId();
-    var temp = await FirebaseFirestore.instance
-        .collection('Users')
-        .where('deviceId', isEqualTo: deviceId)
-        .get();
-
-    for (var doc in temp.docs) {
-      await doc.reference.update({
-        'Analytics.ResponseCount': FieldValue.increment(1),
-      });
     }
   }
 }

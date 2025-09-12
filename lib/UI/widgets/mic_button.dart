@@ -3,12 +3,15 @@ import 'package:papa_pro_vision/enums.dart';
 
 class MicButton extends StatelessWidget {
   final ConversationState conversationState;
-  final Function() onTap;
   final Color baseColor;
   final String baseMode;
 
-  const MicButton({super.key, required this.conversationState, required this.onTap,
-                  required this.baseColor, required this.baseMode});
+  const MicButton({
+    super.key,
+    required this.conversationState,
+    required this.baseColor,
+    required this.baseMode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,17 +23,17 @@ class MicButton extends StatelessWidget {
       },
       excludeSemantics: true,
       child: SizedBox(
-        width: 120,  // Custom size - adjust as needed
+        width: 120, // Custom size - adjust as needed
         height: 120, // Custom size - adjust as needed
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
             borderRadius: BorderRadius.circular(60),
             child: Container(
               decoration: BoxDecoration(
-                color: conversationState == ConversationState.listening || 
-                       conversationState == ConversationState.speaking
+                color:
+                    conversationState == ConversationState.listening ||
+                        conversationState == ConversationState.speaking
                     ? Colors.white
                     : baseColor,
                 shape: BoxShape.circle,
@@ -50,9 +53,10 @@ class MicButton extends StatelessWidget {
                     ConversationState.speaking => Icons.pause,
                     _ => Icons.mic,
                   },
-                  size: 60,  // Larger icon size
-                  color: conversationState == ConversationState.listening || 
-                         conversationState == ConversationState.speaking
+                  size: 60, // Larger icon size
+                  color:
+                      conversationState == ConversationState.listening ||
+                          conversationState == ConversationState.speaking
                       ? baseColor
                       : Colors.white,
                 ),

@@ -94,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return null;
     }
     try {
+      Analyticshelper.updateResponseCount("ImageCaptureCount");
       DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
       return await picture.readAsBytes();
@@ -116,6 +117,16 @@ class _HomeScreenState extends State<HomeScreen> {
           imageBytes = await _captureImage(controller);
           if (imageBytes != null) {
             controller.setImageBytes(imageBytes);
+          }
+        } else {
+          if (controller.getImageBytes().isNotEmpty) {
+            await Analyticshelper.updateResponseCount(
+              "LLMInteractionWithImageCount",
+            );
+          } else {
+            await Analyticshelper.updateResponseCount(
+              "JustLLMInteractionCount",
+            );
           }
         }
         await controller.startListening(
@@ -159,8 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void clearImageBuffer(ConversationController controller) async {
     print("Clearing image buffer");
     DeviceAudioHelper.playDeleteSound();
-    if (controller.getImageBytes() != Uint8List(0)) {
-      print("Cearing image buffer2");
+    if (controller.getImageBytes().isNotEmpty ||
+        controller.getImageBytes() != Uint8List(0)) {
       controller.setImageBytes(Uint8List(0));
       controller.resetAgentChat();
     }
@@ -201,20 +212,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 Semantics(
                   label: "Profile Settings button",
                   excludeSemantics: true,
-                  child:
-                    IconButton(
-                      icon: const Icon(Icons.settings),
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProfilePage(),
-                          ),
-                        );
-                        await _initialize();
-                        // onSettingsChanged?.call();
-                      },
-                    ),
+                  child: IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfilePage(),
+                        ),
+                      );
+                      await _initialize();
+                      // onSettingsChanged?.call();
+                    },
+                  ),
                 ),
               ],
             ),
@@ -298,15 +308,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       flex: 8, // take maximum space
                       child: Semantics(
-                        label: controller.getImageBytes().isNotEmpty ? "Clear image" : "Camera feed",
+                        label: controller.getImageBytes().isNotEmpty
+                            ? "Clear image"
+                            : "Camera feed",
                         excludeSemantics: true,
                         child: InkWell(
                           onTap: () => clearImageBuffer(controller),
                           child: OverflowBox(
                             alignment: Alignment.center,
                             child: SizedBox(
-                              width: cameraController!.value.previewSize!.height,
-                              height: cameraController!.value.previewSize!.width,
+                              width:
+                                  cameraController!.value.previewSize!.height,
+                              height:
+                                  cameraController!.value.previewSize!.width,
                               child: CameraPreview(cameraController!),
                             ),
                           ),
@@ -351,20 +365,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: InkWell(
                         onTap: () async => {
-                          await controller.unsetHistoryMode(),
+                          await controller.setHistoryMode(),
                           onToggleListening(controller),
                         },
                         child: Container(
                           color: Colors.transparent,
                           child: Center(
                             child: MicButton(
-                              conversationState: state.conversationState ?? ConversationState.idle,
-                              onTap: () async => {
-                                await controller.unsetHistoryMode(),
-                                onToggleListening(controller),
-                              },
+                              conversationState:
+                                  state.conversationState ??
+                                  ConversationState.idle,
                               baseColor: Colors.green,
-                              baseMode: "Ask any question"
+                              baseMode: "Ask any question with chat history",
                             ),
                           ),
                         ),
@@ -387,13 +399,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.transparent,
                           child: Center(
                             child: MicButton(
-                              conversationState: state.conversationState ?? ConversationState.idle,
-                              onTap: () async => {
-                                await controller.unsetHistoryMode(),
-                                onToggleListening(controller),
-                              },
+                              conversationState:
+                                  state.conversationState ??
+                                  ConversationState.idle,
                               baseColor: Colors.yellow,
-                              baseMode: "Ask question on an image"
+                              baseMode: "Ask question on an image",
                             ),
                           ),
                         ),
