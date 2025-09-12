@@ -55,7 +55,7 @@ class ConversationController extends ChangeNotifier {
               );
               if (state.isHistoryMode) {
                 processInput(inputLanguage);
-              } else if (_imageBytes.isNotEmpty) {
+              } else if (_imageBytes != Uint8List(0)) {
                 processInput(inputLanguage, imageBytes: _imageBytes);
               }
             }
@@ -63,6 +63,8 @@ class ConversationController extends ChangeNotifier {
         },
         onError: (error) {
           DeviceAudioHelper.playMicOFFSound();
+          _appContentState.conversationState = ConversationState.failed;
+          notifyListeners();
           print('Speech error: $error');
         },
       );
@@ -71,6 +73,10 @@ class ConversationController extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  void resetAgentChat() {
+    _agentService?.reset();
   }
 
   Future<void> processInput(
@@ -94,7 +100,7 @@ class ConversationController extends ChangeNotifier {
         ? state.userRecognisedWords
         : defaultPrompt;
 
-    if (_appContentState.interactionMode == InteractionMode.smartReading) {
+    if (_appContentState.interactionMode == InteractionMode.smartView) {
       promptText = defaultPrompt;
       _appContentState.userRecognisedWords = 'SMART READING MODE';
     } else if (_appContentState.interactionMode ==
@@ -148,6 +154,7 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> stopSpeaking() async {
     _appContentState.conversationState = ConversationState.idle;
+    _appContentState.interactionMode = InteractionMode.normal;
     _appContentState.agentResponse = '';
     _appContentState.userRecognisedWords = '';
     await _ttsService?.stop();
@@ -158,9 +165,14 @@ class ConversationController extends ChangeNotifier {
     _imageBytes = imageBytes;
   }
 
+  Uint8List getImageBytes() {
+    return _imageBytes;
+  }
+
   Future<void> doneSpeaking() async {
     if (_appContentState.conversationState == ConversationState.speaking) {
       _appContentState.conversationState = ConversationState.idle;
+      _appContentState.interactionMode = InteractionMode.normal;
       _appContentState.agentResponse = '';
       _appContentState.userRecognisedWords = '';
       await _ttsService?.stop();
@@ -177,7 +189,7 @@ class ConversationController extends ChangeNotifier {
       return;
     }
     if (_appContentState.conversationState == ConversationState.idle) {
-      if (_appContentState.interactionMode == InteractionMode.smartReading) {
+      if (_appContentState.interactionMode == InteractionMode.smartView) {
         await Analyticshelper.updateResponseCount("SmartReadDoubleTap");
       } else if (_appContentState.interactionMode ==
           InteractionMode.autoReading) {
@@ -199,7 +211,7 @@ class ConversationController extends ChangeNotifier {
       return;
     }
     if (_appContentState.conversationState == ConversationState.idle) {
-      if (_appContentState.interactionMode == InteractionMode.smartReading) {
+      if (_appContentState.interactionMode == InteractionMode.smartView) {
         await Analyticshelper.updateResponseCount("SmartReadSingleTap");
       } else if (_appContentState.interactionMode ==
           InteractionMode.autoReading) {
@@ -212,65 +224,72 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleSmartReadingMode(String communicationLanguage, bool enableTranslation) async {
+  Future<void> setSmartViewMode(
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
-    if (_appContentState.interactionMode != InteractionMode.smartReading) {
-      _appContentState.interactionMode = InteractionMode.smartReading;
-      _agentService?.initialize(
-        Secrets.geminiApiKey,
-        InteractionMode.smartReading,
-        communicationLanguage,
-        enableTranslation,
-      );
-      await _ttsService?.speak(
-        _textService.getSmartReaderText(communicationLanguage, true),
-        isIntermediate: true,
-      );
-      notifyListeners();
-    } else {
-      _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(
-        Secrets.geminiApiKey,
-        InteractionMode.normal,
-        communicationLanguage,
-        enableTranslation,
-      );
-      await _ttsService?.speak(
-        _textService.getSmartReaderText(communicationLanguage, false),
-        isIntermediate: true,
-      );
-      notifyListeners();
-    }
+    _appContentState.interactionMode = InteractionMode.smartView;
+    _agentService?.initialize(
+      Secrets.geminiApiKey,
+      InteractionMode.smartView,
+      communicationLanguage,
+      enableTranslation,
+    );
+    await _ttsService?.speak(
+      _textService.getSmartViewText(communicationLanguage, true),
+      isIntermediate: true,
+    );
+    notifyListeners();
   }
 
-  Future<void> toggleAutoReadingMode(String communicationLanguage, bool enableTranslation) async {
-    print('Toggle reading mode: ${_appContentState.interactionMode}');
-    if (_appContentState.interactionMode != InteractionMode.autoReading) {
-      _appContentState.interactionMode = InteractionMode.autoReading;
-      _agentService?.initialize(
-        Secrets.geminiApiKey,
-        InteractionMode.autoReading,
-        communicationLanguage,
-        enableTranslation,
-      );
-      await _ttsService?.speak(
-        _textService.getAutoReaderText(communicationLanguage, true),
-        isIntermediate: true,
-      );
-      notifyListeners();
-    } else {
-      _appContentState.interactionMode = InteractionMode.normal;
-      _agentService?.initialize(
-        Secrets.geminiApiKey,
-        InteractionMode.normal,
-        communicationLanguage,
-        enableTranslation,
-      );
-      await _ttsService?.speak(
-        _textService.getAutoReaderText(communicationLanguage, false),
-        isIntermediate: true,
-      );
-      notifyListeners();
-    }
+  Future<void> unSetSmartViewMode(
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
+    _appContentState.interactionMode = InteractionMode.normal;
+    _agentService?.initialize(
+      Secrets.geminiApiKey,
+      InteractionMode.normal,
+      communicationLanguage,
+      enableTranslation,
+    );
+    await _ttsService?.speak(
+      _textService.getSmartViewText(communicationLanguage, false),
+      isIntermediate: true,
+    );
+    notifyListeners();
+  }
+
+  Future<void> setAutoReadingMode(
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
+    _appContentState.interactionMode = InteractionMode.autoReading;
+    _agentService?.initialize(
+      Secrets.geminiApiKey,
+      InteractionMode.autoReading,
+      communicationLanguage,
+      enableTranslation,
+    );
+    await _ttsService?.speak(
+      _textService.getAutoReaderText(communicationLanguage, true),
+      isIntermediate: true,
+    );
+    notifyListeners();
+  }
+
+  Future<void> unSetAutoReadingMode(
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
+    _appContentState.interactionMode = InteractionMode.normal;
+    _agentService?.initialize(
+      Secrets.geminiApiKey,
+      InteractionMode.normal,
+      communicationLanguage,
+      enableTranslation,
+    );
+    notifyListeners();
   }
 }

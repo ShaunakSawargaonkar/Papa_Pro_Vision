@@ -47,14 +47,18 @@ class AgentService {
   Keep the tone clear, natural, and easy to follow, like a friend reading aloud.
 """;
 
-  String _getSystemPrompt(InteractionMode mode, String communicationLanguage, bool enableTranslation) {
+  String _getSystemPrompt(
+    InteractionMode mode,
+    String communicationLanguage,
+    bool enableTranslation,
+  ) {
     switch (mode) {
       case InteractionMode.normal:
         return _systemPrompt.replaceAll(
           '{communicationLanguage}',
           communicationLanguage,
         );
-      case InteractionMode.smartReading:
+      case InteractionMode.smartView:
         return _readingModeSystemPrompt.replaceAll(
           '{communicationLanguage}',
           communicationLanguage,
@@ -85,7 +89,10 @@ class AgentService {
     String communicationLanguage,
     bool enableTranslation,
   ) {
-    communicationLanguage = TextService.inputLanguageToCommunicationLanguage[communicationLanguage] ?? 'English';
+    communicationLanguage =
+        TextService
+            .inputLanguageToCommunicationLanguage[communicationLanguage] ??
+        'English';
     if (mode == InteractionMode.normal) {
       _generativeModel = GenerativeModel(
         model: 'gemini-2.0-flash',
@@ -129,7 +136,9 @@ class AgentService {
 
     late Content content;
 
-    if (checkIfIgnoreImage(prompt) || imageBytes == null) {
+    if (checkIfIgnoreImage(prompt) ||
+        imageBytes == null ||
+        imageBytes == Uint8List(0)) {
       content = Content.multi([TextPart(prompt)]);
     } else {
       content = Content.multi([

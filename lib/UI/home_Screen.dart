@@ -51,14 +51,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final bool useFrontCamera = prefs?.getBool('useFrontCamera') ?? false;
 
-       _cameras = await availableCameras();
+      _cameras = await availableCameras();
       // Find the appropriate camera
       CameraDescription selectedCamera;
       if (useFrontCamera && _cameras!.length > 1) {
         // Look for front camera
         selectedCamera = _cameras!.firstWhere(
           (camera) => camera.lensDirection == CameraLensDirection.front,
-          orElse: () => _cameras![0], // Fallback to first camera if front not found
+          orElse: () =>
+              _cameras![0], // Fallback to first camera if front not found
         );
       } else {
         // Use back camera (usually index 0)
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
           orElse: () => _cameras![0], // Fallback to first camera
         );
       }
-     
+
       if (_cameras != null && _cameras!.isNotEmpty) {
         cameraController = CameraController(
           selectedCamera,
@@ -101,21 +102,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void onToggleListening(ConversationController controller) async {
+  Future<void> onToggleListening(ConversationController controller) async {
     print(
-      'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ',
+      'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
 
     if (controller.state.conversationState == ConversationState.idle) {
       if (controller.state.interactionMode == InteractionMode.normal) {
         //Capture image
+        Uint8List? imageBytes = Uint8List(0);
         if (!controller.state.isHistoryMode) {
-          // _captureImage(controller).then((imageBytes) {
-          //   if (imageBytes != null) {
-          //     controller.setImageBytes(imageBytes);
-          //   }
-          // });
-          var imageBytes = await _captureImage(controller);
+          imageBytes = await _captureImage(controller);
           if (imageBytes != null) {
             controller.setImageBytes(imageBytes);
           }
@@ -123,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
-      } 
+      }
       // Reading modes
       else {
         print('Capturing image in smart');
@@ -158,21 +155,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void onToggleSmartReadingMode(
-    ConversationController controller,
-    String communicationLanguage,
-  ) async {
-    print(
-      'Before toggle Smart Reading Mode: ${controller.state.interactionMode}',
-    );
-    await controller.toggleSmartReadingMode(communicationLanguage, prefs?.getBool('enableTranslation') ?? false);
-  }
-
-  void onToggleAutoReadingMode(
-    ConversationController controller,
-    String communicationLanguage,
-  ) async {
-    await controller.toggleAutoReadingMode(communicationLanguage, prefs?.getBool('enableTranslation') ?? false);
+  void clearImageBuffer(ConversationController controller) async {
+    print("Clearing image buffer");
+    DeviceAudioHelper.playDeleteSound();
+    if (controller.getImageBytes() != Uint8List(0)) {
+      print("Cearing image buffer2");
+      controller.setImageBytes(Uint8List(0));
+      controller.resetAgentChat();
+    }
   }
 
   @override
@@ -270,10 +260,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     // LEFT clickable border
                     InkWell(
-                      onTap: () => onToggleAutoReadingMode(
-                        controller,
-                        prefs?.getString('inputLanguage') ?? 'en_IN',
-                      ),
+                      onTap: () async {
+                        await controller.unsetHistoryMode();
+                        await controller.setAutoReadingMode(
+                          prefs?.getString('inputLanguage') ?? 'en_IN',
+                          prefs?.getBool('enableTranslation') ?? false,
+                        );
+                        onToggleListening(controller);
+                      },
                       child: Container(
                         padding: EdgeInsets.only(right: 10),
                         width: MediaQuery.of(context).size.width * 0.15,
@@ -282,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: RotatedBox(
                           quarterTurns: 1,
                           child: Text(
-                            "Auto Reader",
+                            "Reader Mode",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 30),
                           ),
@@ -293,18 +287,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     // CENTER Camera feed
                     Expanded(
                       flex: 8, // take maximum space
-                      child: ClipRect(
+                      child: InkWell(
+                        onTap: () => clearImageBuffer(controller),
                         child: OverflowBox(
                           alignment: Alignment.center,
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width:
-                                  cameraController!.value.previewSize!.height,
-                              height:
-                                  cameraController!.value.previewSize!.width,
-                              child: CameraPreview(cameraController!),
-                            ),
+                          child: SizedBox(
+                            width: cameraController!.value.previewSize!.height,
+                            height: cameraController!.value.previewSize!.width,
+                            child: CameraPreview(cameraController!),
                           ),
                         ),
                       ),
@@ -312,10 +302,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // RIGHT clickable border
                     InkWell(
-                      onTap: () => onToggleSmartReadingMode(
-                        controller,
-                        prefs?.getString('inputLanguage') ?? 'en_IN',
-                      ),
+                      onTap: () async {
+                        await controller.unsetHistoryMode();
+                        controller.setSmartViewMode(
+                          prefs?.getString('inputLanguage') ?? 'en_IN',
+                          prefs?.getBool('enableTranslation') ?? false,
+                        );
+                        onToggleListening(controller);
+                      },
+
                       child: Container(
                         padding: EdgeInsets.only(left: 10),
                         height: cameraController!.value.previewSize!.width,
@@ -324,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: RotatedBox(
                           quarterTurns: 3,
                           child: Text(
-                            "Smart Reader",
+                            "Smart View Mode",
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 30),
                           ),
@@ -338,91 +333,93 @@ class _HomeScreenState extends State<HomeScreen> {
                 flex: 3,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: InkWell(
-                    onTap: () async => {
-                      await controller.unsetHistoryMode(),
-                      onToggleListening(controller),
-                    },
-                    onDoubleTap: () async => {
-                      await controller.setHistoryMode(),
-                      onToggleListening(controller),
-                    },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: state.agentResponse.isNotEmpty
-                              ? SingleChildScrollView(
-                                  child: Text(
-                                    state.agentResponse,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              : Text(
-                                  switch (state.conversationState) {
-                                    ConversationState.listening =>
-                                      'Listening...',
-                                    ConversationState.processing =>
-                                      'Processing...\nYou said: ${state.userRecognisedWords}',
-                                    ConversationState.speaking =>
-                                      state.agentResponse,
-                                    ConversationState.failed =>
-                                      'Failed to process your request',
-                                    ConversationState.idle =>
-                                      'Tap the mic and speak',
-                                    _ => 'Tap the mic and speak',
-                                  },
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                        ),
-                        Expanded(
-                          child: Transform.scale(
-                            scale: 2.0,
-                            child: FloatingActionButton(
-                              onPressed:
-                                  null, // The InkWell now handles the tap
-                              backgroundColor:
-                                  state.conversationState ==
-                                      ConversationState.listening
-                                  ? Colors.white
-                                  : Colors.yellow,
-                              foregroundColor:
-                                  state.conversationState ==
-                                      ConversationState.listening
-                                  ? Colors.yellow
-                                  : Colors.white,
-                              tooltip:
-                                  state.conversationState ==
-                                      ConversationState.listening
-                                  ? 'Stop listening'
-                                  : 'Start listening',
-                              elevation: 8.0,
-                              shape: const CircleBorder(
-                                side: BorderSide(
-                                  color: Colors.yellow,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Icon(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Transform.scale(
+                          scale: 2.0,
+                          child: FloatingActionButton(
+                            onPressed: () async => {
+                              await controller.setHistoryMode(),
+                              onToggleListening(controller),
+                            },
+                            backgroundColor:
                                 state.conversationState ==
-                                        ConversationState.listening
-                                    ? Icons.mic_off
-                                    : Icons.mic,
-                                size: 40,
-                              ),
+                                    ConversationState.listening
+                                ? Colors.white
+                                : Colors.green,
+                            foregroundColor:
+                                state.conversationState ==
+                                    ConversationState.listening
+                                ? Colors.green
+                                : Colors.white,
+                            tooltip:
+                                state.conversationState ==
+                                    ConversationState.listening
+                                ? 'Stop listening'
+                                : 'Start listening',
+                            elevation: 8.0,
+                            shape: const CircleBorder(
+                              side: BorderSide(color: Colors.green, width: 2),
+                            ),
+                            child: Icon(
+                              state.conversationState ==
+                                      ConversationState.listening
+                                  ? Icons.mic_off
+                                  : Icons.mic,
+                              size: 40,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // Vertical divider between mic buttons
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.2,
+                        width: 5,
+                        color: Colors.grey.withOpacity(0.5),
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+
+                      Expanded(
+                        child: Transform.scale(
+                          scale: 2.0,
+                          child: FloatingActionButton(
+                            onPressed: () async => {
+                              await controller.unsetHistoryMode(),
+                              onToggleListening(controller),
+                            }, // The InkWell now handles the tap
+                            backgroundColor:
+                                state.conversationState ==
+                                    ConversationState.listening
+                                ? Colors.white
+                                : Colors.yellow,
+                            foregroundColor:
+                                state.conversationState ==
+                                    ConversationState.listening
+                                ? Colors.yellow
+                                : Colors.white,
+                            tooltip:
+                                state.conversationState ==
+                                    ConversationState.listening
+                                ? 'Stop listening'
+                                : 'Start listening',
+                            elevation: 8.0,
+                            shape: const CircleBorder(
+                              side: BorderSide(color: Colors.yellow, width: 2),
+                            ),
+                            child: Icon(
+                              state.conversationState ==
+                                      ConversationState.listening
+                                  ? Icons.mic_off
+                                  : Icons.mic,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
