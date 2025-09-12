@@ -11,19 +11,9 @@ class TextService {
       case InteractionMode.smartView:
         switch (inputLanguage) {
           case 'mr_IN':
-            return "चित्रातील मजकूर वाचा. मजकूर अपुरा दिसत असेल तर कॅमेरा कसा हलवायचा ते मला सांगा.";
+            return "प्रतिमेत तुम्हाला काय दिसते ते वर्णन करा. प्रतिमा मुख्यतः मजकूराची असेल तर तो स्पष्टपणे वाचा. मजकूर किंवा प्रतिमा अस्पष्ट दिसत असेल तर कॅमेरा कसा समायोजित करावा हे सुचवा.";
           default:
-            return "Read the text in the image. If the text appears cut off, let me know how to adjust the camera for a better view";
-          //Shrini TODO
-          // return """You are an AI assistant helping blind users understand images.
-          //  Start with a 3-4 line overview, then provide detailed descriptions.
-          //  If the image contains predominantly text, read it clearly. If text or image is unclear,
-          //   suggest camera adjustments.""";
-
-          // return """तुम्ही आंधळ्या वापरकर्त्यांना चित्र समजावून सांगणारे AI सहाय्यक आहात.
-          //  प्रथम ३-४ ओळींत चित्राचा सारांश द्या, नंतर तपशीलवार वर्णन करा.
-          //  जर चित्रात मुख्यतः मजकूर असेल तर तो स्पष्टपणे वाचा. मजकूर किंवा चित्र अस्पष्ट असेल तर,
-          //  कॅमेरा कसा समायोजित करावा याचे सूचन द्या.""";
+            return "Describe what you see in the image. If the image is predominantly text, read it clearly. If text or image is unclear, suggest camera adjustments.";
         }
       case InteractionMode.autoReading:
         switch (inputLanguage) {
@@ -43,12 +33,7 @@ class TextService {
   }
 
   String getProcessingResponseText(String inputLanguage) {
-    switch (inputLanguage) {
-      case 'mr_IN':
-        return "कृपया प्रतीक्षा करा. विचार करतोय";
-      default:
-        return "Please wait. Thinking";
-    }
+    return "Processing response";
   }
 
   String getSmartViewText(String inputLanguage, bool isStart) {

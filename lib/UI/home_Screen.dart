@@ -1,14 +1,15 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
-import 'dart:typed_data';
 import 'package:papa_pro_vision/UI/profile_page.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:papa_pro_vision/enums.dart';
+import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -197,18 +198,23 @@ class _HomeScreenState extends State<HomeScreen> {
             appBar: AppBar(
               title: const Text('Papa Pro Vision'),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfilePage(),
-                      ),
-                    );
-                    await _initialize();
-                    // onSettingsChanged?.call();
-                  },
+                Semantics(
+                  label: "Profile Settings button",
+                  excludeSemantics: true,
+                  child:
+                    IconButton(
+                      icon: const Icon(Icons.settings),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfilePage(),
+                          ),
+                        );
+                        await _initialize();
+                        // onSettingsChanged?.call();
+                      },
+                    ),
                 ),
               ],
             ),
@@ -237,17 +243,21 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: AppBar(
             title: const Text('Papa ProVision'),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfilePage(),
-                    ),
-                  );
-                  await _initialize();
-                },
+              Semantics(
+                label: "Profile Settings button",
+                excludeSemantics: true,
+                child: IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePage(),
+                      ),
+                    );
+                    await _initialize();
+                  },
+                ),
               ),
             ],
           ),
@@ -287,14 +297,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     // CENTER Camera feed
                     Expanded(
                       flex: 8, // take maximum space
-                      child: InkWell(
-                        onTap: () => clearImageBuffer(controller),
-                        child: OverflowBox(
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: cameraController!.value.previewSize!.height,
-                            height: cameraController!.value.previewSize!.width,
-                            child: CameraPreview(cameraController!),
+                      child: Semantics(
+                        label: controller.getImageBytes().isNotEmpty ? "Clear image" : "Camera feed",
+                        excludeSemantics: true,
+                        child: InkWell(
+                          onTap: () => clearImageBuffer(controller),
+                          child: OverflowBox(
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: cameraController!.value.previewSize!.height,
+                              height: cameraController!.value.previewSize!.width,
+                              child: CameraPreview(cameraController!),
+                            ),
                           ),
                         ),
                       ),
@@ -331,98 +345,91 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Expanded(
                 flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Transform.scale(
-                          scale: 2.0,
-                          child: FloatingActionButton(
-                            onPressed: () async => {
-                              await controller.setHistoryMode(),
-                              onToggleListening(controller),
-                            },
-                            backgroundColor:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? Colors.white
-                                : Colors.green,
-                            foregroundColor:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? Colors.green
-                                : Colors.white,
-                            tooltip:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? 'Stop listening'
-                                : 'Start listening',
-                            elevation: 8.0,
-                            shape: const CircleBorder(
-                              side: BorderSide(color: Colors.green, width: 2),
-                            ),
-                            child: Icon(
-                              state.conversationState ==
-                                      ConversationState.listening
-                                  ? Icons.mic_off
-                                  : Icons.mic,
-                              size: 40,
+                child: Row(
+                  children: [
+                    // Left half - entire area clickable
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async => {
+                          await controller.unsetHistoryMode(),
+                          onToggleListening(controller),
+                        },
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Center(
+                            child: MicButton(
+                              conversationState: state.conversationState ?? ConversationState.idle,
+                              onTap: () async => {
+                                await controller.unsetHistoryMode(),
+                                onToggleListening(controller),
+                              },
+                              baseColor: Colors.green,
+                              baseMode: "Ask any question"
                             ),
                           ),
                         ),
                       ),
-
-                      // Vertical divider between mic buttons
-                      Container(
-                        height: MediaQuery.of(context).size.height * 0.2,
-                        width: 5,
-                        color: Colors.grey.withOpacity(0.5),
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-
-                      Expanded(
-                        child: Transform.scale(
-                          scale: 2.0,
-                          child: FloatingActionButton(
-                            onPressed: () async => {
-                              await controller.unsetHistoryMode(),
-                              onToggleListening(controller),
-                            }, // The InkWell now handles the tap
-                            backgroundColor:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? Colors.white
-                                : Colors.yellow,
-                            foregroundColor:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? Colors.yellow
-                                : Colors.white,
-                            tooltip:
-                                state.conversationState ==
-                                    ConversationState.listening
-                                ? 'Stop listening'
-                                : 'Start listening',
-                            elevation: 8.0,
-                            shape: const CircleBorder(
-                              side: BorderSide(color: Colors.yellow, width: 2),
-                            ),
-                            child: Icon(
-                              state.conversationState ==
-                                      ConversationState.listening
-                                  ? Icons.mic_off
-                                  : Icons.mic,
-                              size: 40,
+                    ),
+                    // Vertical divider between mic buttons
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      width: 2,
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                    // Right half - entire area clickable
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async => {
+                          await controller.unsetHistoryMode(),
+                          onToggleListening(controller),
+                        },
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Center(
+                            child: MicButton(
+                              conversationState: state.conversationState ?? ConversationState.idle,
+                              onTap: () async => {
+                                await controller.unsetHistoryMode(),
+                                onToggleListening(controller),
+                              },
+                              baseColor: Colors.yellow,
+                              baseMode: "Ask question on an image"
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+              if (state.agentResponse.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: state.agentResponse),
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Response copied to clipboard'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy Response'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
