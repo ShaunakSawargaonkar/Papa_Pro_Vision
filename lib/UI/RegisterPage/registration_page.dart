@@ -130,17 +130,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
         'isActive': true,
         'createdAt': FieldValue.serverTimestamp(),
         'Analytics': {
-          'ResponseCount': 0,
-          'AutoReadSingleTap': 0,
-          'AutoReadDoubleTap': 0,
-          'DoubleTap': 0,
-          'SingleTap': 0,
-          'SmartReadSingleTap': 0,
-          'SmartReadDoubleTap': 0,
+          'TotalResponseCount': 0,
           'TTSErrorCount': 0,
           'STTErrorCount': 0,
           'PromptErrorCount': 0,
           'CancelledRequestCount': 0,
+          'ImageCaptureCount': 0,
+          'ImageWithHistoryCount': 0,
+          'JustLLMInteractionCount': 0,
+          'SmartViewModeCount': 0,
+          'ReaderModeCount': 0,
+          'TranslationCount': 0,
+          'MarathiResponseCount': 0,
+          'EnglishResponseCount': 0,
         },
       });
 
@@ -189,7 +191,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Name/नाव *'),
+                      decoration: const InputDecoration(
+                        labelText: 'Name/नाव *',
+                      ),
                       validator: (value) =>
                           value?.isEmpty ?? true ? 'Name is required' : null,
                     ),
@@ -222,7 +226,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedGender,
-                      decoration: const InputDecoration(labelText: 'Gender/लिंग *'),
+                      decoration: const InputDecoration(
+                        labelText: 'Gender/लिंग *',
+                      ),
                       items: ['Male', 'Female', 'Other']
                           .map(
                             (gender) => DropdownMenuItem(

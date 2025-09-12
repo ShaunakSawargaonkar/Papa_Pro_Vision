@@ -6,4 +6,4 @@ enum ConversationState {
   failed, // error occurred while setting up speech understanding
 }
 
-enum InteractionMode { normal, smartReading, autoReading }
+enum InteractionMode { normal, smartView, autoReading }
