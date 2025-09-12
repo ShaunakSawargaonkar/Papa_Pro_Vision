@@ -33,7 +33,12 @@ class TextService {
   }
 
   String getProcessingResponseText(String inputLanguage) {
-    return "Processing response";
+    switch (inputLanguage) {
+      case 'mr_IN':
+        return 'विचार करतोय';
+      default:
+        return 'Processing Response';
+    }
   }
 
   String getSmartViewText(String inputLanguage, bool isStart) {

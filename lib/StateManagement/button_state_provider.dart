@@ -55,7 +55,7 @@ class ConversationController extends ChangeNotifier {
                 'Image bytes: ${_imageBytes.isNotEmpty} ${state.isHistoryMode}',
               );
               if (state.isHistoryMode) {
-                processInput(inputLanguage);
+                processInput(inputLanguage, historyMode: true);
               } else if (_imageBytes.isNotEmpty) {
                 processInput(inputLanguage, imageBytes: _imageBytes);
               }
@@ -82,6 +82,7 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> processInput(
     String inputLanguage, {
+    bool historyMode = false,
     Uint8List? imageBytes,
   }) async {
     var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
@@ -93,6 +94,9 @@ class ConversationController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    inputLanguage =
+        (await SharedPreferences.getInstance()).getString('inputLanguage') ??
+        'en_IN';
     String defaultPrompt = _textService.getPromptText(
       inputLanguage,
       state.interactionMode,
@@ -122,11 +126,19 @@ class ConversationController extends ChangeNotifier {
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
-    final response = await _agentService?.generateResponse(
-      promptText,
-      imageBytes: imageBytes,
-      inputLanguage,
-    );
+    late String? response;
+    if (!historyMode) {
+      response = await _agentService?.generateResponse(
+        promptText,
+        imageBytes: imageBytes,
+        inputLanguage,
+      );
+    } else {
+      response = await _agentService?.generateResponse(
+        promptText,
+        inputLanguage,
+      );
+    }
 
     if (response != null &&
         response.isNotEmpty &&

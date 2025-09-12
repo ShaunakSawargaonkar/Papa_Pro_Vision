@@ -110,14 +110,6 @@ class AgentService {
     }
   }
 
-  bool checkIfIgnoreImage(String promptText) {
-    promptText.toLowerCase();
-    if (promptText.contains("ignore the image")) {
-      return true; // Placeholder logic, replace with actual condition
-    }
-    return false; // Placeholder, replace with actual logic
-  }
-
   String cleanAgentResponse(String responseText) {
     return responseText.replaceAll('*', ' ').replaceAll('"', '');
   }
@@ -131,14 +123,13 @@ class AgentService {
     String inputLanguage, {
     Uint8List? imageBytes,
   }) async {
-    if (_appContentState.conversationState != ConversationState.processing)
+    if (_appContentState.conversationState != ConversationState.processing) {
       return "";
+    }
 
     late Content content;
 
-    if (checkIfIgnoreImage(prompt) ||
-        imageBytes == null ||
-        imageBytes == Uint8List(0)) {
+    if (imageBytes == null || imageBytes == Uint8List(0)) {
       content = Content.multi([TextPart(prompt)]);
     } else {
       content = Content.multi([
