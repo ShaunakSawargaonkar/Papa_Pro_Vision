@@ -92,7 +92,7 @@ class GoogleTTSService implements TextToSpeechService {
           return;
         await _audioPlayerService?.enqueue(audioBytes);
       } catch (e) {
-        await Analyticshelper.updateResponseCount("TTSErrorCount");
+        Analyticshelper.updateResponseCount("TTSErrorCount");
         print("TTS error for '$trimmed': $e");
       }
     }
