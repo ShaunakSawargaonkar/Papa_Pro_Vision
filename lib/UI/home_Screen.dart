@@ -109,6 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
 
+    // prefs = await SharedPreferences.getInstance();
+    print(prefs?.getString('inputLanguage'));
+
     if (controller.state.conversationState == ConversationState.idle) {
       if (controller.state.interactionMode == InteractionMode.normal) {
         //Capture image
@@ -222,6 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                       await _initialize();
+                      controller.initializeAgent(
+                        prefs?.getString('inputLanguage') ?? 'en_IN',
+                        prefs?.getBool('enableTranslation') ?? false,
+                        InteractionMode.normal,
+                      );
                       // onSettingsChanged?.call();
                     },
                   ),
@@ -266,6 +274,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                     await _initialize();
+                    controller.initializeAgent(
+                      prefs?.getString('inputLanguage') ?? 'en_IN',
+                      prefs?.getBool('enableTranslation') ?? false,
+                      InteractionMode.normal,
+                    );
                   },
                 ),
               ),
