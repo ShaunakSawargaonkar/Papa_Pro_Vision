@@ -94,9 +94,6 @@ class ConversationController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    inputLanguage =
-        (await SharedPreferences.getInstance()).getString('inputLanguage') ??
-        'en_IN';
     String defaultPrompt = _textService.getPromptText(
       inputLanguage,
       state.interactionMode,
@@ -152,6 +149,16 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
+  void initializeAgent(String inputLanguage, bool enableTranslation, InteractionMode interactionMode) {
+    print('Initializing agent for ${interactionMode} ${inputLanguage} ${enableTranslation}');
+    _agentService?.initialize(
+      Secrets.geminiApiKey,
+      interactionMode,
+      inputLanguage,
+      enableTranslation,
+    );
+  }
+
   Future<void> startListening(String inputLanguage) async {
     _appContentState.conversationState = ConversationState.listening;
     _appContentState.agentResponse = '';
@@ -174,11 +181,10 @@ class ConversationController extends ChangeNotifier {
       SharedPreferences? prefs = await SharedPreferences.getInstance();
       _appContentState.interactionMode = InteractionMode.normal;
 
-      _agentService?.initialize(
-        Secrets.geminiApiKey,
-        InteractionMode.smartView,
+      initializeAgent(
         prefs.getString('inputLanguage') ?? 'en_IN',
         prefs.getBool('enableTranslation') ?? false,
+        InteractionMode.normal,
       );
     }
     _appContentState.userRecognisedWords = '';
@@ -202,11 +208,10 @@ class ConversationController extends ChangeNotifier {
         SharedPreferences? prefs = await SharedPreferences.getInstance();
         _appContentState.interactionMode = InteractionMode.normal;
 
-        _agentService?.initialize(
-          Secrets.geminiApiKey,
-          InteractionMode.smartView,
+        initializeAgent(
           prefs.getString('inputLanguage') ?? 'en_IN',
           prefs.getBool('enableTranslation') ?? false,
+          InteractionMode.normal,
         );
       }
 
@@ -267,12 +272,7 @@ class ConversationController extends ChangeNotifier {
     Analyticshelper.updateResponseCount("SmartViewModeCount");
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
-    _agentService?.initialize(
-      Secrets.geminiApiKey,
-      InteractionMode.smartView,
-      communicationLanguage,
-      enableTranslation,
-    );
+    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.smartView);
     await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
@@ -285,12 +285,7 @@ class ConversationController extends ChangeNotifier {
     bool enableTranslation,
   ) async {
     _appContentState.interactionMode = InteractionMode.normal;
-    _agentService?.initialize(
-      Secrets.geminiApiKey,
-      InteractionMode.normal,
-      communicationLanguage,
-      enableTranslation,
-    );
+    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.normal);
     await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, false),
       isIntermediate: true,
@@ -304,12 +299,7 @@ class ConversationController extends ChangeNotifier {
   ) async {
     Analyticshelper.updateResponseCount("ReaderModeCount");
     _appContentState.interactionMode = InteractionMode.autoReading;
-    _agentService?.initialize(
-      Secrets.geminiApiKey,
-      InteractionMode.autoReading,
-      communicationLanguage,
-      enableTranslation,
-    );
+    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.autoReading);
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount");
     }
@@ -325,12 +315,7 @@ class ConversationController extends ChangeNotifier {
     bool enableTranslation,
   ) async {
     _appContentState.interactionMode = InteractionMode.normal;
-    _agentService?.initialize(
-      Secrets.geminiApiKey,
-      InteractionMode.normal,
-      communicationLanguage,
-      enableTranslation,
-    );
+    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.normal);
     notifyListeners();
   }
 }
