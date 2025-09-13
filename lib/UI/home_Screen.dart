@@ -97,6 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
       Analyticshelper.updateResponseCount("ImageCaptureCount");
       DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
+      if (controller.state.interactionMode == InteractionMode.normal) {
+        await Future.delayed(Duration(milliseconds: 100)); // wait for camera sound to complete
+      }
       return await picture.readAsBytes();
     } catch (e) {
       print("Error taking picture or processing: $e");
@@ -123,11 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         } else {
           if (controller.getImageBytes().isNotEmpty) {
-            await Analyticshelper.updateResponseCount(
+            Analyticshelper.updateResponseCount(
               "LLMInteractionWithImageCount",
             );
           } else {
-            await Analyticshelper.updateResponseCount(
+            Analyticshelper.updateResponseCount(
               "JustLLMInteractionCount",
             );
           }
@@ -162,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       print('Stopping speaking');
-      await Analyticshelper.updateResponseCount("CancelledRequestCount");
+      Analyticshelper.updateResponseCount("CancelledRequestCount");
       await controller.stopSpeaking();
     }
     print(

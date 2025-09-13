@@ -229,16 +229,6 @@ class ConversationController extends ChangeNotifier {
       print("No internet connection. Cannot set history mode.");
       return;
     }
-    if (_appContentState.conversationState == ConversationState.idle) {
-      if (_appContentState.interactionMode == InteractionMode.smartView) {
-        await Analyticshelper.updateResponseCount("SmartReadDoubleTap");
-      } else if (_appContentState.interactionMode ==
-          InteractionMode.autoReading) {
-        await Analyticshelper.updateResponseCount("AutoReadDoubleTap");
-      } else {
-        await Analyticshelper.updateResponseCount("DoubleTap");
-      }
-    }
     _appContentState.isHistoryMode = true;
     notifyListeners();
   }
@@ -250,16 +240,6 @@ class ConversationController extends ChangeNotifier {
     if (!isInternetAvailable) {
       print("No internet connection. Cannot perform unsetHistoryMode.");
       return;
-    }
-    if (_appContentState.conversationState == ConversationState.idle) {
-      if (_appContentState.interactionMode == InteractionMode.smartView) {
-        await Analyticshelper.updateResponseCount("SmartReadSingleTap");
-      } else if (_appContentState.interactionMode ==
-          InteractionMode.autoReading) {
-        await Analyticshelper.updateResponseCount("AutoReadSingleTap");
-      } else {
-        await Analyticshelper.updateResponseCount("SingleTap");
-      }
     }
     _appContentState.isHistoryMode = false;
     notifyListeners();
@@ -273,7 +253,7 @@ class ConversationController extends ChangeNotifier {
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
     initializeAgent(communicationLanguage, enableTranslation, InteractionMode.smartView);
-    await _ttsService?.speak(
+    _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
     );
@@ -303,7 +283,7 @@ class ConversationController extends ChangeNotifier {
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount");
     }
-    await _ttsService?.speak(
+    _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
       isIntermediate: true,
     );
