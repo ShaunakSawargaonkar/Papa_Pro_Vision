@@ -67,7 +67,6 @@ class DeviceAudioHelper {
   static Future<void> playInternetNotAvailableSound() async {
     print("Playing Internet Not Available Sound2");
     final FlutterTts _flutterTts = FlutterTts();
-    Analyticshelper.updateResponseCount("NoInternetTTSCount");
     _flutterTts.speak(
       'Internet not available. Please check your connection and try again.',
     );

@@ -1,7 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
+import 'dart:io';
 
 class Devicehelper {
   static bool IsDevanagari(String text) {
@@ -25,15 +25,18 @@ class Devicehelper {
     String methodCallName = "JustChecking",
   }) async {
     try {
-      final response = await http
-          .get(Uri.parse('https://www.google.com'))
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode != 200) {
+      // Much faster: Just check DNS resolution instead of full HTTP request
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 2));
+
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      } else {
         print("Playing Internet Not Available Sound");
         await DeviceAudioHelper.playInternetNotAvailableSound();
         return false;
       }
-      return true;
     } catch (e) {
       print('No internet connection, Method call : $methodCallName');
       await DeviceAudioHelper.playInternetNotAvailableSound();
