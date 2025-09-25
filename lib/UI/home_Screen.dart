@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/UI/profile_page.dart';
-import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:papa_pro_vision/enums.dart';
+import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
 import 'dart:typed_data';
 import 'dart:io';
 
@@ -165,6 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
     print(
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
+
+    // prefs = await SharedPreferences.getInstance();
     // Image mode
     print(prefs?.getString('inputLanguage'));
 

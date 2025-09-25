@@ -1,14 +1,11 @@
-import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'dart:io';
-import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:ffmpeg_kit_flutter_new_video/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new_video/return_code.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ffmpeg_kit_flutter_new_video/ffprobe_kit.dart';
-// import 'package:path/path.dart' as path;
+import 'dart:typed_data';
 
 class Devicehelper {
   static bool IsDevanagari(String text) {
