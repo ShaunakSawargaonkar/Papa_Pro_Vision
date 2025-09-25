@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
@@ -28,6 +29,7 @@ class ConversationController extends ChangeNotifier {
   AppContentState _appContentState = AppContentState();
   Uint8List _imageBytes = Uint8List(0);
   final TextService _textService = TextService();
+  File videoFile = File('');
 
   Future<void> initialize(String inputLanguage, bool enableTranslation) async {
     _ttsService ??= setupTTSService('google', this);
@@ -50,14 +52,18 @@ class ConversationController extends ChangeNotifier {
           if (status == 'done') {
             DeviceAudioHelper.playMicOFFSound();
             if (state.userRecognisedWords.isNotEmpty) {
-              print('Processing input');
               print(
-                'Image bytes: ${_imageBytes.isNotEmpty} ${state.isHistoryMode}',
+                'Inside speech done: ${_imageBytes.isNotEmpty} ${state.isHistoryMode} ${videoFile.path.isNotEmpty}',
               );
               if (state.isHistoryMode) {
+                print("Inside History file processing");
                 processInput(inputLanguage, historyMode: true);
               } else if (_imageBytes.isNotEmpty) {
+                print("Inside image file processing");
                 processInput(inputLanguage, imageBytes: _imageBytes);
+              } else if (videoFile.path.isNotEmpty) {
+                print("Inside video file processing");
+                processInput(inputLanguage, videoFile: videoFile);
               }
             }
           }
@@ -84,7 +90,9 @@ class ConversationController extends ChangeNotifier {
     String inputLanguage, {
     bool historyMode = false,
     Uint8List? imageBytes,
+    File? videoFile,
   }) async {
+    SharedPreferences? prefs;
     var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'processInput',
     );
@@ -94,6 +102,8 @@ class ConversationController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    prefs = await SharedPreferences.getInstance();
+    inputLanguage = prefs.getString('inputLanguage') ?? 'en_IN';
     String defaultPrompt = _textService.getPromptText(
       inputLanguage,
       state.interactionMode,
@@ -114,7 +124,8 @@ class ConversationController extends ChangeNotifier {
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
     notifyListeners();
-    if (_appContentState.interactionMode == InteractionMode.normal) {
+    if (_appContentState.interactionMode == InteractionMode.normal ||
+        _appContentState.interactionMode == InteractionMode.video) {
       await _ttsService?.speak(
         _textService.getProcessingResponseText(inputLanguage),
         isIntermediate: true,
@@ -124,13 +135,23 @@ class ConversationController extends ChangeNotifier {
       _agentService?.reset();
     }
     late String? response;
-    if (!historyMode) {
+    if (!state.isHistoryMode && imageBytes != null) {
+      print("Inside image generateResponse call");
       response = await _agentService?.generateResponse(
         promptText,
         imageBytes: imageBytes,
         inputLanguage,
       );
+    } else if (!state.isHistoryMode && videoFile != null) {
+      print("Inside video generateResponse call");
+
+      response = await _agentService?.generateResponse(
+        promptText,
+        videoFile: videoFile,
+        inputLanguage,
+      );
     } else {
+      print("Inside history generateResponse call");
       response = await _agentService?.generateResponse(
         promptText,
         inputLanguage,
@@ -149,14 +170,41 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  void initializeAgent(String inputLanguage, bool enableTranslation, InteractionMode interactionMode) {
-    print('Initializing agent for ${interactionMode} ${inputLanguage} ${enableTranslation}');
+  void initializeAgent(
+    String inputLanguage,
+    bool enableTranslation,
+    InteractionMode interactionMode,
+  ) {
+    print(
+      'Initializing agent for ${interactionMode} ${inputLanguage} ${enableTranslation}',
+    );
     _agentService?.initialize(
       Secrets.geminiApiKey,
       interactionMode,
       inputLanguage,
       enableTranslation,
     );
+  }
+
+  Future<void> startVideoRecording() async {
+    _appContentState.conversationState = ConversationState.videoRecording;
+    _appContentState.agentResponse = '';
+    _appContentState.userRecognisedWords = '';
+    _imageBytes = Uint8List(0);
+    notifyListeners();
+    DeviceAudioHelper.playDeleteSound();
+  }
+
+  Future<void> stopVideoRecording({File? file}) async {
+    print(" Video recording stopped : ${file?.path}");
+    if (file != null) videoFile = file;
+    _appContentState.conversationState = ConversationState.idle;
+    _appContentState.interactionMode = InteractionMode.video;
+    _appContentState.agentResponse = '';
+    _appContentState.userRecognisedWords = '';
+    _imageBytes = Uint8List(0);
+    notifyListeners();
+    DeviceAudioHelper.playDeleteSound();
   }
 
   Future<void> startListening(String inputLanguage) async {
@@ -252,7 +300,11 @@ class ConversationController extends ChangeNotifier {
     Analyticshelper.updateResponseCount("SmartViewModeCount");
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
-    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.smartView);
+    initializeAgent(
+      communicationLanguage,
+      enableTranslation,
+      InteractionMode.smartView,
+    );
     _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
@@ -265,7 +317,11 @@ class ConversationController extends ChangeNotifier {
     bool enableTranslation,
   ) async {
     _appContentState.interactionMode = InteractionMode.normal;
-    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.normal);
+    initializeAgent(
+      communicationLanguage,
+      enableTranslation,
+      InteractionMode.normal,
+    );
     await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, false),
       isIntermediate: true,
@@ -279,7 +335,11 @@ class ConversationController extends ChangeNotifier {
   ) async {
     Analyticshelper.updateResponseCount("ReaderModeCount");
     _appContentState.interactionMode = InteractionMode.autoReading;
-    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.autoReading);
+    initializeAgent(
+      communicationLanguage,
+      enableTranslation,
+      InteractionMode.autoReading,
+    );
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount");
     }
@@ -295,7 +355,11 @@ class ConversationController extends ChangeNotifier {
     bool enableTranslation,
   ) async {
     _appContentState.interactionMode = InteractionMode.normal;
-    initializeAgent(communicationLanguage, enableTranslation, InteractionMode.normal);
+    initializeAgent(
+      communicationLanguage,
+      enableTranslation,
+      InteractionMode.normal,
+    );
     notifyListeners();
   }
 }

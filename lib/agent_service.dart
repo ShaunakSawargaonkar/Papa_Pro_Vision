@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
@@ -14,6 +15,14 @@ class AgentService {
   You are a helpful, friendly assistant for blind users.
   Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
   """;
+  final String _videoSystemPrompt = """
+  You are a helpful, friendly assistant for blind users. User will provide a video or a list of images and a prompt. This video or a list of images will be of his surroundings
+  that he or she will capture from their phone camera. Try to answer the prompt based on the video or a list of images content and guide him or her
+  accordingly.If the user is asking to find something, answer it by guiding him clearly towards the object he is looking for.
+  Do not give bounding boxes as answer.
+  Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
+  """;
+
   final String _autoReadingSystemPrompt = """
   You are in Auto-Reading Mode. The user is blind and has supplied an image that contains text.
 
@@ -122,6 +131,12 @@ class AgentService {
     bool enableTranslation,
   ) {
     switch (mode) {
+      case InteractionMode.video:
+        return _videoSystemPrompt.replaceAll(
+          '{communicationLanguage}',
+          communicationLanguage,
+        );
+
       case InteractionMode.normal:
         return _systemPrompt.replaceAll(
           '{communicationLanguage}',
@@ -198,6 +213,7 @@ class AgentService {
     String prompt,
     String inputLanguage, {
     Uint8List? imageBytes,
+    File? videoFile,
   }) async {
     if (_appContentState.conversationState != ConversationState.processing) {
       return "";
@@ -205,13 +221,51 @@ class AgentService {
 
     late Content content;
 
-    if (imageBytes == null || imageBytes == Uint8List(0)) {
-      content = Content.multi([TextPart(prompt)]);
-    } else {
+    //Video content
+    if (videoFile != null) {
+      // print("Inside video setting content - extracting frames at 4 FPS");
+
+      // // Extract frames from video at 4 FPS instead of sending entire video
+      // List<Uint8List> videoFrames = await Devicehelper.extractVideoFrames(
+      //   videoFile,
+      // );
+
+      // if (videoFrames.isNotEmpty) {
+      //   print(
+      //     "**************************Extracted ${videoFrames.length} frames from video",
+      //   );
+      //   List<Part> parts = [TextPart(prompt)];
+      //   for (int i = 0; i < videoFrames.length; i++) {
+      //     parts.add(DataPart('image/jpeg', videoFrames[i]));
+      //   }
+      //   content = Content.multi(parts);
+      //   print(
+      //     "*************************Created content with ${videoFrames.length} video frames at 4 FPS",
+      //   );
+      // } else {
+      // Fallback: if frame extraction fails, send video as before
+      print(
+        "*************************Frame extraction failed, falling back to full video ${videoFile.path}",
+      );
+      final videoBytes = await videoFile.readAsBytes();
+      content = Content.multi([
+        DataPart('video/mp4', videoBytes),
+        TextPart(prompt),
+      ]);
+      // }
+    }
+    // Image content
+    else if (imageBytes != null && imageBytes != Uint8List(0)) {
+      print("Inside image setting content");
       content = Content.multi([
         DataPart('image/jpeg', imageBytes),
         TextPart(prompt),
       ]);
+    }
+    // text only content
+    else {
+      print("Inside history setting content ");
+      content = Content.multi([TextPart(prompt)]);
     }
     print('chat.history: ${_chat.history.length}');
     try {
@@ -231,6 +285,18 @@ class AgentService {
       return "Error from AI Service: $e";
     } catch (e) {
       return "An unexpected error occurred: $e";
+    } finally {
+      // Clean up video file after processing
+      if (videoFile != null) {
+        try {
+          if (await videoFile.exists()) {
+            await videoFile.delete();
+            print("Video file deleted successfully: ${videoFile.path}");
+          }
+        } catch (e) {
+          print("Error deleting video file: $e");
+        }
+      }
     }
   }
 }

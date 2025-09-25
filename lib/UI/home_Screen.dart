@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/UI/profile_page.dart';
+import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:papa_pro_vision/enums.dart';
-import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
+import 'dart:typed_data';
+import 'dart:io';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -98,7 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
       DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
       if (controller.state.interactionMode == InteractionMode.normal) {
-        await Future.delayed(Duration(milliseconds: 100)); // wait for camera sound to complete
+        await Future.delayed(
+          Duration(milliseconds: 500),
+        ); // wait for camera sound to complete
       }
       return await picture.readAsBytes();
     } catch (e) {
@@ -107,12 +112,60 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _startRecording(ConversationController controller) async {
+    if (controller.state.conversationState != ConversationState.idle ||
+        !cameraController!.value.isInitialized) {
+      return;
+    }
+    try {
+      await controller.startVideoRecording();
+      await cameraController!.startVideoRecording();
+      print('Started recording video');
+    } catch (e) {
+      print('Error starting video recording: $e');
+      controller.stopVideoRecording();
+    }
+  }
+
+  Future<void> _stopRecording(ConversationController controller) async {
+    if (controller.state.conversationState !=
+        ConversationState.videoRecording) {
+      return;
+    }
+
+    try {
+      final XFile videoFile = await cameraController!.stopVideoRecording();
+
+      // Convert XFile to File and call the callback
+      final File file = File(videoFile.path);
+
+      await controller.stopVideoRecording(file: file);
+      print('Stopped recording video: ${videoFile.path}');
+    } catch (e) {
+      print('Error stopping video recording: $e');
+      controller.stopVideoRecording();
+    }
+  }
+
+  Future<void> _cancelRecording(ConversationController controller) async {
+    if (controller.state.conversationState !=
+        ConversationState.videoRecording) {
+      return;
+    }
+    try {
+      final XFile videoFile = await cameraController!.stopVideoRecording();
+      print('Stopped recording video: ${videoFile.path}');
+    } catch (e) {
+      print('Error stopping video recording: $e');
+      controller.stopVideoRecording();
+    }
+  }
+
   Future<void> onToggleListening(ConversationController controller) async {
     print(
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
-
-    // prefs = await SharedPreferences.getInstance();
+    // Image mode
     print(prefs?.getString('inputLanguage'));
 
     if (controller.state.conversationState == ConversationState.idle) {
@@ -126,15 +179,17 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         } else {
           if (controller.getImageBytes().isNotEmpty) {
-            Analyticshelper.updateResponseCount(
-              "LLMInteractionWithImageCount",
-            );
+            Analyticshelper.updateResponseCount("LLMInteractionWithImageCount");
           } else {
-            Analyticshelper.updateResponseCount(
-              "JustLLMInteractionCount",
-            );
+            Analyticshelper.updateResponseCount("JustLLMInteractionCount");
           }
         }
+        await controller.startListening(
+          prefs?.getString('inputLanguage') ?? 'en_IN',
+        );
+      }
+      // Video mode
+      else if (controller.state.interactionMode == InteractionMode.video) {
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
@@ -406,11 +461,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     // Right half - entire area clickable
                     Expanded(
-                      child: InkWell(
+                      child: GestureDetector(
                         onTap: () async => {
                           await controller.unsetHistoryMode(),
                           onToggleListening(controller),
                         },
+                        // onLongPressStart: (details) async {
+                        //   await controller.unsetHistoryMode();
+                        //   await _startRecording(controller);
+                        // },
+                        // onLongPressEnd: (details) async {
+                        //   await _stopRecording(controller);
+                        //   onToggleListening(controller);
+                        // },
+                        // onLongPressCancel: () async {
+                        //   await _cancelRecording(controller);
+                        // },
                         child: Container(
                           color: Colors.transparent,
                           child: Center(

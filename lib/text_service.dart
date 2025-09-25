@@ -22,6 +22,13 @@ class TextService {
           default:
             return "Read the text in the image.";
         }
+      case InteractionMode.video:
+        switch (inputLanguage) {
+          case 'mr_IN':
+            return "तुम्हाला या विडिओ काय दिसते? आंधळ्या व्यक्तीसाठी त्याचे वर्णन करा.";
+          default:
+            return "What do you see in the video? Describe it for a blind person";
+        }
       default:
         switch (inputLanguage) {
           case 'mr_IN':

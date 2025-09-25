@@ -33,7 +33,8 @@ class MicButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color:
                     conversationState == ConversationState.listening ||
-                        conversationState == ConversationState.speaking
+                        conversationState == ConversationState.speaking ||
+                        conversationState == ConversationState.videoRecording
                     ? Colors.white
                     : baseColor,
                 shape: BoxShape.circle,
@@ -56,7 +57,8 @@ class MicButton extends StatelessWidget {
                   size: 60, // Larger icon size
                   color:
                       conversationState == ConversationState.listening ||
-                          conversationState == ConversationState.speaking
+                          conversationState == ConversationState.speaking ||
+                          conversationState == ConversationState.videoRecording
                       ? baseColor
                       : Colors.white,
                 ),

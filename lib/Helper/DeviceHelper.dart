@@ -1,7 +1,14 @@
+import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'dart:io';
+import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:ffmpeg_kit_flutter_new_video/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_video/return_code.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:ffmpeg_kit_flutter_new_video/ffprobe_kit.dart';
+// import 'package:path/path.dart' as path;
 
 class Devicehelper {
   static bool IsDevanagari(String text) {
@@ -91,6 +98,46 @@ class Devicehelper {
     } catch (e) {
       print('Error checking registration status: $e');
       return {'isRegistered': false, 'isActive': false};
+    }
+  }
+
+  static Future<List<Uint8List>> extractVideoFrames(File videoFile) async {
+    final tempDir = await getTemporaryDirectory();
+    final outputDir = Directory(
+      '${tempDir.path}/frames_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    await outputDir.create();
+
+    try {
+      // Extract all frames at once with 5fps filter
+      final command =
+          '-i "${videoFile.path}" -vf "fps=5" -y "${outputDir.path}/frame_%04d.png"';
+
+      final session = await FFmpegKit.execute(command);
+
+      if (ReturnCode.isSuccess(await session.getReturnCode())) {
+        final frames = <Uint8List>[];
+
+        // Read all generated frames
+        final files = outputDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.png'))
+            .toList();
+
+        // Sort files by name to maintain order
+        files.sort((a, b) => a.path.compareTo(b.path));
+
+        for (final file in files) {
+          frames.add(await file.readAsBytes());
+        }
+
+        return frames;
+      }
+
+      return [];
+    } finally {
+      await outputDir.delete(recursive: true);
     }
   }
 }
