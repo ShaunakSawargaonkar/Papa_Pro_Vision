@@ -467,17 +467,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           await controller.unsetHistoryMode(),
                           onToggleListening(controller),
                         },
-                        // onLongPressStart: (details) async {
-                        //   await controller.unsetHistoryMode();
-                        //   await _startRecording(controller);
-                        // },
-                        // onLongPressEnd: (details) async {
-                        //   await _stopRecording(controller);
-                        //   onToggleListening(controller);
-                        // },
-                        // onLongPressCancel: () async {
-                        //   await _cancelRecording(controller);
-                        // },
+                        onLongPressStart: (details) async {
+                          await controller.unsetHistoryMode();
+                          await _startRecording(controller);
+                        },
+                        onLongPressEnd: (details) async {
+                          await _stopRecording(controller);
+                          onToggleListening(controller);
+                        },
+                        onLongPressCancel: () async {
+                          await _cancelRecording(controller);
+                        },
                         child: Container(
                           color: Colors.transparent,
                           child: Center(
@@ -523,6 +523,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.04,
+              ), // Add some spacing at the bottom
             ],
           ),
         );

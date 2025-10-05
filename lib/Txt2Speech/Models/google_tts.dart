@@ -52,7 +52,7 @@ class GoogleTTSService implements TextToSpeechService {
       } else {
         audioContent = await getWAVFromGoogle(trimmed, "en-IN");
       }
-      if (sessionId != _sessionId) {
+      if (sessionId != _sessionId && !isIntermediate) {
         print("Skipping old audio (session invalidated)");
         return;
       }

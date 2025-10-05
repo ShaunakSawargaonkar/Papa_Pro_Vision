@@ -128,17 +128,14 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
     if (_appContentState.interactionMode == InteractionMode.normal ||
         _appContentState.interactionMode == InteractionMode.video) {
-      int _streamSessionId = await _ttsService?.startSession() ?? 0;
       await _ttsService?.speak(
         _textService.getProcessingResponseText(inputLanguage),
         isIntermediate: true,
-        sessionId: _streamSessionId,
       );
     }
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
-    late String? response;
     if (!state.isHistoryMode && imageBytes != null) {
       print("Inside image generate Response call");
       content =
@@ -340,11 +337,9 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.smartView,
     );
-    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
-      sessionId: _streamSessionId,
     );
     notifyListeners();
   }
@@ -359,11 +354,9 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.normal,
     );
-    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, false),
       isIntermediate: true,
-      sessionId: _streamSessionId,
     );
     notifyListeners();
   }
@@ -379,14 +372,12 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.autoReading,
     );
-    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount");
     }
     _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
       isIntermediate: true,
-      sessionId: _streamSessionId,
     );
     notifyListeners();
   }
