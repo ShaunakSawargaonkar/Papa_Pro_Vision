@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
-import 'package:papa_pro_vision/agent_service.dart';
+import 'package:papa_pro_vision/LLMResponse/agent_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -93,6 +94,7 @@ class ConversationController extends ChangeNotifier {
     File? videoFile,
   }) async {
     SharedPreferences? prefs;
+    Content content;
     var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'processInput',
     );
@@ -126,9 +128,11 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
     if (_appContentState.interactionMode == InteractionMode.normal ||
         _appContentState.interactionMode == InteractionMode.video) {
+      int _streamSessionId = await _ttsService?.startSession() ?? 0;
       await _ttsService?.speak(
         _textService.getProcessingResponseText(inputLanguage),
         isIntermediate: true,
+        sessionId: _streamSessionId,
       );
     }
     if (!state.isHistoryMode) {
@@ -136,37 +140,58 @@ class ConversationController extends ChangeNotifier {
     }
     late String? response;
     if (!state.isHistoryMode && imageBytes != null) {
-      print("Inside image generateResponse call");
-      response = await _agentService?.generateResponse(
-        promptText,
-        imageBytes: imageBytes,
-        inputLanguage,
-      );
+      print("Inside image generate Response call");
+      content =
+          await _agentService?.CreateContentForResponse(
+                promptText,
+                imageBytes: imageBytes,
+                inputLanguage,
+              )
+              as Content;
     } else if (!state.isHistoryMode && videoFile != null) {
-      print("Inside video generateResponse call");
-
-      response = await _agentService?.generateResponse(
-        promptText,
-        videoFile: videoFile,
-        inputLanguage,
-      );
+      print("Inside video generate Response call");
+      content =
+          await _agentService?.CreateContentForResponse(
+                promptText,
+                videoFile: videoFile,
+                inputLanguage,
+              )
+              as Content;
     } else {
-      print("Inside history generateResponse call");
-      response = await _agentService?.generateResponse(
-        promptText,
-        inputLanguage,
-      );
+      print("Inside history generate Response call");
+      content =
+          await _agentService?.CreateContentForResponse(
+                promptText,
+                inputLanguage,
+              )
+              as Content;
     }
 
-    if (response != null &&
-        response.isNotEmpty &&
-        _appContentState.conversationState == ConversationState.processing) {
-      _appContentState.agentResponse = response;
+    await _agentService?.sendStreamingMessage(
+      content,
+      _ttsService,
+      onStartSpeaking,
+    );
+    // response = await _agentService?.generateResponse(content, inputLanguage);
+
+    // print("Received chunked FINALLLLL: $response");
+
+    // if (response != null &&
+    //     response.isNotEmpty &&
+    //     _appContentState.conversationState == ConversationState.processing) {
+    //   _appContentState.agentResponse = response;
+    //   _appContentState.conversationState = ConversationState.speaking;
+    //   notifyListeners();
+    //   await _ttsService?.speak(response);
+    //   // _appContentState.conversationState = ConversationState.idle;
+    //   // notifyListeners();
+    // }
+  }
+
+  Future<void> onStartSpeaking() async {
+    if (_appContentState.conversationState == ConversationState.processing) {
       _appContentState.conversationState = ConversationState.speaking;
       notifyListeners();
-      await _ttsService?.speak(response);
-      // _appContentState.conversationState = ConversationState.idle;
-      // notifyListeners();
     }
   }
 
@@ -225,17 +250,27 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> stopSpeaking() async {
     _appContentState.conversationState = ConversationState.idle;
+    SharedPreferences? prefs = await SharedPreferences.getInstance();
     if (_appContentState.interactionMode != InteractionMode.normal) {
-      SharedPreferences? prefs = await SharedPreferences.getInstance();
       _appContentState.interactionMode = InteractionMode.normal;
 
-      initializeAgent(
-        prefs.getString('inputLanguage') ?? 'en_IN',
-        prefs.getBool('enableTranslation') ?? false,
-        InteractionMode.normal,
-      );
+      // initializeAgent(
+      //   prefs.getString('inputLanguage') ?? 'en_IN',
+      //   prefs.getBool('enableTranslation') ?? false,
+      //   InteractionMode.normal,
+      // );
     }
     _appContentState.userRecognisedWords = '';
+    _agentService?.stopStream(
+      Secrets.geminiApiKey,
+      InteractionMode.normal,
+      TextService.inputLanguageToCommunicationLanguage[prefs.getString(
+                'inputLanguage',
+              ) ??
+              'en_IN'] ??
+          'English',
+      prefs.getBool('enableTranslation') ?? false,
+    );
     await _ttsService?.stop();
     notifyListeners();
   }
@@ -305,9 +340,11 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.smartView,
     );
+    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
+      sessionId: _streamSessionId,
     );
     notifyListeners();
   }
@@ -322,9 +359,11 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.normal,
     );
+    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, false),
       isIntermediate: true,
+      sessionId: _streamSessionId,
     );
     notifyListeners();
   }
@@ -340,12 +379,14 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.autoReading,
     );
+    int _streamSessionId = await _ttsService?.startSession() ?? 0;
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount");
     }
     _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
       isIntermediate: true,
+      sessionId: _streamSessionId,
     );
     notifyListeners();
   }

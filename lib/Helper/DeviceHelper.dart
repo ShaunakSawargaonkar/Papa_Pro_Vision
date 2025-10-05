@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'dart:io';
 import 'package:ffmpeg_kit_flutter_new_video/ffmpeg_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffmpeg_kit_flutter_new_video/return_code.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
@@ -15,8 +16,10 @@ class Devicehelper {
 
   static Future<String> getDeviceId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    String? contactNumber = await (await SharedPreferences.getInstance())
+        .getString('contactNumber');
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return 'android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}';
+    return '${contactNumber}_android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}';
   }
 
   static Future<String> getOldUserDeviceId() async {
@@ -48,6 +51,10 @@ class Devicehelper {
     }
   }
 
+  static String cleanAgentResponse(String responseText) {
+    return responseText.replaceAll('*', ' ').replaceAll('"', '');
+  }
+
   static Future<Map<String, bool>> checkRegistration() async {
     try {
       var isInternetAvailable =
@@ -56,7 +63,7 @@ class Devicehelper {
           );
       if (!isInternetAvailable) {
         print("No internet connection. Cannot perform checkRegistration.");
-        return {'isRegistered': true, 'isActive': true}; //TODO Make it False!
+        return {'isRegistered': false, 'isActive': false};
       }
       final deviceId = await Devicehelper.getDeviceId();
       final oldUserDeviceId = await Devicehelper.getOldUserDeviceId();

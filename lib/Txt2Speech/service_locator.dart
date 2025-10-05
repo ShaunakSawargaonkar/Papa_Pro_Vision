@@ -4,13 +4,18 @@ import 'package:papa_pro_vision/Txt2Speech/Models/google_tts.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 abstract class TextToSpeechService {
-  Future<void> speak(String text, {bool isIntermediate = false});
+  Future<void> speak(String text, {bool isIntermediate = false, int sessionId});
+  Future<void> speak2(String text, {bool isIntermediate = false});
   Future<void> stop();
+  Future<int> startSession();
 }
 
 final GetIt locator = GetIt.instance;
 
-TextToSpeechService setupTTSService(String selectedModel, ConversationController controller) {
+TextToSpeechService setupTTSService(
+  String selectedModel,
+  ConversationController controller,
+) {
   // if (locator.isRegistered<TextToSpeechService>()) {
   //   locator.unregister<TextToSpeechService>();
   // }

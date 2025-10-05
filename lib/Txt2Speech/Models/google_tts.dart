@@ -26,7 +26,52 @@ class GoogleTTSService implements TextToSpeechService {
   int _sessionId = 0;
 
   @override
-  Future<void> speak(String text, {bool isIntermediate = false}) async {
+  Future<void> speak(
+    String text, {
+    int sessionId = -1,
+    bool isIntermediate = false,
+  }) async {
+    if (_appContentState.conversationState != ConversationState.speaking &&
+        !isIntermediate)
+      return;
+
+    if (isIntermediate || sessionId == -1) {
+      _audioPlayerService?.reset();
+    }
+
+    print('Resetting audio player');
+
+    String trimmed = text.trim();
+
+    print("Requesting TTS for: $trimmed");
+
+    try {
+      dynamic audioContent;
+      if (Devicehelper.IsDevanagari(trimmed)) {
+        audioContent = await getWAVFromGoogle(trimmed, "mr-IN");
+      } else {
+        audioContent = await getWAVFromGoogle(trimmed, "en-IN");
+      }
+      if (sessionId != _sessionId) {
+        print("Skipping old audio (session invalidated)");
+        return;
+      }
+
+      final audioBytes = base64.decode(audioContent);
+
+      print("Enqueuing audio for: $trimmed");
+      if (_appContentState.conversationState != ConversationState.speaking &&
+          !isIntermediate)
+        return;
+      await _audioPlayerService?.enqueue(audioBytes);
+    } catch (e) {
+      Analyticshelper.updateResponseCount("TTSErrorCount");
+      print("TTS error for '$trimmed': $e");
+    }
+  }
+
+  @override
+  Future<void> speak2(String text, {bool isIntermediate = false}) async {
     if (_appContentState.conversationState != ConversationState.speaking &&
         !isIntermediate)
       return;
@@ -107,6 +152,13 @@ class GoogleTTSService implements TextToSpeechService {
         DateTime.now().minute; // new session // invalidate current session
     // _audioPlayerService.reset(); // clear any queued audio
     await _audioPlayerService?.stop();
+  }
+
+  @override
+  Future<int> startSession() async {
+    _sessionId = DateTime.now().microsecond + DateTime.now().minute;
+    _audioPlayerService?.reset();
+    return _sessionId;
   }
 }
 

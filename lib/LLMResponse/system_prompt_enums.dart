@@ -1,21 +1,9 @@
-import 'dart:io';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'dart:typed_data';
-import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
-import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/text_service.dart';
-import 'package:papa_pro_vision/enums.dart';
-
-class AgentService {
-  late GenerativeModel _generativeModel;
-  late ChatSession _chat;
-  late AppContentState _appContentState;
-
-  final String _systemPrompt = """
+class SystemPrompts {
+  static final String systemPrompt = """
   You are a helpful, friendly assistant for blind users.
   Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
   """;
-  final String _videoSystemPrompt = """
+  static final String videoSystemPrompt = """
   You are a helpful, friendly assistant for blind users. User will provide a video or a list of images and a prompt. This video or a list of images will be of his surroundings
   that he or she will capture from their phone camera. Try to answer the prompt based on the video or a list of images content and guide him or her
   accordingly.If the user is asking to find something, answer it by guiding him clearly towards the object he is looking for.
@@ -23,7 +11,7 @@ class AgentService {
   Communication language: {communicationLanguage}. Always respond in the communication language indepdendent of the language of the user.
   """;
 
-  final String _autoReadingSystemPrompt = """
+  static final String autoReadingSystemPrompt = """
   You are in Auto-Reading Mode. The user is blind and has supplied an image that contains text.
 
   YOUR SINGLE TASK  
@@ -42,7 +30,7 @@ class AgentService {
   • Camera guidance is included if necessary.
   """;
 
-  final String _autoReadingSystemPromptWithTranslation = """
+  static final String autoReadingSystemPromptWithTranslation = """
   You are in Auto-Reading Mode. The user is blind and has supplied an image that contains text.
 
   YOUR SINGLE TASK  
@@ -63,7 +51,7 @@ class AgentService {
   Return the cleaned, translated text only. No additional commentary.
   """;
 
-  final String _smartViewModeSystemPrompt = """
+  static final String smartViewModeSystemPrompt = """
   You are in Describe & Read Mode. The user is blind and has supplied an image.
 
   YOUR TWO-PART TASK  
@@ -94,7 +82,7 @@ class AgentService {
   • Cut-off text: “The left margin of the document is missing. Please move the camera slightly left so I can read the full line.”
 """;
 
-  final String _smartViewModeSystemPromptWithTranslation = """
+  static final String smartViewModeSystemPromptWithTranslation = """
   You are in Describe & Read Mode. The user is blind and has supplied an image.
 
   YOUR TWO-PART TASK  
@@ -124,179 +112,4 @@ class AgentService {
   • Table of items: “A wooden table with several objects: starting from the left, a blue mug, a folded newspaper, and a set of keys.”  
   • Cut-off text: “The left margin of the document is missing. Please move the camera slightly left so I can read the full line.”
 """;
-
-  String _getSystemPrompt(
-    InteractionMode mode,
-    String communicationLanguage,
-    bool enableTranslation,
-  ) {
-    switch (mode) {
-      case InteractionMode.video:
-        return _videoSystemPrompt.replaceAll(
-          '{communicationLanguage}',
-          communicationLanguage,
-        );
-
-      case InteractionMode.normal:
-        return _systemPrompt.replaceAll(
-          '{communicationLanguage}',
-          communicationLanguage,
-        );
-      case InteractionMode.smartView:
-        if (enableTranslation) {
-          return _smartViewModeSystemPromptWithTranslation.replaceAll(
-            '{communicationLanguage}',
-            communicationLanguage,
-          );
-        }
-        return _smartViewModeSystemPrompt.replaceAll(
-          '{communicationLanguage}',
-          communicationLanguage,
-        );
-      case InteractionMode.autoReading:
-        if (enableTranslation) {
-          return _autoReadingSystemPromptWithTranslation.replaceAll(
-            '{communicationLanguage}',
-            communicationLanguage,
-          );
-        }
-        return _autoReadingSystemPrompt.replaceAll(
-          '{communicationLanguage}',
-          communicationLanguage,
-        );
-    }
-  }
-
-  AgentService(ConversationController controller) {
-    controller.addListener(() {
-      _appContentState = controller.state;
-    });
-  }
-
-  void initialize(
-    String apiKey,
-    InteractionMode mode,
-    String communicationLanguage,
-    bool enableTranslation,
-  ) {
-    communicationLanguage =
-        TextService
-            .inputLanguageToCommunicationLanguage[communicationLanguage] ??
-        'English';
-    if (mode == InteractionMode.normal) {
-      _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
-        apiKey: apiKey,
-      );
-      _chat = _generativeModel.startChat();
-    } else {
-      _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
-        apiKey: apiKey,
-        systemInstruction: Content.system(
-          _getSystemPrompt(mode, communicationLanguage, enableTranslation),
-        ),
-      );
-      _chat = _generativeModel.startChat();
-    }
-  }
-
-  String cleanAgentResponse(String responseText) {
-    return responseText.replaceAll('*', ' ').replaceAll('"', '');
-  }
-
-  void reset() {
-    _chat = _generativeModel.startChat();
-  }
-
-  Future<String> generateResponse(
-    String prompt,
-    String inputLanguage, {
-    Uint8List? imageBytes,
-    File? videoFile,
-  }) async {
-    if (_appContentState.conversationState != ConversationState.processing) {
-      return "";
-    }
-
-    late Content content;
-
-    //Video content
-    if (videoFile != null) {
-      // print("Inside video setting content - extracting frames at 4 FPS");
-
-      // // Extract frames from video at 4 FPS instead of sending entire video
-      // List<Uint8List> videoFrames = await Devicehelper.extractVideoFrames(
-      //   videoFile,
-      // );
-
-      // if (videoFrames.isNotEmpty) {
-      //   print(
-      //     "**************************Extracted ${videoFrames.length} frames from video",
-      //   );
-      //   List<Part> parts = [TextPart(prompt)];
-      //   for (int i = 0; i < videoFrames.length; i++) {
-      //     parts.add(DataPart('image/jpeg', videoFrames[i]));
-      //   }
-      //   content = Content.multi(parts);
-      //   print(
-      //     "*************************Created content with ${videoFrames.length} video frames at 4 FPS",
-      //   );
-      // } else {
-      // Fallback: if frame extraction fails, send video as before
-      print(
-        "*************************Frame extraction failed, falling back to full video ${videoFile.path}",
-      );
-      final videoBytes = await videoFile.readAsBytes();
-      content = Content.multi([
-        DataPart('video/mp4', videoBytes),
-        TextPart(prompt),
-      ]);
-      // }
-    }
-    // Image content
-    else if (imageBytes != null && imageBytes != Uint8List(0)) {
-      print("Inside image setting content");
-      content = Content.multi([
-        DataPart('image/jpeg', imageBytes),
-        TextPart(prompt),
-      ]);
-    }
-    // text only content
-    else {
-      print("Inside history setting content ");
-      content = Content.multi([TextPart(prompt)]);
-    }
-    print('chat.history: ${_chat.history.length}');
-    try {
-      final response = await _chat.sendMessage(content);
-      Analyticshelper.updateResponseCount("ResponseCount");
-
-      if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount");
-      } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount");
-      }
-      return cleanAgentResponse(response.text!);
-    } on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount");
-      print("Error from AI Service: $e");
-      print(_chat.history);
-      return "Error from AI Service: $e";
-    } catch (e) {
-      return "An unexpected error occurred: $e";
-    } finally {
-      // Clean up video file after processing
-      if (videoFile != null) {
-        try {
-          if (await videoFile.exists()) {
-            await videoFile.delete();
-            print("Video file deleted successfully: ${videoFile.path}");
-          }
-        } catch (e) {
-          print("Error deleting video file: $e");
-        }
-      }
-    }
-  }
 }

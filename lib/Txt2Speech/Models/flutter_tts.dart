@@ -6,7 +6,7 @@ import 'package:papa_pro_vision/enums.dart';
 class FlutterTTSService implements TextToSpeechService {
   late AppContentState _appContentState;
 
-  FlutterTTSService(ConversationController controller){
+  FlutterTTSService(ConversationController controller) {
     controller.addListener(() {
       _appContentState = controller.state;
     });
@@ -15,13 +15,33 @@ class FlutterTTSService implements TextToSpeechService {
   final FlutterTts _flutterTts = FlutterTts();
 
   @override
-  Future<void> speak(String text, {bool isIntermediate = false}) async {
-    if(_appContentState.conversationState != ConversationState.speaking && !isIntermediate) return;
+  Future<void> speak(
+    String text, {
+    bool isIntermediate = false,
+    int sessionId = -1,
+  }) async {
+    if (_appContentState.conversationState != ConversationState.speaking &&
+        !isIntermediate)
+      return;
+    await _flutterTts.speak(text);
+  }
+
+  @override
+  Future<void> speak2(String text, {bool isIntermediate = false}) async {
+    if (_appContentState.conversationState != ConversationState.speaking &&
+        !isIntermediate)
+      return;
     await _flutterTts.speak(text);
   }
 
   @override
   Future<void> stop() async {
     await _flutterTts.stop();
+  }
+
+  @override
+  Future<int> startSession() {
+    // TODO: implement startSession
+    throw UnimplementedError();
   }
 }
