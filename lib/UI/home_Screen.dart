@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
@@ -10,8 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:papa_pro_vision/enums.dart';
 import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
-import 'dart:typed_data';
 import 'dart:io';
+import 'package:papa_pro_vision/UI/widgets/image_preview.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -173,14 +174,18 @@ class _HomeScreenState extends State<HomeScreen> {
       if (controller.state.interactionMode == InteractionMode.normal) {
         //Capture image
         Uint8List? imageBytes = Uint8List(0);
-        if (!controller.state.isHistoryMode) {
+        if (!controller.state.isHistoryMode && !controller.state.hasUploadedImage) {
           imageBytes = await _captureImage(controller);
           if (imageBytes != null) {
             controller.setImageBytes(imageBytes);
           }
         } else {
           if (controller.getImageBytes().isNotEmpty) {
-            Analyticshelper.updateResponseCount("LLMInteractionWithImageCount");
+            if (controller.state.hasUploadedImage) {
+              Analyticshelper.updateResponseCount("LLMInteractionWithUploadedImageCount");
+            } else {
+              Analyticshelper.updateResponseCount("LLMInteractionWithImageCount");
+            }
           } else {
             Analyticshelper.updateResponseCount("JustLLMInteractionCount");
           }
@@ -191,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // Video mode
       else if (controller.state.interactionMode == InteractionMode.video) {
+        Analyticshelper.updateResponseCount("VideoModeCount");
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
@@ -236,6 +242,10 @@ class _HomeScreenState extends State<HomeScreen> {
         controller.getImageBytes() != Uint8List(0)) {
       controller.setImageBytes(Uint8List(0));
       controller.resetAgentChat();
+      controller.unsetUploadedImageMode(
+        prefs?.getString('inputLanguage') ?? 'en_IN',
+        prefs?.getBool('enableTranslation') ?? false,
+      );
     }
   }
 
@@ -393,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   cameraController!.value.previewSize!.height,
                               height:
                                   cameraController!.value.previewSize!.width,
-                              child: CameraPreview(cameraController!),
+                              child: ImagePreview(cameraController: cameraController!, hasUploadedImage: controller.state.hasUploadedImage, imageBytes: controller.getImageBytes()),
                             ),
                           ),
                         ),
@@ -458,13 +468,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       height: MediaQuery.of(context).size.height * 0.2,
                       width: 2,
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                     ),
                     // Right half - entire area clickable
                     Expanded(
                       child: GestureDetector(
                         onTap: () async => {
                           await controller.unsetHistoryMode(),
+                          await controller.unsetUploadedImageMode(
+                            prefs?.getString('inputLanguage') ?? 'en_IN',
+                            prefs?.getBool('enableTranslation') ?? false,
+                          ),
                           onToggleListening(controller),
                         },
                         onLongPressStart: (details) async {
