@@ -4,6 +4,27 @@ allprojects {
         mavenCentral()
     }
 }
+
+subprojects {
+    afterEvaluate {
+        // Configure Android projects
+        if (project.hasProperty("android")) {
+            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+            android.compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
+            }
+        }
+        
+        // Force Kotlin JVM target for all Kotlin compilation tasks
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+            kotlinOptions {
+                jvmTarget = "11"
+            }
+        }
+    }
+}
+
 plugins {
   // ...
 
