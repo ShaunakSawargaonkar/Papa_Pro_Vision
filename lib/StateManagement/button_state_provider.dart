@@ -87,6 +87,10 @@ class ConversationController extends ChangeNotifier {
     _agentService?.reset();
   }
 
+  int chatHistoryCount() {
+    return _agentService!.chatHistoryCount();
+  }
+
   Future<void> processInput(
     String inputLanguage, {
     bool historyMode = false,
@@ -164,11 +168,36 @@ class ConversationController extends ChangeNotifier {
               as Content;
     }
 
-    await _agentService?.sendStreamingMessage(
-      content,
-      _ttsService,
-      onStartSpeaking,
-    );
+    // Check Gemini or GoogleRenderer
+    int chatHistoryCount = _agentService!.chatHistoryCount();
+    bool ifGoogle = false;
+
+    if (state.isHistoryMode && chatHistoryCount == 0) {
+      ifGoogle = true;
+    }
+
+    if (ifGoogle == true) {
+      print("Insideeee google search Response call");
+      var response = await _agentService?.sendGoogleSearchMessage(
+        promptText,
+        inputLanguage,
+      );
+      if (response != null &&
+          _appContentState.conversationState == ConversationState.processing) {
+        _appContentState.agentResponse = response;
+        _appContentState.conversationState = ConversationState.speaking;
+        notifyListeners();
+        await _ttsService?.speak2(response);
+        resetAgentChat();
+      }
+    } else {
+      print("Insideeee streaming Response call");
+      await _agentService?.sendStreamingMessage(
+        content,
+        _ttsService,
+        onStartSpeaking,
+      );
+    }
     // response = await _agentService?.generateResponse(content, inputLanguage);
 
     // print("Received chunked FINALLLLL: $response");
@@ -250,12 +279,6 @@ class ConversationController extends ChangeNotifier {
     SharedPreferences? prefs = await SharedPreferences.getInstance();
     if (_appContentState.interactionMode != InteractionMode.normal) {
       _appContentState.interactionMode = InteractionMode.normal;
-
-      // initializeAgent(
-      //   prefs.getString('inputLanguage') ?? 'en_IN',
-      //   prefs.getBool('enableTranslation') ?? false,
-      //   InteractionMode.normal,
-      // );
     }
     _appContentState.userRecognisedWords = '';
     _agentService?.stopStream(
@@ -268,6 +291,16 @@ class ConversationController extends ChangeNotifier {
           'English',
       prefs.getBool('enableTranslation') ?? false,
     );
+    await _ttsService?.stop();
+    notifyListeners();
+  }
+
+  Future<void> stopSpeakingForGoogleSearch() async {
+    _appContentState.conversationState = ConversationState.idle;
+    if (_appContentState.interactionMode != InteractionMode.normal) {
+      _appContentState.interactionMode = InteractionMode.normal;
+    }
+    _appContentState.userRecognisedWords = '';
     await _ttsService?.stop();
     notifyListeners();
   }

@@ -222,7 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       print('Stopping speaking');
       Analyticshelper.updateResponseCount("CancelledRequestCount");
-      await controller.stopSpeaking();
+      if (controller.chatHistoryCount() == 0) {
+        print("Insideee Stopping google search speaking");
+        await controller.stopSpeakingForGoogleSearch();
+      } else {
+        print("Insideee Stopping non google search speaking");
+        await controller.stopSpeaking();
+      }
     }
     print(
       'After toggle: ${controller.state.conversationState} ${controller.state.interactionMode}',

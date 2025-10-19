@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:typed_data';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
+import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/LLMResponse/system_prompt_enums.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
@@ -110,6 +112,59 @@ class AgentService {
         Analyticshelper.updateResponseCount("MarathiResponseCount");
       }
       return Devicehelper.cleanAgentResponse(response.text!);
+    }
+    //Error logging
+    on GenerativeAIException catch (e) {
+      Analyticshelper.updateResponseCount("PromptErrorCount");
+      print("Error from AI Service: $e");
+      return "Error from AI Service: $e";
+    } catch (e) {
+      return "An unexpected error occurred: $e";
+    }
+  }
+
+  Future<String> getResponseFromRender(String query) async {
+    String encodedQuery = Uri.encodeComponent(query);
+    final url = Uri.parse(
+      'https://vercelgooglesearch.onrender.com/search/$encodedQuery',
+    );
+
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body)['response'];
+    } else {
+      throw Exception('Failed to search: ${response.statusCode}');
+    }
+  }
+
+  int chatHistoryCount() {
+    print("Insideeee chat history length: ${_chat.history.length}");
+
+    return _chat.history.length;
+  }
+
+  Future<String> sendGoogleSearchMessage(
+    String inputText,
+    String inputLanguage,
+  ) async {
+    if (_appContentState.conversationState != ConversationState.processing) {
+      return "";
+    }
+    // Get Response From Render
+    try {
+      final response = await getResponseFromRender(inputText);
+      Analyticshelper.updateResponseCount("ResponseCount");
+
+      if (inputLanguage == 'en_IN') {
+        Analyticshelper.updateResponseCount("EnglishResponseCount");
+      } else {
+        Analyticshelper.updateResponseCount("MarathiResponseCount");
+      }
+      return Devicehelper.cleanAgentResponse(response);
     }
     //Error logging
     on GenerativeAIException catch (e) {
