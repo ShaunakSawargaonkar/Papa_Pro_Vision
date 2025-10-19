@@ -52,7 +52,8 @@ dependencies:
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.14.0
   device_info_plus: ^9.1.2
-  ffmpeg_kit_flutter_new_video: ^1.1.0
+  ffmpeg_kit_flutter_new_video: ^1.1.0 
+  receive_sharing_intent: ^1.8.1
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
+import 'package:papa_pro_vision/Helper/FileSharingHelper.dart';
 import 'package:papa_pro_vision/LLMResponse/agent_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
@@ -18,6 +19,7 @@ class AppContentState {
   ConversationState? conversationState = ConversationState.idle;
   InteractionMode? interactionMode = InteractionMode.normal;
   bool isHistoryMode = false;
+  bool hasUploadedImage = false;
 
   AppContentState();
 }
@@ -30,6 +32,7 @@ class ConversationController extends ChangeNotifier {
   AppContentState _appContentState = AppContentState();
   Uint8List _imageBytes = Uint8List(0);
   final TextService _textService = TextService();
+  FileSharingHelper? _fileSharingHelper;
   File videoFile = File('');
 
   Future<void> initialize(String inputLanguage, bool enableTranslation) async {
@@ -45,6 +48,11 @@ class ConversationController extends ChangeNotifier {
       );
     }
 
+    if (_fileSharingHelper == null) {
+      _fileSharingHelper = FileSharingHelper();
+      _fileSharingHelper?.initialize(this);
+    }
+
     if (_speechToText == null) {
       _speechToText = SpeechToText();
       final bool? speechInitialized = await _speechToText?.initialize(
@@ -56,7 +64,7 @@ class ConversationController extends ChangeNotifier {
               print(
                 'Inside speech done: ${_imageBytes.isNotEmpty} ${state.isHistoryMode} ${videoFile.path.isNotEmpty}',
               );
-              if (state.isHistoryMode) {
+              if (state.isHistoryMode && !state.hasUploadedImage) {
                 print("Inside History file processing");
                 processInput(inputLanguage, historyMode: true);
               } else if (_imageBytes.isNotEmpty) {
@@ -140,7 +148,7 @@ class ConversationController extends ChangeNotifier {
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
-    if (!state.isHistoryMode && imageBytes != null) {
+    if ((!state.isHistoryMode || state.hasUploadedImage) && imageBytes != null) {
       print("Inside image generate Response call");
       content =
           await _agentService?.CreateContentForResponse(
@@ -426,5 +434,24 @@ class ConversationController extends ChangeNotifier {
       InteractionMode.normal,
     );
     notifyListeners();
+  }
+
+  Future<void> setUploadedImageMode(Uint8List imageBytes, String communicationLanguage, bool enableTranslation,) async {
+    _appContentState.hasUploadedImage = true;
+    setImageBytes(imageBytes);
+    notifyListeners();
+  }
+
+  Future<void> unsetUploadedImageMode(String communicationLanguage, bool enableTranslation) async {
+    if (_appContentState.hasUploadedImage) {
+      _appContentState.interactionMode = InteractionMode.normal;
+      _appContentState.hasUploadedImage = false;
+      initializeAgent(
+        communicationLanguage,
+        enableTranslation,
+        InteractionMode.normal,
+      );
+      notifyListeners();
+    }
   }
 }
