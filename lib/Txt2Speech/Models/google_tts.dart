@@ -180,8 +180,8 @@ Future<String> getWAVFromGoogle(String text, String lang) async {
       "input": {"text": text},
       "voice": {
         "languageCode": "en-IN",
-        "name": "en-IN-Neural2-C",
-        "ssmlGender": "MALE",
+        "name": "en-IN-Chirp3-HD-Alnilam",
+        // "ssmlGender": "MALE",
       },
       "audioConfig": {"audioEncoding": "MP3", "speakingRate": speechRate},
     });

@@ -8,6 +8,13 @@ import 'package:ffmpeg_kit_flutter_new_video/return_code.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:typed_data';
 
+enum WhichPageFromMain {
+  AlasInternetPage,
+  AlasPage,
+  HomeScreen,
+  RegistrationPage,
+}
+
 class Devicehelper {
   static bool IsDevanagari(String text) {
     final devanagariRegex = RegExp(r'[\u0900-\u097F]');
@@ -55,7 +62,7 @@ class Devicehelper {
     return responseText.replaceAll('*', ' ').replaceAll('"', '');
   }
 
-  static Future<Map<String, bool>> checkRegistration() async {
+  static Future<WhichPageFromMain> checkRegistration() async {
     try {
       var isInternetAvailable =
           await Devicehelper.hasInternetConnectionAndNotify(
@@ -63,7 +70,7 @@ class Devicehelper {
           );
       if (!isInternetAvailable) {
         print("No internet connection. Cannot perform checkRegistration.");
-        return {'isRegistered': false, 'isActive': false};
+        return WhichPageFromMain.AlasInternetPage;
       }
       final deviceId = await Devicehelper.getDeviceId();
       final oldUserDeviceId = await Devicehelper.getOldUserDeviceId();
@@ -76,9 +83,13 @@ class Devicehelper {
 
       if (querySnapshot.docs.isNotEmpty) {
         final userData = querySnapshot.docs[0].data();
-        final isActive = userData['isActive'] ?? false;
+        final isActive = userData['isActive'];
         print('User status: $userData');
-        return {'isRegistered': true, 'isActive': isActive};
+        if (isActive) {
+          return WhichPageFromMain.HomeScreen;
+        } else {
+          return WhichPageFromMain.AlasPage;
+        }
       }
 
       // If not found, check with old device ID
@@ -89,19 +100,23 @@ class Devicehelper {
             .get();
         if (oldQuerySnapshot.docs.isNotEmpty) {
           final userData = oldQuerySnapshot.docs[0].data();
-          final isActive = userData['isActive'] ?? false;
+          final isActive = userData['isActive'];
           print('User status (old ID): $userData');
 
           // Update to new device ID
           oldQuerySnapshot.docs[0].reference.update({'deviceId': deviceId});
-          return {'isRegistered': true, 'isActive': isActive};
+          if (isActive) {
+            return WhichPageFromMain.HomeScreen;
+          } else {
+            return WhichPageFromMain.AlasPage;
+          }
         }
       }
 
-      return {'isRegistered': false, 'isActive': false};
+      return WhichPageFromMain.RegistrationPage;
     } catch (e) {
       print('Error checking registration status: $e');
-      return {'isRegistered': false, 'isActive': false};
+      return WhichPageFromMain.AlasInternetPage;
     }
   }
 

@@ -50,6 +50,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
     });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('contactNumber', _contactController.text);
       final deviceId = await Devicehelper.getDeviceId();
 
       // Check if device is already registered
@@ -147,9 +149,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       });
 
       // Set registration status in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isRegistered', true);
-      await prefs.setString('contactNumber', _contactController.text);
 
       // Navigate to home screen
       if (mounted) {
