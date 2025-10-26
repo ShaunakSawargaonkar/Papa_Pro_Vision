@@ -13,6 +13,7 @@ import 'package:papa_pro_vision/enums.dart';
 import 'package:papa_pro_vision/UI/widgets/mic_button.dart';
 import 'dart:io';
 import 'package:papa_pro_vision/UI/widgets/image_preview.dart';
+import 'package:papa_pro_vision/UI/widgets/side_bar_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -174,7 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (controller.state.interactionMode == InteractionMode.normal) {
         //Capture image
         Uint8List? imageBytes = Uint8List(0);
-        if (!controller.state.isHistoryMode && !controller.state.hasUploadedImage) {
+        if (!controller.state.isHistoryMode &&
+            !controller.state.hasUploadedImage) {
           imageBytes = await _captureImage(controller);
           if (imageBytes != null) {
             controller.setImageBytes(imageBytes);
@@ -182,9 +184,13 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           if (controller.getImageBytes().isNotEmpty) {
             if (controller.state.hasUploadedImage) {
-              Analyticshelper.updateResponseCount("LLMInteractionWithUploadedImageCount");
+              Analyticshelper.updateResponseCount(
+                "LLMInteractionWithUploadedImageCount",
+              );
             } else {
-              Analyticshelper.updateResponseCount("LLMInteractionWithImageCount");
+              Analyticshelper.updateResponseCount(
+                "LLMInteractionWithImageCount",
+              );
             }
           } else {
             Analyticshelper.updateResponseCount("JustLLMInteractionCount");
@@ -255,6 +261,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  PreferredSizeWidget appBar(
+    ConversationController controller,
+    double largeFontSize,
+  ) {
+    final deviceWidth = MediaQuery.of(context).size.width;
+    return AppBar(
+      title: Row(
+        children: [
+          Image.asset('assets/logo_color.png', width: 30, height: 30),
+          const SizedBox(width: 10),
+          Text('Letsee', style: TextStyle(fontSize: deviceWidth * 0.06)),
+        ],
+      ),
+      actions: [
+        Semantics(
+          label: "Profile Settings button",
+          excludeSemantics: true,
+          child: IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+              await _initialize();
+              controller.initializeAgent(
+                prefs?.getString('inputLanguage') ?? 'en_IN',
+                prefs?.getBool('enableTranslation') ?? false,
+                InteractionMode.normal,
+              );
+              // onSettingsChanged?.call();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Show loading indicator while initializing or if camera is not ready
@@ -276,6 +320,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final controller = Provider.of<ConversationController>(context);
 
     final AppContentState state = controller.state;
+    final deviceHeight = MediaQuery.of(context).size.height;
+    final deviceWidth = MediaQuery.of(context).size.width;
+
+    final largeFontSize = deviceWidth * 0.065;
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return FutureBuilder(
         future: controller.initialize(
@@ -284,33 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         builder: (context, snapshot) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Papa Pro Vision'),
-              actions: [
-                Semantics(
-                  label: "Profile Settings button",
-                  excludeSemantics: true,
-                  child: IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfilePage(),
-                        ),
-                      );
-                      await _initialize();
-                      controller.initializeAgent(
-                        prefs?.getString('inputLanguage') ?? 'en_IN',
-                        prefs?.getBool('enableTranslation') ?? false,
-                        InteractionMode.normal,
-                      );
-                      // onSettingsChanged?.call();
-                    },
-                  ),
-                ),
-              ],
-            ),
+            appBar: appBar(controller, largeFontSize),
             body: Center(
               child: state.agentResponse.isNotEmpty
                   ? Padding(
@@ -333,120 +355,88 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       builder: (context, snapshot) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Papa ProVision'),
-            actions: [
-              Semantics(
-                label: "Profile Settings button",
-                excludeSemantics: true,
-                child: IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfilePage(),
-                      ),
-                    );
-                    await _initialize();
-                    controller.initializeAgent(
-                      prefs?.getString('inputLanguage') ?? 'en_IN',
-                      prefs?.getBool('enableTranslation') ?? false,
-                      InteractionMode.normal,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+          appBar: appBar(controller, largeFontSize),
           body: Column(
             children: [
               SizedBox(
                 // width: cameraController!.value.previewSize!.height,
-                height: MediaQuery.of(context).size.height * 0.55,
-                child: Row(
+                height: deviceHeight * 0.55,
+                child: Stack(
                   children: [
-                    // LEFT clickable border
-                    InkWell(
-                      onTap: () async {
-                        await controller.unsetHistoryMode();
-                        await controller.setAutoReadingMode(
-                          prefs?.getString('inputLanguage') ?? 'en_IN',
-                          prefs?.getBool('enableTranslation') ?? false,
-                        );
-                        onToggleListening(controller);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.only(right: 10),
-                        width: MediaQuery.of(context).size.width * 0.15,
-                        height: cameraController!.value.previewSize!.width,
-                        color: Colors.blue, // full-height clickable blue area
-                        child: RotatedBox(
-                          quarterTurns: 1,
-                          child: Text(
-                            "Reader Mode",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 30),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // CENTER Camera feed
-                    Expanded(
-                      flex: 8, // take maximum space
-                      child: Semantics(
-                        label: controller.getImageBytes().isNotEmpty
-                            ? "Clear image"
-                            : "Camera feed",
-                        excludeSemantics: true,
-                        child: InkWell(
-                          onTap: () => clearImageBuffer(controller),
-                          child: OverflowBox(
-                            alignment: Alignment.center,
-                            child: SizedBox(
-                              width:
-                                  cameraController!.value.previewSize!.height,
-                              height:
-                                  cameraController!.value.previewSize!.width,
-                              child: ImagePreview(cameraController: cameraController!, hasUploadedImage: controller.state.hasUploadedImage, imageBytes: controller.getImageBytes()),
+                    // BOTTOM LAYER: Full-width Camera feed
+                    Semantics(
+                      label: controller.getImageBytes().isNotEmpty
+                          ? "Clear image"
+                          : "Camera feed",
+                      excludeSemantics: true,
+                      child: InkWell(
+                        onTap: () => clearImageBuffer(controller),
+                        child: Center(
+                          child: SizedBox(
+                            width: cameraController!.value.previewSize!.height,
+                            height: cameraController!.value.previewSize!.width,
+                            child: ImagePreview(
+                              cameraController: cameraController!,
+                              hasUploadedImage:
+                                  controller.state.hasUploadedImage,
+                              imageBytes: controller.getImageBytes(),
                             ),
                           ),
                         ),
                       ),
                     ),
 
-                    // RIGHT clickable border
-                    InkWell(
-                      onTap: () async {
-                        await controller.unsetHistoryMode();
-                        controller.setSmartViewMode(
-                          prefs?.getString('inputLanguage') ?? 'en_IN',
-                          prefs?.getBool('enableTranslation') ?? false,
-                        );
-                        onToggleListening(controller);
-                      },
-
-                      child: Container(
-                        padding: EdgeInsets.only(left: 10),
-                        height: cameraController!.value.previewSize!.width,
-                        width: MediaQuery.of(context).size.width * 0.15,
-                        color: Colors.blue, // full-height clickable blue area
-                        child: RotatedBox(
-                          quarterTurns: 3,
-                          child: Text(
-                            "Smart View Mode",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 30),
-                          ),
+                    // TOP LAYER: Left and Right sidebars positioned on top
+                    Row(
+                      children: [
+                        // LEFT clickable border
+                        SideBarButton(
+                          buttonText: "Reader Mode",
+                          onTap: () async {
+                            await controller.unsetHistoryMode();
+                            await controller.setAutoReadingMode(
+                              prefs?.getString('inputLanguage') ?? 'en_IN',
+                              prefs?.getBool('enableTranslation') ?? false,
+                            );
+                            onToggleListening(controller);
+                          },
+                          height: cameraController!.value.previewSize!.width,
+                          largeFontSize: largeFontSize,
+                          isLeft: true,
                         ),
-                      ),
+
+                        // SPACER - to push right sidebar to the right
+                        Spacer(),
+
+                        // RIGHT clickable border
+                        SideBarButton(
+                          buttonText: "Smart View Mode",
+                          onTap: () async {
+                            await controller.unsetHistoryMode();
+                            controller.setSmartViewMode(
+                              prefs?.getString('inputLanguage') ?? 'en_IN',
+                              prefs?.getBool('enableTranslation') ?? false,
+                            );
+                            onToggleListening(controller);
+                          },
+                          height: cameraController!.value.previewSize!.width,
+                          largeFontSize: largeFontSize,
+                          isLeft: false,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                flex: 3,
+              SizedBox(
+                height: state.agentResponse.isNotEmpty
+                    ? deviceHeight * 0.00
+                    : deviceHeight * 0.03,
+              ),
+              SizedBox(
+                height: state.agentResponse.isNotEmpty
+                    ? deviceHeight * 0.22
+                    : deviceHeight * 0.27,
                 child: Row(
                   children: [
                     // Left half - entire area clickable
@@ -472,8 +462,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     // Vertical divider between mic buttons
                     Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
-                      width: 2,
+                      height: deviceHeight * 0.2,
+                      width: deviceWidth * 0.015,
                       color: Colors.grey.withValues(alpha: 0.3),
                     ),
                     // Right half - entire area clickable
@@ -518,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (state.agentResponse.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(8.0),
+                  padding: EdgeInsets.all(deviceWidth * 0.02),
                   child: ElevatedButton.icon(
                     onPressed: () async {
                       await Clipboard.setData(
@@ -536,15 +526,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: const Icon(Icons.copy),
                     label: const Text('Copy Response'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: deviceWidth * 0.02,
+                        vertical: deviceHeight * 0.02,
                       ),
                     ),
                   ),
                 ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.04,
+                height: deviceHeight * 0.04,
               ), // Add some spacing at the bottom
             ],
           ),
