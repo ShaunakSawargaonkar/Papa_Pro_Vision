@@ -15,6 +15,7 @@ class MicButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final buttonWidth = MediaQuery.of(context).size.width * 0.32;
     return Semantics(
       label: switch (conversationState) {
         ConversationState.listening => 'Stop listening',
@@ -23,12 +24,12 @@ class MicButton extends StatelessWidget {
       },
       excludeSemantics: true,
       child: SizedBox(
-        width: 120, // Custom size - adjust as needed
-        height: 120, // Custom size - adjust as needed
+        width: buttonWidth,
+        height: buttonWidth,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(60),
+            borderRadius: BorderRadius.circular(buttonWidth / 2),
             child: Container(
               decoration: BoxDecoration(
                 color:
@@ -38,14 +39,6 @@ class MicButton extends StatelessWidget {
                     ? Colors.white
                     : baseColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: baseColor, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
               ),
               child: Center(
                 child: Icon(
@@ -54,7 +47,7 @@ class MicButton extends StatelessWidget {
                     ConversationState.speaking => Icons.pause,
                     _ => Icons.mic,
                   },
-                  size: 60, // Larger icon size
+                  size: buttonWidth * 0.5,
                   color:
                       conversationState == ConversationState.listening ||
                           conversationState == ConversationState.speaking ||
