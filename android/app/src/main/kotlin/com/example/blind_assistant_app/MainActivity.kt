@@ -1,4 +1,4 @@
-package com.example.blind_assistant_app
+package com.letsee.letsee
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,6 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 
 class _AudioManager {
   static final _AudioManager _instance = _AudioManager._internal();

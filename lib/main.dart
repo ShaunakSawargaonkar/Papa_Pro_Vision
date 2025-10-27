@@ -7,6 +7,8 @@ import 'package:papa_pro_vision/UI/home_screen.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:papa_pro_vision/UI/auth/phone_auth_page.dart';
 import 'package:flutter/services.dart';
 
 void main() async {
@@ -37,32 +39,53 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.blue,
       ),
-      home: FutureBuilder<WhichPageFromMain>(
-        future: Devicehelper.checkRegistration(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      // Show Phone OTP flow when not signed in. When signed in, keep the
+      // original FutureBuilder that chooses the correct app page.
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, authSnapshot) {
+          if (authSnapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          if (snapshot.hasData) {
-            final data = snapshot.data!;
-            if (data == WhichPageFromMain.AlasInternetPage) {
-              return const AlasInternetPage();
-            } else if (data == WhichPageFromMain.AlasPage) {
-              return const AlasPage();
-            } else if (data == WhichPageFromMain.HomeScreen) {
-              return const HomeScreen();
-            } else if (data == WhichPageFromMain.RegistrationPage) {
-              return const RegistrationPage();
-            } else {
-              return const AlasInternetPage();
-            }
+          final user = authSnapshot.data;
+          if (user == null) {
+            // Not signed in -> show minimal phone OTP page
+            return const PhoneAuthPage();
           }
-          return const AlasInternetPage();
+          print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
+          // Signed in -> show the existing registration/device check
+          return FutureBuilder<WhichPageFromMain>(
+            future: Devicehelper.checkRegistration(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasData) {
+                final data = snapshot.data!;
+                if (data == WhichPageFromMain.AlasInternetPage) {
+                  return const AlasInternetPage();
+                } else if (data == WhichPageFromMain.AlasPage) {
+                  return const AlasPage();
+                } else if (data == WhichPageFromMain.HomeScreen) {
+                  return const HomeScreen();
+                } else if (data == WhichPageFromMain.RegistrationPage) {
+                  return const RegistrationPage();
+                } else {
+                  return const AlasInternetPage();
+                }
+              }
+              return const AlasInternetPage();
+            },
+          );
         },
       ),
     );
   }
 }
+
+// Phone auth page moved to `lib/UI/auth/phone_auth_page.dart`.

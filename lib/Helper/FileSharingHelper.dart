@@ -44,15 +44,12 @@ class FileSharingHelper {
       try {
         // Get the file path from the shared media file
         String? filePath = sharedFile.path;
-
-        if (filePath != null) {   
           // Read the image file as bytes
           File imageFile = File(filePath);
           Uint8List imageBytes = await imageFile.readAsBytes();
           print('Uploaded Image Bytes: ${imageBytes.length}');
           controller.setUploadedImageMode(imageBytes, inputLanguage, enableTranslation);
           
-        }
       } catch (e) {
         print('Error processing shared image: $e');
       }

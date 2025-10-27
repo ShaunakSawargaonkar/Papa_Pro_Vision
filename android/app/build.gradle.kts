@@ -13,6 +13,7 @@ dependencies {
   // TODO: Add the dependencies for Firebase products you want to use
   // When using the BoM, don't specify versions in Firebase dependencies
   implementation("com.google.firebase:firebase-analytics")
+  implementation("com.google.firebase:firebase-auth")
 
 
   // Add the dependencies for any other desired Firebase products
@@ -20,7 +21,7 @@ dependencies {
 }
 
 android {
-    namespace = "com.example.blind_assistant_app"
+    namespace = "com.letsee.letsee"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -35,7 +36,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.blind_assistant_app"
+        applicationId = "com.letsee.letsee"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdkVersion(24)

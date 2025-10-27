@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1008549371925",
-    "project_id": "let-see-7b19c",
-    "storage_bucket": "let-see-7b19c.firebasestorage.app"
+    "project_number": "303194042908",
+    "project_id": "papaprovision",
+    "storage_bucket": "papaprovision.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1008549371925:android:83be0eb5640071623e6e1c",
+        "mobilesdk_app_id": "1:303194042908:android:143326825df57be90425d9",
         "android_client_info": {
           "package_name": "com.letsee.letsee"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAF89htKOhaNBG4AQoCrN6VB5EZpdaIbFA"
+          "current_key": "AIzaSyDZ-ZZniMNkI3bnLeQubqrzeg4SXSYbmzk"
         }
       ],
       "services": {
