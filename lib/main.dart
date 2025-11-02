@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
-import 'package:papa_pro_vision/UI/RegisterPage/AlasInternet.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/UI/home_screen.dart';
@@ -10,6 +8,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/UI/auth/phone_auth_page.dart';
 import 'package:flutter/services.dart';
+import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
+import 'package:papa_pro_vision/enums.dart';
+import 'package:papa_pro_vision/UI/payment_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,8 +58,8 @@ class MyApp extends StatelessWidget {
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
           // Signed in -> show the existing registration/device check
-          return FutureBuilder<WhichPageFromMain>(
-            future: Devicehelper.checkRegistration(),
+          return FutureBuilder<UserStatusResponse>(
+            future: DatabaseHelper.checkUserStatus(userUID: user.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
@@ -67,19 +68,27 @@ class MyApp extends StatelessWidget {
               }
               if (snapshot.hasData) {
                 final data = snapshot.data!;
-                if (data == WhichPageFromMain.AlasInternetPage) {
-                  return const AlasInternetPage();
-                } else if (data == WhichPageFromMain.AlasPage) {
-                  return const AlasPage();
-                } else if (data == WhichPageFromMain.HomeScreen) {
-                  return const HomeScreen();
-                } else if (data == WhichPageFromMain.RegistrationPage) {
+                if (data.userStatus == UserStatus.errorState) {
+                  return AlasPage(
+                    title: 'Please Contact Support',
+                    message:
+                        data.message ??
+                        'An error occurred. Please contact support.',
+                  );
+                } else if (data.userStatus == UserStatus.notRegistered) {
                   return const RegistrationPage();
-                } else {
-                  return const AlasInternetPage();
+                } else if (data.userStatus == UserStatus.firstPaymentPending) {
+                  return const PaymentPage(isFirstPayment: true);
+                } else if (data.userStatus == UserStatus.paymentPending) {
+                  return const PaymentPage(isFirstPayment: false);
+                } else if (data.userStatus == UserStatus.active) {
+                  return const HomeScreen();
                 }
               }
-              return const AlasInternetPage();
+              return const AlasPage(
+                message: "Something went wrong. Please try again later or contact support.",
+                title: "Something Went Wrong",
+              );
             },
           );
         },

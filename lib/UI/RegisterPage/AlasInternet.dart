@@ -1,26 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 
-class AlasInternetPage extends StatelessWidget {
-  const AlasInternetPage({super.key});
+class AlasInternetPage extends AlasPage {
+  const AlasInternetPage({super.key, super.message = "Please Check your internet connection and close the app and try again", super.title = "Internet Connection Error"});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Text(
-            "Please Check your internet connection and close the app and try again.",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
+    return super.build(context);
   }
 }
