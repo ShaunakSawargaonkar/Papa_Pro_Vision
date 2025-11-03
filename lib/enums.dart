@@ -8,3 +8,14 @@ enum ConversationState {
 }
 
 enum InteractionMode { normal, smartView, autoReading, video }
+
+enum UserType {single, organization }
+
+
+enum UserStatus {
+  errorState,  // contact support
+  notRegistered, // continue to registration process
+  firstPaymentPending, // continue to first payment process
+  paymentPending, // continue to payment process
+  active, // continue to home screen
+}

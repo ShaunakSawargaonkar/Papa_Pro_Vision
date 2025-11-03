@@ -1,23 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/payment_page.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import 'package:fluttertoast/fluttertoast.dart';
 
 class PaymentGateway extends StatefulWidget {
-  final DateTime currentDate;
-  final String email;
-  final String mobileNo;
-  final String userName;
+  final bool isFirstPayment;
 
-  const PaymentGateway({
-    super.key,
-    required this.currentDate,
-    required this.email,
-    required this.mobileNo,
-    required this.userName,
-  });
+  const PaymentGateway({super.key, required this.isFirstPayment});
 
   @override
   _PaymentGatewayState createState() => _PaymentGatewayState();
@@ -28,119 +19,9 @@ class _PaymentGatewayState extends State<PaymentGateway> {
 
   @override
   Widget build(BuildContext context) {
-    var height = MediaQuery.of(context).size.height;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "PICTIRA - Subscription",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      backgroundColor: Color(0xfff2f3f7),
-      body: Padding(
-        padding: EdgeInsets.all(height * 0.02),
-        child: ListView(
-          //crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Center(
-              child: CircleAvatar(
-                backgroundImage: AssetImage('images/pictira.png'),
-                radius: height * 0.11,
-                backgroundColor: Colors.black12,
-              ),
-            ),
-            SizedBox(height: height * 0.02),
-            Center(
-              child: Text(
-                "Together We Studyy",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: height * 0.03,
-                  color: Color(0xff2e91a0),
-                ),
-              ),
-            ),
-            SizedBox(height: height * 0.05),
-            Center(
-              // TODO make it look appeleaing
-              child: Text(
-                "Hey ${widget.userName},\n\n"
-                "Perks of Subscribing* - \n"
-                "\t >	Textbooks & Reference Books\n"
-                "\t >	Study Notes\n"
-                "\t >	Previous Question Papers and MCQs\n"
-                "\t >	Placement Resources and alumni connect portal\n",
-                // "Of all divisions at one place ",
-                style: TextStyle(
-                  fontSize: height * 0.025,
-                  color: Color(0xff31394c),
-                ),
-              ),
-            ),
-            SizedBox(height: height * 0.007),
-            Text(
-              "*Contents are subject to availability",
-              style: TextStyle(fontSize: height * 0.02, color: Colors.black),
-              textAlign: TextAlign.right,
-            ),
-            SizedBox(height: height * 0.03),
-            Center(
-              // child: ElevatedButton(
-              //     onPressed: openCheckout,
-              //     child: Text("Pay ₹9/-")
-              // )
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    child: Text("Pay ₹100/-"),
-                    onPressed: () {
-                      openCheckout(100);
-                    },
-                  ),
-                  SizedBox(height: height * 0.005),
-                  IconButton(
-                    icon: Icon(Icons.logout, color: Color(0xff2e91a0)),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) {
-                          return AlertDialog(
-                            content: Text("Are you sure you want to logout?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: Text("No"),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(ctx);
-                                  // while(Navigator.canPop(context)){ // Navigator.canPop return true if can pop
-                                  //   Navigator.pop(context);
-                                  // }
-                                  //Navigator.popUntil(context, (Route<dynamic> route) => route.isFirst);
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (c) => RegistrationPage(),
-                                    ),
-                                  );
-                                },
-                                child: Text("Yes"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return PaymentPage(
+      isFirstPayment: widget.isFirstPayment,
+      onPayment: (int amount) => openCheckout(amount),
     );
   }
 
@@ -233,13 +114,10 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     var options = <String, dynamic>{
       'key': 'rzp_test_RaVDdVb2vZXMGO',
       'amount': price * 100, // Amount in paise
-      'name': 'PICTIRA',
-      'description': 'Monthly Subscription',
+      'name': 'LetSee',
+      'description': 'User Subscription',
       'timeout': 300, // 5 minutes timeout
-      'prefill': <String, String>{
-        'contact': widget.mobileNo,
-        'email': widget.email,
-      },
+      'prefill': <String, String>{},
       'external': <String, List<String>>{
         'wallets': ['paytm'],
       },
