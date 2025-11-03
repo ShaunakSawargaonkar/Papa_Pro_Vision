@@ -1,4 +1,3 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'dart:io';
@@ -22,18 +21,31 @@ class Devicehelper {
   }
 
   static Future<String> getDeviceId() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    String? contactNumber = await (await SharedPreferences.getInstance())
-        .getString('contactNumber');
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return '${contactNumber}_android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}';
+    // DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    // String? contactNumber = await (await SharedPreferences.getInstance())
+    //     .getString('contactNumber');
+    // AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return '_android__FINGER:_HARD:_SERIAL:';
   }
 
   static Future<String> getOldUserDeviceId() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return androidInfo.id;
+    // DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    // AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    return '_android__FINGER:_HARD:_SERIAL:';
   }
+  // static Future<String> getDeviceId() async {
+  //   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  //   String? contactNumber = await (await SharedPreferences.getInstance())
+  //       .getString('contactNumber');
+  //   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+  //   return '${contactNumber}_android_${androidInfo.id}_FINGER:${androidInfo.fingerprint}_HARD:${androidInfo.hardware}_SERIAL:${androidInfo.serialNumber}';
+  // }
+
+  // static Future<String> getOldUserDeviceId() async {
+  //   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  //   AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+  //   return androidInfo.id;
+  // }
 
   static Future<bool> hasInternetConnectionAndNotify({
     String methodCallName = "JustChecking",
