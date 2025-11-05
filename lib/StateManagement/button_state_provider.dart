@@ -6,7 +6,7 @@ import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/Helper/FileSharingHelper.dart';
 import 'package:papa_pro_vision/LLMResponse/agent_service.dart';
-import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/UI/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';

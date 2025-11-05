@@ -9,7 +9,7 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/LLMResponse/system_prompt_enums.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/UI/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:papa_pro_vision/enums.dart';
 

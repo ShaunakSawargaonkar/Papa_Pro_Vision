@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/flutter_tts.dart';
-import 'package:papa_pro_vision/Txt2Speech/Models/google_tts.dart';
+import 'package:papa_pro_vision/UI/Txt2Speech/Models/flutter_tts.dart';
+import 'package:papa_pro_vision/UI/Txt2Speech/Models/google_tts.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 
 abstract class TextToSpeechService {
