@@ -196,13 +196,6 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
         title: const Text('', semanticsLabel: 'Phone Authentication Page'),
         backgroundColor: const Color(0xFFFCB853),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            Navigator.of(context).pop();
-          },
-        ),
       ),
       body: _loading
           ? const Center(
@@ -295,39 +288,6 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                                   }
                                   return null;
                                 },
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Info Card
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.blue[200]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      color: Colors.blue[700],
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'We\'ll send you a verification code via SMS',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.blue[800],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
                               const SizedBox(height: 24),
 
