@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/AlasInternet.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/auth/phone_auth_page.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
@@ -40,22 +41,6 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.blue,
       ),
-      // Show Phone OTP flow when not signed in. When signed in, keep the
-      // original FutureBuilder that chooses the correct app page.
-      // home: PaymentGateway(
-      //   currentDate: DateTime.now(),
-      //   email: "<user_email>",
-      //   mobileNo: "<user_mobile_no>",
-      //   userName: "<user_name>",
-      // ), // Temporarily using PhoneAuthPage instead of PaymentGateway
-      // StreamBuilder<User?>(
-      //   stream: FirebaseAuth.instance.authStateChanges(),
-      //   builder: (context, authSnapshot) {
-      //     if (authSnapshot.connectionState == ConnectionState.waiting) {
-      //       return const Scaffold(
-      //         body: Center(child: CircularProgressIndicator()),
-      //       );
-      //     }
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, authSnapshot) {
@@ -67,7 +52,8 @@ class MyApp extends StatelessWidget {
           final user = authSnapshot.data;
           if (user == null) {
             // Not signed in -> show minimal phone OTP page
-            return const PaymentGateway(isFirstPayment: true);
+            return const RegistrationPage();
+            // return const PaymentGateway(isFirstPayment: true);
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
           // Signed in -> show the existing registration/device check
@@ -96,6 +82,8 @@ class MyApp extends StatelessWidget {
                   return const PaymentGateway(isFirstPayment: false);
                 } else if (data.userStatus == UserStatus.active) {
                   return const HomeScreen();
+                } else if (data.userStatus == UserStatus.noInternet) {
+                  return const AlasInternetPage();
                 }
               }
               return AlasPage(

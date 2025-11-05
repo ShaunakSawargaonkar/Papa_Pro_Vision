@@ -96,14 +96,16 @@ class _RegistrationPageState extends State<RegistrationPage>
     });
 
     ReferralKeyResponse result = await DatabaseHelper.verifyReferralKey(
-      referralKey: _referralKeyController.text,
+      referralKeyName: _referralKeyController.text,
     );
     if (!result.success) {
       if (mounted) {
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message ?? 'Something went wrong. Please try again later.'),
+            content: Text(
+              result.message ?? 'Something went wrong. Please try again later.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -164,7 +166,9 @@ class _RegistrationPageState extends State<RegistrationPage>
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message ?? 'Something went wrong. Please try again later.'),
+            content: Text(
+              result.message ?? 'Something went wrong. Please try again later.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -242,6 +246,32 @@ class _RegistrationPageState extends State<RegistrationPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Change Organization Button - only show when organization is verified
+        if (_isOrganizationVerified) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                setState(() {
+                  _isOrganizationVerified = false;
+                  _referralKeyController.clear();
+                  _orgRef = null;
+                  _referralKeyRef = null;
+                });
+              },
+              icon: Icon(Icons.edit, size: 16, color: Colors.grey[600]),
+              label: Text(
+                'Change Organization',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         // Name Field - Required
         _buildFormField(
@@ -576,9 +606,46 @@ class _RegistrationPageState extends State<RegistrationPage>
                       // Header
                       Container(
                         padding: const EdgeInsets.all(24.0),
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Text(
+                            // Organization indicator when verified
+                            if (_isOrganizationVerified) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[50],
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.green[200]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.business,
+                                      size: 16,
+                                      color: Colors.green[700],
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Organization Registration',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            const Text(
                               'Welcome!',
                               style: TextStyle(
                                 fontSize: 28,
@@ -587,10 +654,12 @@ class _RegistrationPageState extends State<RegistrationPage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
-                              'Choose your registration type',
-                              style: TextStyle(
+                              _isOrganizationVerified
+                                  ? 'Complete your organization registration'
+                                  : 'Choose your registration type',
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                               ),
@@ -600,77 +669,81 @@ class _RegistrationPageState extends State<RegistrationPage>
                         ),
                       ),
 
-                      // Tab Bar
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        margin: const EdgeInsets.symmetric(horizontal: 24),
-                        padding: const EdgeInsets.all(4),
-                        child: TabBar(
-                          controller: _tabController,
-                          onTap: (index) {
-                            HapticFeedback.selectionClick();
-                            setState(() {
-                              _isOrganizationVerified = false;
-                            });
-                          },
-                          indicator: BoxDecoration(
-                            color: const Color(0xFFFCB853),
-                            borderRadius: BorderRadius.circular(10),
+                      // Tab Bar - Only show when organization is not verified
+                      if (!_isOrganizationVerified) ...[
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: Colors.grey[700],
-                          labelStyle: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.all(4),
+                          child: TabBar(
+                            controller: _tabController,
+                            onTap: (index) {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _isOrganizationVerified = false;
+                              });
+                            },
+                            indicator: BoxDecoration(
+                              color: const Color(0xFFFCB853),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            labelColor: Colors.white,
+                            unselectedLabelColor: Colors.grey[700],
+                            labelStyle: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            tabs: const [
+                              Tab(
+                                text: 'Single User',
+                                icon: Icon(
+                                  Icons.person,
+                                  size: 20,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Tab(
+                                text: 'Organization',
+                                icon: Icon(
+                                  Icons.business,
+                                  size: 20,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
                           ),
-                          tabs: const [
-                            Tab(
-                              text: 'Single User',
-                              icon: Icon(
-                                Icons.person,
-                                size: 20,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            Tab(
-                              text: 'Organization',
-                              icon: Icon(
-                                Icons.business,
-                                size: 20,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 12),
+                      ],
 
-                      // Tab Bar View
+                      // Content Area
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0),
                           child: Form(
                             key: _formKey,
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                // Single User Tab
-                                SingleChildScrollView(
-                                  child: _buildUserDetailsForm(),
-                                ),
+                            child: _isOrganizationVerified
+                                ? SingleChildScrollView(
+                                    child: _buildUserDetailsForm(),
+                                  )
+                                : TabBarView(
+                                    controller: _tabController,
+                                    children: [
+                                      // Single User Tab
+                                      SingleChildScrollView(
+                                        child: _buildUserDetailsForm(),
+                                      ),
 
-                                // Organization Tab
-                                SingleChildScrollView(
-                                  child: !_isOrganizationVerified
-                                      ? _buildOrganizationForm()
-                                      : _buildUserDetailsForm(),
-                                ),
-                              ],
-                            ),
+                                      // Organization Tab
+                                      SingleChildScrollView(
+                                        child: _buildOrganizationForm(),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 // ================= FIRESTORE SCHEMA =================
@@ -33,7 +34,6 @@ import 'package:papa_pro_vision/enums.dart';
 //
 // ====================================================
 
-
 class UserStatusResponse {
   final String? message;
   final UserStatus userStatus;
@@ -47,7 +47,12 @@ class ReferralKeyResponse {
   final DocumentReference? referralKeyRef;
   final DocumentReference? orgRef;
 
-  ReferralKeyResponse({this.message, required this.success,this.referralKeyRef, this.orgRef});
+  ReferralKeyResponse({
+    this.message,
+    required this.success,
+    this.referralKeyRef,
+    this.orgRef,
+  });
 }
 
 class CreateUserResponse {
@@ -57,7 +62,13 @@ class CreateUserResponse {
   final DocumentReference? orgRef;
   final DocumentReference? referralKeyRef;
 
-  CreateUserResponse({this.message, required this.success,this.userRef, this.orgRef, this.referralKeyRef});
+  CreateUserResponse({
+    this.message,
+    required this.success,
+    this.userRef,
+    this.orgRef,
+    this.referralKeyRef,
+  });
 }
 
 class DatabaseHelper {
@@ -79,10 +90,10 @@ class DatabaseHelper {
   }) async {
     try {
       if (userUID.isEmpty) {
-        return CreateUserResponse(
-          success: false,
-          message: 'User not logged in. Please restart app and sign in using your phone number to continue.',
-        );
+        // return CreateUserResponse(
+        //   success: false,
+        //   message: 'User not logged in. Please restart app and sign in using your phone number to continue.',
+        // );
       }
       if (userType == UserType.single) {
         print('Creating single user');
@@ -90,7 +101,7 @@ class DatabaseHelper {
             .collection(organizationsTableName)
             .add({
               'NumberOfUsers': 1,
-              'OrgType': UserType.single.toString(),
+              'OrgType': (UserType.single.name).toString(),
               'ReferralKeys': [],
             });
 
@@ -113,13 +124,15 @@ class DatabaseHelper {
         if (referralKeyRef == null) {
           return CreateUserResponse(
             success: false,
-            message: 'Referral Key is required to register an organization user',
+            message:
+                'Referral Key is required to register an organization user',
           );
         }
         if (orgRef == null) {
           return CreateUserResponse(
             success: false,
-            message: 'No organization associated with this referral key. Please contact your organization admin.',
+            message:
+                'No organization associated with this referral key. Please contact your organization admin.',
           );
         }
 
@@ -173,31 +186,45 @@ class DatabaseHelper {
   }
 
   static Future<ReferralKeyResponse> verifyReferralKey({
-    required String referralKey,
+    required String referralKeyName,
   }) async {
     try {
-      DocumentSnapshot referralKeyDoc = await FirebaseFirestore.instance
+      print("Verifying referral key: $referralKeyName");
+
+      QuerySnapshot referralKey = await FirebaseFirestore.instance
           .collection(referralKeyTableName)
-          .doc(referralKey)
+          .where('KeyName', isEqualTo: referralKeyName)
           .get();
-      if (!referralKeyDoc.exists) {
-          return ReferralKeyResponse(
-            success: false,
-            message: 'Could not find referral key. Please cross check with your organization admin.',
-          );
-        }
+      print("Referral key query done, found ${referralKey} documents");
+
+      if (referralKey.docs.isNotEmpty) {
+        // return ReferralKeyResponse(
+        //   success: false,
+        //   message:
+        //       'Could not find referral key. Please cross check with your organization admin.',
+        // );
+
+        var referralKeyDoc = referralKey.docs.first;
         var referralKeyData = referralKeyDoc.data() as Map<String, dynamic>;
         if (referralKeyData['NumberOfUsers'] >= referralKeyData['MaxCount']) {
           return ReferralKeyResponse(
             success: false,
-            message: 'Referral key usage limit reached. Please contact your organization admin.',
+            message:
+                'Referral key usage limit reached. Please contact your organization admin.',
           );
         }
-      return ReferralKeyResponse(
-        success: true,
-        orgRef: referralKeyData['OrgID'] as DocumentReference,
-        referralKeyRef: referralKeyDoc.reference,
-      );
+        return ReferralKeyResponse(
+          success: true,
+          orgRef: referralKeyData['OrgID'] as DocumentReference,
+          referralKeyRef: referralKeyDoc.reference,
+        );
+      } else {
+        return ReferralKeyResponse(
+          success: false,
+          message:
+              'Could not find referral key. Please cross check with your organization admin.',
+        );
+      }
     } catch (e) {
       print('Error verifying referral key: $e');
       return ReferralKeyResponse(
@@ -211,52 +238,61 @@ class DatabaseHelper {
     required String userUID,
   }) async {
     try {
+      var isInternetAvailable =
+          await Devicehelper.hasInternetConnectionAndNotify(
+            methodCallName: 'checkUserStatus',
+          );
+      if (!isInternetAvailable) {
+        return UserStatusResponse(userStatus: UserStatus.noInternet);
+      }
       QuerySnapshot userDoc = await FirebaseFirestore.instance
           .collection(usersTableName)
           .where('UserUID', isEqualTo: userUID)
           .get();
       if (userDoc.docs.isNotEmpty) {
-        if(userDoc.docs.length > 1) {
+        if (userDoc.docs.length > 1) {
           return UserStatusResponse(
-            message: 'Multiple users found with the same phone number. Please contact support.',
+            message:
+                'Multiple users found with the same phone number. Please contact support.',
             userStatus: UserStatus.errorState,
           );
         }
-        if((userDoc.docs[0].data() as Map<String, dynamic>?)?['IsEnabled'] == false) {
+        if ((userDoc.docs[0].data() as Map<String, dynamic>?)?['IsEnabled'] ==
+            false) {
           return UserStatusResponse(
             message: 'Your account is not active. Please contact support.',
             userStatus: UserStatus.errorState,
           );
         }
-        UserStatus userStatus = checkSubscriptionStatus(userDoc: userDoc.docs[0]);
-        return UserStatusResponse(
-          userStatus: userStatus
+        UserStatus userStatus = checkSubscriptionStatus(
+          userDoc: userDoc.docs[0],
         );
+        return UserStatusResponse(userStatus: userStatus);
       }
-      return UserStatusResponse(
-        userStatus: UserStatus.notRegistered,
-      );
+      return UserStatusResponse(userStatus: UserStatus.notRegistered);
     } catch (e) {
       print('Error checking if user exists: $e');
       return UserStatusResponse(
-        message: 'Something went wrong while checking if user exists. Please try again later.',
+        message:
+            'Something went wrong while checking if user exists. Please try again later.',
         userStatus: UserStatus.errorState,
       );
     }
   }
 
-
-  static UserStatus checkSubscriptionStatus({required QueryDocumentSnapshot userDoc}){
+  static UserStatus checkSubscriptionStatus({
+    required QueryDocumentSnapshot userDoc,
+  }) {
     var userData = userDoc.data() as Map<String, dynamic>;
 
-    if(userData['SubscriptionEndDate'] == null) {
+    if (userData['SubscriptionEndDate'] == null) {
       return UserStatus.firstPaymentPending;
     }
 
-    if(userData['SubscriptionEndDate'].isAfter(DateTime.now())) {
+    if (userData['SubscriptionEndDate'].isAfter(DateTime.now())) {
       return UserStatus.active;
     }
 
     return UserStatus.paymentPending;
   }
-  }
+}
