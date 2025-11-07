@@ -52,9 +52,9 @@ class MyApp extends StatelessWidget {
           final user = authSnapshot.data;
           if (user == null) {
             // Not signed in -> show minimal phone OTP page
-            return const RegistrationPage();
+            // return const RegistrationPage();
             // return const PaymentGateway(isFirstPayment: true);
-            // return const PaymentGateway(isFirstPayment: true);
+            return const PhoneAuthPage();
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
           // Signed in -> show the existing registration/device check

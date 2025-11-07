@@ -11,7 +11,9 @@ class PhoneAuthPage extends StatefulWidget {
 }
 
 class _PhoneAuthPageState extends State<PhoneAuthPage> {
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController(
+    text: '+91',
+  );
   final TextEditingController _codeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -185,6 +187,16 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
       ),
       validator: validator,
       onTap: () => HapticFeedback.selectionClick(),
+      onChanged: controller == _phoneController
+          ? (value) {
+              if (!value.startsWith('+91')) {
+                controller.value = controller.value.copyWith(
+                  text: '+91',
+                  selection: const TextSelection.collapsed(offset: 3),
+                );
+              }
+            }
+          : null,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/UI/home_screen.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +47,7 @@ class _RegistrationPageState extends State<RegistrationPage>
 
   Future<void> _loadPhoneNumber() async {
     final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('contactNumber') ?? '+91 9876543210';
+    final phoneNumber = prefs.getString('contactNumber') ?? '+91';
     setState(() {
       _phoneController.text = phoneNumber;
     });
@@ -122,6 +123,13 @@ class _RegistrationPageState extends State<RegistrationPage>
       _isOrganizationVerified = true;
       _isLoading = false;
     });
+
+    print('Navigating to Payment Page');
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   Future<void> _submitForm() async {
@@ -186,11 +194,13 @@ class _RegistrationPageState extends State<RegistrationPage>
     // Success haptic feedback
     HapticFeedback.lightImpact();
 
-    // Navigate to home screen
-    print('Navigating to home screen');
+    // Navigate to Payment Page
+    print('Navigating to Payment Page');
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) => const PaymentGateway(isFirstPayment: true),
+        ),
       );
     }
     return;

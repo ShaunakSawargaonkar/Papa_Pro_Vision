@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/payment_page.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentGateway extends StatefulWidget {
   final bool isFirstPayment;
@@ -43,349 +45,9 @@ class _PaymentGatewayState extends State<PaymentGateway> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFCB853),
-      appBar: AppBar(
-        title: const Text('', semanticsLabel: 'Payment Gateway'),
-        backgroundColor: const Color(0xFFFCB853),
-        elevation: 0,
-      ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                semanticsLabel: 'Loading payment options, please wait',
-              ),
-            )
-          : SafeArea(
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 550),
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      children: [
-                        // Header - Compact
-                        Column(
-                          children: [
-                            Icon(
-                              Icons.payment,
-                              size: 40,
-                              color: const Color(0xFFFCB853),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              widget.isFirstPayment
-                                  ? 'Choose Your Plan'
-                                  : 'Renew Subscription',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFFCB853),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Select a subscription plan to unlock premium features',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Subscription Plans - Grid Layout for Compact View
-                        Expanded(
-                          flex: 3,
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 1.0,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                ),
-                            itemCount: subscriptionPlans.length,
-                            itemBuilder: (context, index) {
-                              final plan = subscriptionPlans[index];
-                              final isSelected = selectedPlan == index;
-
-                              return InkWell(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => selectedPlan = index);
-                                },
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? const Color(
-                                            0xFFFCB853,
-                                          ).withOpacity(0.1)
-                                        : Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? const Color(0xFFFCB853)
-                                          : Colors.grey[300]!,
-                                      width: isSelected ? 2 : 1,
-                                    ),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      // Popular Badge
-                                      if (plan['popular'])
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green,
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: const Text(
-                                              'POPULAR',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 8,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-
-                                      // Content
-                                      Row(
-                                        children: [
-                                          // Selection Indicator (Radio Button)
-                                          Container(
-                                            width: 16,
-                                            height: 16,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: isSelected
-                                                    ? const Color(0xFFFCB853)
-                                                    : Colors.grey[400]!,
-                                                width: 2,
-                                              ),
-                                              color: isSelected
-                                                  ? const Color(0xFFFCB853)
-                                                  : Colors.transparent,
-                                            ),
-                                            child: isSelected
-                                                ? const Icon(
-                                                    Icons.check,
-                                                    size: 10,
-                                                    color: Colors.white,
-                                                  )
-                                                : null,
-                                          ),
-
-                                          const SizedBox(width: 8),
-
-                                          // Text Content Column
-                                          Expanded(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Duration
-                                                Text(
-                                                  plan['duration'],
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black,
-                                                  ),
-                                                ),
-
-                                                const SizedBox(height: 4),
-
-                                                // Price
-                                                Text(
-                                                  plan['price'],
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFFFCB853),
-                                                  ),
-                                                ),
-
-                                                // Savings
-                                                if (plan['savings'] !=
-                                                    null) ...[
-                                                  const SizedBox(height: 4),
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 6,
-                                                          vertical: 2,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.green[50],
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            6,
-                                                          ),
-                                                      border: Border.all(
-                                                        color:
-                                                            Colors.green[200]!,
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      plan['savings'],
-                                                      style: TextStyle(
-                                                        fontSize: 9,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color:
-                                                            Colors.green[700],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Features Section - Compact
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.blue[200]!,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.star,
-                                color: Colors.blue[700],
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Unlimited access • Priority support • No ads • Advanced features',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blue[700],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Payment Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              final amount = int.parse(
-                                subscriptionPlans[selectedPlan]['price']
-                                    .replaceAll('₹', '')
-                                    .replaceAll(',', '')
-                                    .trim(),
-                              );
-                              openCheckout(amount);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFCB853),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 3,
-                            ),
-                            child: Text(
-                              'Pay ${subscriptionPlans[selectedPlan]['price']} - Continue',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Security Note - Compact
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.security,
-                              size: 14,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Secure payment powered by Razorpay',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+    return PaymentPage(
+      isFirstPayment: widget.isFirstPayment,
+      onPayment: openCheckout,
     );
   }
 
@@ -584,22 +246,34 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       return;
     }
 
+    final prefs = await SharedPreferences.getInstance();
+    final phoneNumber = prefs.getString('contactNumber') ?? '+91';
     var options = <String, dynamic>{
       'key': 'rzp_test_RaVDdVb2vZXMGO',
       'amount': price * 100, // Amount in paise
-      'name': 'Papa Pro Vision',
+      'name': 'Let See',
       'description':
           'Premium Subscription - ${subscriptionPlans[selectedPlan]['duration']}',
       'timeout': 300, // 5 minutes timeout
-      'prefill': <String, String>{},
-      'external': <String, List<String>>{
-        'wallets': ['paytm', 'gpay', 'phonepe', 'amazonpay'],
+      'prefill': <String, String>{'contact': phoneNumber},
+      'config': <String, dynamic>{
+        'display': <String, dynamic>{
+          'hide': [
+            <String, String>{'method': 'emi'},
+            <String, String>{'method': 'wallet'},
+            <String, String>{'method': 'paylater'},
+          ],
+          'preferences': <String, dynamic>{'show_default_blocks': true},
+        },
       },
       'theme': <String, String>{'color': '#FCB853'}, // Match our theme color
     };
 
     try {
       print("Opening Razorpay with options: $options");
+      print(
+        "Razorpay Flutter Version: Check your pubspec.yaml for razorpay_flutter version",
+      );
 
       // Show loading indicator
       if (mounted) {
