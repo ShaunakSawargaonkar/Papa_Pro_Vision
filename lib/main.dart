@@ -52,9 +52,9 @@ class MyApp extends StatelessWidget {
           final user = authSnapshot.data;
           if (user == null) {
             // Not signed in -> show minimal phone OTP page
-            // return const RegistrationPage();
+            return RegistrationPage(phoneNumber: '9561112577');
             // return const PaymentGateway(isFirstPayment: true);
-            return const HomeScreen();
+            // return PaymentGateway(isFirstPayment: false);
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
           // Signed in -> show the existing registration/device check
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
                         'An error occurred. Please contact support.',
                   );
                 } else if (data.userStatus == UserStatus.notRegistered) {
-                  return const RegistrationPage();
+                  return RegistrationPage(phoneNumber: user.phoneNumber ?? '');
                 } else if (data.userStatus == UserStatus.firstPaymentPending) {
                   return const PaymentGateway(isFirstPayment: true);
                 } else if (data.userStatus == UserStatus.paymentPending) {

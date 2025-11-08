@@ -10,7 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({super.key});
+  final String? phoneNumber;
+  const RegistrationPage({super.key, required this.phoneNumber});
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
@@ -46,11 +47,23 @@ class _RegistrationPageState extends State<RegistrationPage>
   }
 
   Future<void> _loadPhoneNumber() async {
-    final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('contactNumber') ?? '+91';
-    setState(() {
-      _phoneController.text = phoneNumber;
-    });
+    // Prioritize widget parameter, fallback to SharedPreferences
+    if (widget.phoneNumber != null && widget.phoneNumber!.isNotEmpty) {
+      setState(() {
+        _phoneController.text = widget.phoneNumber!.startsWith('+91')
+            ? widget.phoneNumber!
+            : '+91${widget.phoneNumber!}';
+      });
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final phoneNumber = prefs.getString('contactNumber') ?? '+91';
+      final formattedPhoneNumber = phoneNumber.startsWith('+91')
+          ? phoneNumber
+          : '+91${phoneNumber}';
+      setState(() {
+        _phoneController.text = formattedPhoneNumber;
+      });
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -300,7 +313,7 @@ class _RegistrationPageState extends State<RegistrationPage>
           controller: _phoneController,
           validator: (value) =>
               value.isEmpty ? 'Please enter your phone number' : null,
-          isDisabled: true,
+          isDisabled: _phoneController.text.isNotEmpty && _phoneController.text != '+91',
         ),
         const SizedBox(height: 16),
 
@@ -575,6 +588,85 @@ class _RegistrationPageState extends State<RegistrationPage>
     );
   }
 
+  Future<void> _skipRegistration() async {
+    // Haptic feedback
+    HapticFeedback.mediumImpact();
+
+    if(_phoneController.text.isEmpty || _phoneController.text == '+91') {
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your phone number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    print('Skipping registration - creating minimal user');
+
+    CreateUserResponse result = await DatabaseHelper.createUser(
+      userUID: FirebaseAuth.instance.currentUser?.uid ?? '',
+      dob: DateTime(2000),
+      gender: '',
+      name: '',
+      phoneNumber: _phoneController.text,
+      occupation: '',
+      userType: UserType.single,
+      referralKeyRef: null,
+      orgRef: null,
+    );
+
+    print('Skip registration result: $result');
+
+    if (!result.success) {
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.message ?? 'Something went wrong. Please try again later.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Success haptic feedback
+    HapticFeedback.lightImpact();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+
+    // Navigate to Payment Page
+    print('Navigating to Payment Page');
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const PaymentGateway(isFirstPayment: true),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -583,6 +675,22 @@ class _RegistrationPageState extends State<RegistrationPage>
         title: const Text('', semanticsLabel: 'Registration Page'),
         backgroundColor: const Color(0xFFFCB853),
         elevation: 0,
+        actions: [
+          // Skip button - only show for single users
+          if (_tabController.index == 0 && !_isOrganizationVerified)
+            TextButton.icon(
+              onPressed: _skipRegistration,
+              icon: const Icon(Icons.arrow_forward, color: Colors.white),
+              label: const Text(
+                'Skip',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(

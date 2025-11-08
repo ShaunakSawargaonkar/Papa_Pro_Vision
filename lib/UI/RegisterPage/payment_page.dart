@@ -57,7 +57,7 @@ class _PaymentPageState extends State<PaymentPage> {
     _initializePaymentCosts();
   }
 
-  Future<void> _initializePaymentCosts() async {
+   Future<void> _initializePaymentCosts() async {
     try {
       // Fetch payment costs from Firestore
       print("Inside initializePaymentCosts");
@@ -73,15 +73,19 @@ class _PaymentPageState extends State<PaymentPage> {
         // Update subscription plans with fetched prices
         setState(() {
           for (int i = 0; i < subscriptionPlans.length; i++) {
-            final originalPrice = data['${subscriptionPlans[i]['duration']}']
+            final originalPriceValue = data['${subscriptionPlans[i]['duration']}']
                 .toString();
-            subscriptionPlans[i]['originalPrice'] = originalPrice;
+            // Always add rupee symbol to the original price
+            final originalPriceWithRupee = originalPriceValue.startsWith('₹') 
+                ? originalPriceValue 
+                : '₹$originalPriceValue';
+            subscriptionPlans[i]['originalPrice'] = originalPriceWithRupee;
 
             if (widget.isFirstPayment &&
                 subscriptionPlans[i]['duration'] == '1 Month') {
               subscriptionPlans[i]['price'] = '₹1';
             } else {
-              subscriptionPlans[i]['price'] = originalPrice;
+              subscriptionPlans[i]['price'] = originalPriceWithRupee;
             }
           }
           // Recalculate savings after updating prices
@@ -144,6 +148,11 @@ class _PaymentPageState extends State<PaymentPage> {
     double screenWidth,
     double screenHeight,
     bool isTablet,
+    double durationTextSize,
+    double priceTextSize,
+    double originalPriceTextSize,
+    double savingsTextSize,
+    double badgeTextSize,
   ) {
     final plan = subscriptionPlans[index];
     final isSelected = selectedPlan == index;
@@ -206,12 +215,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     'POPULAR',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: isTablet
-                          ? 12
-                          : (screenWidth * 0.025).clamp(
-                              8.0,
-                              12.0,
-                            ), // Dynamic font size
+                      fontSize: badgeTextSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -236,31 +240,30 @@ class _PaymentPageState extends State<PaymentPage> {
                     'First month free',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: isTablet
-                          ? 12
-                          : (screenWidth * 0.025).clamp(
-                              8.0,
-                              12.0,
-                            ), // Dynamic font size
+                      fontSize: badgeTextSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
             Padding(
-              padding: EdgeInsets.all(screenWidth * 0.04), // 4% of screen width
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, // 4% of screen width
+                vertical: screenWidth * 0.04, // 4% of screen width
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Add equal padding for "First month free" badge to keep content centered
+                  if (widget.isFirstPayment && plan['duration'] == '1 Month')
+                    SizedBox(height: screenHeight * 0.035) // 3.5% padding to balance the badge
+                  else
+                    SizedBox(height: screenHeight * 0.01), // Small padding for other cards
                   Text(
                     plan['duration'],
                     style: TextStyle(
-                      fontSize: isTablet
-                          ? 18
-                          : (screenWidth * 0.04).clamp(
-                              14.0,
-                              18.0,
-                            ), // Dynamic font size
+                      fontSize: durationTextSize,
                       fontWeight: FontWeight.bold,
                       color: isSelected ? Colors.white : Colors.black87,
                     ),
@@ -269,44 +272,48 @@ class _PaymentPageState extends State<PaymentPage> {
                   SizedBox(
                     height: screenHeight * 0.015,
                   ), // 1.5% of screen height
-                  // Show slashed original price for first month free
+                  // Show slashed original price and new price side by side for first month free
                   if (widget.isFirstPayment &&
                       plan['duration'] == '1 Month' &&
-                      plan['originalPrice'] != null) ...[
+                      plan['originalPrice'] != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          plan['originalPrice'],
+                          style: TextStyle(
+                            fontSize: originalPriceTextSize,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? Colors.white70 : Colors.grey[600],
+                            decoration: TextDecoration.lineThrough,
+                            decorationThickness: 2,
+                          ),
+                        ),
+                        SizedBox(width: screenWidth * 0.02), // Space between prices
+                        Text(
+                          plan['price'],
+                          style: TextStyle(
+                            fontSize: priceTextSize,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFFFCB853),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
                     Text(
-                      plan['originalPrice'],
+                      plan['price'],
                       style: TextStyle(
-                        fontSize: isTablet
-                            ? 20
-                            : (screenWidth * 0.045).clamp(
-                                16.0,
-                                20.0,
-                              ), // Dynamic font size
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white70 : Colors.grey[600],
-                        decoration: TextDecoration.lineThrough,
-                        decorationThickness: 2,
+                        fontSize: priceTextSize,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFFFCB853),
                       ),
                     ),
-                    SizedBox(
-                      height: screenHeight * 0.005,
-                    ), // 0.5% of screen height
-                  ],
-                  Text(
-                    plan['price'],
-                    style: TextStyle(
-                      fontSize: isTablet
-                          ? 28
-                          : (screenWidth * 0.06).clamp(
-                              20.0,
-                              28.0,
-                            ), // Dynamic font size
-                      fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? Colors.white
-                          : const Color(0xFFFCB853),
-                    ),
-                  ),
                   if (plan['savings'] != null) ...[
                     SizedBox(
                       height: screenHeight * 0.01,
@@ -314,17 +321,17 @@ class _PaymentPageState extends State<PaymentPage> {
                     Text(
                       plan['savings'],
                       style: TextStyle(
-                        fontSize: isTablet
-                            ? 14
-                            : (screenWidth * 0.03).clamp(
-                                10.0,
-                                14.0,
-                              ), // Dynamic font size
+                        fontSize: savingsTextSize,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.white70 : Colors.green,
                       ),
                     ),
                   ],
+                  // Add bottom padding for 1 Month card to balance the top badge
+                  if (widget.isFirstPayment && plan['duration'] == '1 Month')
+                    SizedBox(height: screenHeight * 0.035) // 3.5% padding to balance
+                  else
+                    SizedBox(height: screenHeight * 0.01), // Small padding for other cards
                 ],
               ),
             ),
@@ -344,6 +351,13 @@ class _PaymentPageState extends State<PaymentPage> {
     final isTablet = screenWidth > 600;
     final isLargeScreen = screenWidth > 900;
 
+    // Define all text sizes at the top
+    final durationTextSize = isTablet ? 22.0 : (screenWidth * 0.04).clamp(18.0, 22.0);
+    final priceTextSize = isTablet ? 32.0 : (screenWidth * 0.06).clamp(24.0, 32.0);
+    final originalPriceTextSize = isTablet ? 20.0 : (screenWidth * 0.045).clamp(16.0, 20.0);
+    final savingsTextSize = isTablet ? 14.0 : (screenWidth * 0.03).clamp(10.0, 14.0);
+    final badgeTextSize = isTablet ? 12.0 : (screenWidth * 0.025).clamp(8.0, 12.0);
+
     // Responsive spacing and sizing
     final horizontalPadding = screenWidth * 0.05; // 5% of screen width
     final verticalPadding = isLandscape
@@ -359,16 +373,6 @@ class _PaymentPageState extends State<PaymentPage> {
       backgroundColor: const Color(0xFFFCB853),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCB853),
-        title: Text(
-          widget.isFirstPayment ? 'Complete Payment' : 'Renew Subscription',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: isTablet ? 20 : 18,
-          ),
-          semanticsLabel: 'Payment Page',
-        ),
-        centerTitle: true,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -426,8 +430,8 @@ class _PaymentPageState extends State<PaymentPage> {
                             ), // 2% of screen height
                             Text(
                               widget.isFirstPayment
-                                  ? 'Choose Your Plan'
-                                  : 'Select Renewal Plan',
+                                  ? 'Complete Payment'
+                                  : 'Renew Subscription',
                               style: TextStyle(
                                 fontSize: isTablet
                                     ? 32
@@ -473,6 +477,11 @@ class _PaymentPageState extends State<PaymentPage> {
                               screenWidth,
                               screenHeight,
                               isTablet,
+                              durationTextSize,
+                              priceTextSize,
+                              originalPriceTextSize,
+                              savingsTextSize,
+                              badgeTextSize,
                             ),
                           ),
                         ),

@@ -364,7 +364,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                       ),
                     ),
                     Text(
-                      'Welcome to Papa Pro Vision Premium',
+                      'Welcome to Letsee Premium',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
