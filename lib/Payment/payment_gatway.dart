@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:papa_pro_vision/UI/RegisterPage/payment_page.dart';
 import 'package:papa_pro_vision/UI/home_Screen.dart';
+import 'package:papa_pro_vision/Payment/payment_utils.dart';
+import 'package:papa_pro_vision/enums.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentGateway extends StatefulWidget {
   final bool isFirstPayment;
+  final String userUID;
+  final String phoneNumber;
 
-  const PaymentGateway({super.key, required this.isFirstPayment});
+  const PaymentGateway({
+    super.key,
+    required this.isFirstPayment,
+    required this.userUID,
+    required this.phoneNumber,
+  });
 
   @override
   _PaymentGatewayState createState() => _PaymentGatewayState();
@@ -21,35 +27,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
   int selectedPlan = 0;
   bool isLoading = true;
 
-  List<Map<String, dynamic>> subscriptionPlans = [
-    {'duration': '1 Month', 'price': '₹299', 'savings': null, 'popular': false},
-    {
-      'duration': '3 Months',
-      'price': '₹750',
-      'savings': 'Save 16%',
-      'popular': true,
-    },
-    {
-      'duration': '6 Months',
-      'price': '₹1300',
-      'savings': 'Save 28%',
-      'popular': false,
-    },
-    {
-      'duration': '1 Year',
-      'price': '₹2300',
-      'savings': 'Save 35%',
-      'popular': false,
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return PaymentPage(
-      isFirstPayment: widget.isFirstPayment,
-      onPayment: openCheckout,
-    );
-  }
+  List<Map<String, dynamic>> subscriptionPlans = PaymentService.initialSubscriptionPlans;
 
   @override
   void initState() {
@@ -61,25 +39,11 @@ class _PaymentGatewayState extends State<PaymentGateway> {
   Future<void> _initializePaymentCosts() async {
     try {
       // Fetch payment costs from Firestore
-      print("Fetching payment costs from Firestore");
-      final paymentCostSnapshot = await FirebaseFirestore.instance
-          .collection('PaymentCost')
-          .get();
-
-      if (paymentCostSnapshot.docs.isNotEmpty) {
-        final data = paymentCostSnapshot.docs[0].data();
-        print("Payment Costs Data: $data");
-
-        // Update subscription plans with fetched prices
+      subscriptionPlans = await PaymentService.fetchPaymentCosts();
+      if (mounted) {
         setState(() {
-          for (int i = 0; i < subscriptionPlans.length; i++) {
-            final duration = subscriptionPlans[i]['duration'];
-            if (data.containsKey(duration)) {
-              subscriptionPlans[i]['price'] = '₹${data[duration]}';
-            }
-          }
-          // Recalculate savings after updating prices
-          _calculateSavings();
+          subscriptionPlans = subscriptionPlans;
+          isLoading = false;
         });
       }
     } catch (e) {
@@ -90,45 +54,6 @@ class _PaymentGatewayState extends State<PaymentGateway> {
         setState(() {
           isLoading = false;
         });
-      }
-    }
-  }
-
-  void _calculateSavings() {
-    // Get monthly price for calculation
-    final monthlyPriceStr =
-        subscriptionPlans[0]['price']?.replaceAll(RegExp(r'[^\d]'), '') ??
-        '299';
-    final monthlyPrice = int.tryParse(monthlyPriceStr) ?? 299;
-
-    for (int i = 1; i < subscriptionPlans.length; i++) {
-      final currentPriceStr =
-          subscriptionPlans[i]['price']?.replaceAll(RegExp(r'[^\d]'), '') ??
-          '0';
-      final currentPrice = int.tryParse(currentPriceStr) ?? 0;
-
-      int months;
-      switch (subscriptionPlans[i]['duration']) {
-        case '3 Months':
-          months = 3;
-          break;
-        case '6 Months':
-          months = 6;
-          break;
-        case '1 Year':
-          months = 12;
-          break;
-        default:
-          months = 1;
-      }
-
-      final expectedPrice = monthlyPrice * months;
-      if (currentPrice < expectedPrice) {
-        final savingsPercent =
-            ((expectedPrice - currentPrice) / expectedPrice * 100).round();
-        subscriptionPlans[i]['savings'] = 'Save $savingsPercent%';
-      } else {
-        subscriptionPlans[i]['savings'] = null;
       }
     }
   }
@@ -246,16 +171,14 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('contactNumber') ?? '+91';
     var options = <String, dynamic>{
       'key': 'rzp_test_RaVDdVb2vZXMGO',
       'amount': price * 100, // Amount in paise
       'name': 'Let See',
       'description':
-          'Premium Subscription - ${subscriptionPlans[selectedPlan]['duration']}',
+          'Premium Subscription - ${subscriptionPlans[selectedPlan]['duration'].toString()}',
       'timeout': 300, // 5 minutes timeout
-      'prefill': <String, String>{'contact': phoneNumber},
+      'prefill': <String, String>{'contact': widget.phoneNumber},
       'config': <String, dynamic>{
         'display': <String, dynamic>{
           'hide': [
@@ -499,5 +422,429 @@ class _PaymentGatewayState extends State<PaymentGateway> {
         ),
       );
     }
+  }
+
+  Widget _buildPlanCard(
+    int index,
+    double screenWidth,
+    double screenHeight,
+    bool isTablet,
+    double durationTextSize,
+    double priceTextSize,
+    double originalPriceTextSize,
+    double savingsTextSize,
+    double badgeTextSize,
+  ) {
+    final plan = subscriptionPlans[index];
+    final isSelected = selectedPlan == index;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => selectedPlan = index);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFFCB853) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(
+            screenWidth * 0.03,
+          ), // 3% of screen width
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFCB853) : Colors.grey[300]!,
+            width: isTablet ? 3 : 2, // Thicker border on tablets
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFFCB853).withOpacity(0.3),
+                    blurRadius: screenWidth * 0.02, // 2% of screen width
+                    offset: Offset(
+                      0,
+                      screenHeight * 0.004,
+                    ), // 0.4% of screen height
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: screenWidth * 0.01, // 1% of screen width
+                    offset: Offset(
+                      0,
+                      screenHeight * 0.002,
+                    ), // 0.2% of screen height
+                  ),
+                ],
+        ),
+        child: Stack(
+          children: [
+            if (plan['popular'])
+              Positioned(
+                top: screenHeight * 0.01, // 1% of screen height
+                right: screenWidth * 0.02, // 2% of screen width
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.02, // 2% of screen width
+                    vertical: screenHeight * 0.005, // 0.5% of screen height
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(
+                      screenWidth * 0.02,
+                    ), // 2% of screen width
+                  ),
+                  child: Text(
+                    'POPULAR',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: badgeTextSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
+              Positioned(
+                top: screenHeight * 0.01, // 1% of screen height
+                left: screenWidth * 0.02, // 2% of screen width
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.02, // 2% of screen width
+                    vertical: screenHeight * 0.005, // 0.5% of screen height
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(
+                      screenWidth * 0.02,
+                    ), // 2% of screen width
+                  ),
+                  child: Text(
+                    'First month free',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: badgeTextSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, // 4% of screen width
+                vertical: screenWidth * 0.04, // 4% of screen width
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Add equal padding for "First month free" badge to keep content centered
+                  if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
+                    SizedBox(
+                      height: screenHeight * 0.035,
+                    ) // 3.5% padding to balance the badge
+                  else
+                    SizedBox(
+                      height: screenHeight * 0.01,
+                    ), // Small padding for other cards
+                  Text(
+                    plan['duration'].toString(),
+                    style: TextStyle(
+                      fontSize: durationTextSize,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(
+                    height: screenHeight * 0.015,
+                  ), // 1.5% of screen height
+                  // Show slashed original price and new price side by side for first month free
+                  if (widget.isFirstPayment &&
+                      (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth &&
+                      plan['originalPrice'] != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          plan['originalPrice'],
+                          style: TextStyle(
+                            fontSize: originalPriceTextSize,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white70
+                                : Colors.grey[600],
+                            decoration: TextDecoration.lineThrough,
+                            decorationThickness: 2,
+                          ),
+                        ),
+                        SizedBox(
+                          width: screenWidth * 0.02,
+                        ), // Space between prices
+                        Text(
+                          plan['price'],
+                          style: TextStyle(
+                            fontSize: priceTextSize,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFFFCB853),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      plan['price'],
+                      style: TextStyle(
+                        fontSize: priceTextSize,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFFFCB853),
+                      ),
+                    ),
+                  if (plan['savings'] != null) ...[
+                    SizedBox(
+                      height: screenHeight * 0.01,
+                    ), // 1% of screen height
+                    Text(
+                      plan['savings'],
+                      style: TextStyle(
+                        fontSize: savingsTextSize,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white70 : Colors.green,
+                      ),
+                    ),
+                  ],
+                  // Add bottom padding for 1 Month card to balance the top badge
+                  if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
+                    SizedBox(
+                      height: screenHeight * 0.035,
+                    ) // 3.5% padding to balance
+                  else
+                    SizedBox(
+                      height: screenHeight * 0.01,
+                    ), // Small padding for other cards
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenWidth = screenSize.width;
+    final screenHeight = screenSize.height;
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+    final isTablet = screenWidth > 600;
+    final isLargeScreen = screenWidth > 900;
+
+    // Define all text sizes at the top
+    final durationTextSize = isTablet
+        ? 22.0
+        : (screenWidth * 0.04).clamp(18.0, 22.0);
+    final priceTextSize = isTablet
+        ? 32.0
+        : (screenWidth * 0.06).clamp(24.0, 32.0);
+    final originalPriceTextSize = isTablet
+        ? 20.0
+        : (screenWidth * 0.045).clamp(16.0, 20.0);
+    final savingsTextSize = isTablet
+        ? 14.0
+        : (screenWidth * 0.03).clamp(10.0, 14.0);
+    final badgeTextSize = isTablet
+        ? 12.0
+        : (screenWidth * 0.025).clamp(8.0, 12.0);
+
+    // Responsive spacing and sizing
+    final horizontalPadding = screenWidth * 0.05; // 5% of screen width
+    final verticalPadding = isLandscape
+        ? screenHeight * 0.03
+        : screenHeight * 0.02; // Adjusted for landscape
+    final containerBorderRadius =
+        screenWidth * 0.05; // 5% of screen width, max 25
+    final maxContainerWidth = isLargeScreen
+        ? 600.0
+        : (isTablet ? screenWidth * 0.8 : screenWidth * 0.95);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFCB853),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFFCB853),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                semanticsLabel: 'Loading, please wait',
+              ),
+            )
+          : SafeArea(
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: maxContainerWidth),
+                  margin: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: verticalPadding,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(
+                      containerBorderRadius.clamp(15.0, 25.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: screenWidth * 0.025, // 2.5% of screen width
+                        offset: Offset(
+                          0,
+                          screenHeight * 0.006,
+                        ), // 0.6% of screen height
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header Section
+                      Container(
+                        padding: EdgeInsets.all(
+                          screenWidth * 0.06,
+                        ), // 6% of screen width
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.workspace_premium,
+                              size: (screenWidth * 0.15).clamp(
+                                50.0,
+                                80.0,
+                              ), // 15% of screen width, clamped between 50-80
+                              color: const Color(0xFFFCB853),
+                            ),
+                            SizedBox(
+                              height: screenHeight * 0.02,
+                            ), // 2% of screen height
+                            Text(
+                              widget.isFirstPayment
+                                  ? 'Complete Payment'
+                                  : 'Renew Subscription',
+                              style: TextStyle(
+                                fontSize: isTablet
+                                    ? 32
+                                    : (screenWidth * 0.07).clamp(
+                                        24.0,
+                                        32.0,
+                                      ), // Dynamic font size
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFFCB853),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Subscription Plans
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.06,
+                          ), // 6% of screen width
+                          child: GridView.builder(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: isLargeScreen
+                                      ? 4
+                                      : (isTablet
+                                            ? 3
+                                            : 2), // Responsive column count
+                                  childAspectRatio: isTablet
+                                      ? 0.9
+                                      : 0.85, // Slightly taller cards on tablets
+                                  crossAxisSpacing:
+                                      screenWidth * 0.03, // 3% of screen width
+                                  mainAxisSpacing:
+                                      screenHeight *
+                                      0.015, // 1.5% of screen height
+                                ),
+                            itemCount: subscriptionPlans.length,
+                            itemBuilder: (context, index) => _buildPlanCard(
+                              index,
+                              screenWidth,
+                              screenHeight,
+                              isTablet,
+                              durationTextSize,
+                              priceTextSize,
+                              originalPriceTextSize,
+                              savingsTextSize,
+                              badgeTextSize,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Continue Button
+                      Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.06,
+                        ), // 6% of screen width
+                        padding: EdgeInsets.only(
+                          bottom: screenHeight * 0.02, // 2% of screen height
+                          top: screenHeight * 0.02, // 2% of screen height
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            openCheckout(
+                              int.parse(
+                                subscriptionPlans[selectedPlan]['price']
+                                    .replaceAll('₹', '')
+                                    .replaceAll(',', '')
+                                    .trim(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFCB853),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                              vertical:
+                                  screenHeight * 0.02, // 2% of screen height
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                screenWidth * 0.03,
+                              ), // 3% of screen width
+                            ),
+                            elevation: 3,
+                          ),
+                          child: Text(
+                            'Continue with ${subscriptionPlans[selectedPlan]['duration'].toString()} - ${subscriptionPlans[selectedPlan]['price']}',
+                            style: TextStyle(
+                              fontSize: isTablet
+                                  ? 20
+                                  : (screenWidth * 0.045).clamp(
+                                      16.0,
+                                      20.0,
+                                    ), // Dynamic font size
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
   }
 }

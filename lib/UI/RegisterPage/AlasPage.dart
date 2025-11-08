@@ -11,6 +11,12 @@ class AlasPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Calculate minimum width (70% of screen width, but at least 280 and max 400)
+    final minWidth = (screenWidth * 0.7).clamp(280.0, 400.0);
+    
     return Scaffold(
       backgroundColor: const Color(0xFFFCB853), // #FCB853
       body: Center(
@@ -23,7 +29,10 @@ class AlasPage extends StatelessWidget {
                 SizedBox(height: 48),
                 // Main Dialog Box
                 Container(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                  constraints: BoxConstraints(
+                    minWidth: minWidth,
+                    maxWidth: 400,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -58,7 +67,7 @@ class AlasPage extends StatelessWidget {
 
                         // Title
                         Text(
-                          title,
+                          title.isEmpty ? 'Something Went Wrong' : title,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -70,6 +79,9 @@ class AlasPage extends StatelessWidget {
 
                         // Error Message
                         Container(
+                          constraints: BoxConstraints(
+                            minWidth: minWidth * 0.8, // 80% of dialog's min width
+                          ),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF3E0),
@@ -80,7 +92,7 @@ class AlasPage extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            message,
+                            message.isEmpty ? 'Something went wrong. Please try again later or contact support.' : message,
                             style: const TextStyle(
                               fontSize: 17,
                               color: Color(0xFF424242),

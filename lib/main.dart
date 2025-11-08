@@ -49,12 +49,17 @@ class MyApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-          final user = authSnapshot.data;
-          if (user == null) {
+          var user = authSnapshot.data;
+          // user = null;
+          if (user == null ||
+              user.phoneNumber == null ||
+              user.uid.isEmpty ||
+              user.phoneNumber!.isEmpty) {
             // Not signed in -> show minimal phone OTP page
-            return const PhoneAuthPage();
-            // return RegistrationPage(phoneNumber: '9561112577');
-            // return const PaymentGateway(isFirstPayment: true);
+            return PhoneAuthPage();
+            // return RegistrationPage(phoneNumber: '9561112577', userUID: '9561112577');
+            // return HomeScreen();
+            // return PaymentGateway(isFirstPayment: true, userUID: '', phoneNumber: '9561112577');
             // return PaymentGateway(isFirstPayment: false);
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
@@ -68,6 +73,7 @@ class MyApp extends StatelessWidget {
                 );
               }
               if (snapshot.hasData) {
+                print("User status: ${snapshot.data?.userStatus}");
                 final data = snapshot.data!;
                 if (data.userStatus == UserStatus.errorState) {
                   return AlasPage(
@@ -77,17 +83,33 @@ class MyApp extends StatelessWidget {
                         'An error occurred. Please contact support.',
                   );
                 } else if (data.userStatus == UserStatus.notRegistered) {
-                  return RegistrationPage(phoneNumber: user.phoneNumber ?? '');
+                  return RegistrationPage(
+                    phoneNumber: user?.phoneNumber ?? '',
+                    userUID: user?.uid ?? '',
+                  );
                 } else if (data.userStatus == UserStatus.firstPaymentPending) {
-                  return const HomeScreen();
-                  // return const PaymentGateway(isFirstPayment: true);
+                  return PaymentGateway(
+                    isFirstPayment: true,
+                    userUID: user?.uid ?? '',
+                    phoneNumber: user?.phoneNumber ?? '',
+                  );
                 } else if (data.userStatus == UserStatus.paymentPending) {
-                  return const PaymentGateway(isFirstPayment: false);
-                  // return const PaymentGateway(isFirstPayment: false);
+                  return PaymentGateway(
+                    isFirstPayment: false,
+                    userUID: user?.uid ?? '',
+                    phoneNumber: user?.phoneNumber ?? '',
+                  );
                 } else if (data.userStatus == UserStatus.active) {
                   return const HomeScreen();
                 } else if (data.userStatus == UserStatus.noInternet) {
                   return const AlasInternetPage();
+                } else if (data.userStatus == UserStatus.apkKilled) {
+                  return AlasPage(
+                    title: data.reasonTitle ?? 'Please update your app',
+                    message:
+                        data.message ??
+                        'Your app version is not supported. Please update to the latest version.',
+                  );
                 }
               }
               return AlasPage(

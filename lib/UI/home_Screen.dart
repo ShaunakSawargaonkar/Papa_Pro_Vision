@@ -237,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       print('Stopping speaking');
       Analyticshelper.updateResponseCount("CancelledRequestCount");
-      if (controller.chatHistoryCount() == 0) {
+      if (controller.chatHistoryCount() == 0 && controller.state.isHistoryMode) {
         print("Insideee Stopping google search speaking");
         await controller.stopSpeakingForGoogleSearch();
       } else {
