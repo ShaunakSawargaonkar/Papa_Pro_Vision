@@ -359,7 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Column(
             children: [
               SizedBox(
-                // width: cameraController!.value.previewSize!.height,
                 height: deviceHeight * 0.55,
                 child: Stack(
                   children: [
@@ -371,10 +370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       excludeSemantics: true,
                       child: InkWell(
                         onTap: () => clearImageBuffer(controller),
-                        child: Center(
+                        child: ClipRect(
                           child: SizedBox(
-                            width: cameraController!.value.previewSize!.height,
-                            height: cameraController!.value.previewSize!.width,
+                            width: double.infinity,
+                            height: double.infinity,
                             child: ImagePreview(
                               cameraController: cameraController!,
                               hasUploadedImage:
@@ -387,43 +386,45 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     // TOP LAYER: Left and Right sidebars positioned on top
-                    Row(
-                      children: [
-                        // LEFT clickable border
-                        SideBarButton(
-                          buttonText: "Reader Mode",
-                          onTap: () async {
-                            await controller.unsetHistoryMode();
-                            await controller.setAutoReadingMode(
-                              prefs?.getString('inputLanguage') ?? 'en_IN',
-                              prefs?.getBool('enableTranslation') ?? false,
-                            );
-                            onToggleListening(controller);
-                          },
-                          height: cameraController!.value.previewSize!.width,
-                          largeFontSize: largeFontSize,
-                          isLeft: true,
-                        ),
+                    Positioned.fill(
+                      child: Row(
+                        children: [
+                          // LEFT clickable border
+                          SideBarButton(
+                            buttonText: "Reader Mode",
+                            onTap: () async {
+                              await controller.unsetHistoryMode();
+                              await controller.setAutoReadingMode(
+                                prefs?.getString('inputLanguage') ?? 'en_IN',
+                                prefs?.getBool('enableTranslation') ?? false,
+                              );
+                              onToggleListening(controller);
+                            },
+                            height: double.infinity,
+                            largeFontSize: largeFontSize,
+                            isLeft: true,
+                          ),
 
-                        // SPACER - to push right sidebar to the right
-                        Spacer(),
+                          // SPACER - to push right sidebar to the right
+                          Spacer(),
 
-                        // RIGHT clickable border
-                        SideBarButton(
-                          buttonText: "Smart View Mode",
-                          onTap: () async {
-                            await controller.unsetHistoryMode();
-                            controller.setSmartViewMode(
-                              prefs?.getString('inputLanguage') ?? 'en_IN',
-                              prefs?.getBool('enableTranslation') ?? false,
-                            );
-                            onToggleListening(controller);
-                          },
-                          height: cameraController!.value.previewSize!.width,
-                          largeFontSize: largeFontSize,
-                          isLeft: false,
-                        ),
-                      ],
+                          // RIGHT clickable border
+                          SideBarButton(
+                            buttonText: "Smart View Mode",
+                            onTap: () async {
+                              await controller.unsetHistoryMode();
+                              controller.setSmartViewMode(
+                                prefs?.getString('inputLanguage') ?? 'en_IN',
+                                prefs?.getBool('enableTranslation') ?? false,
+                              );
+                              onToggleListening(controller);
+                            },
+                            height: double.infinity,
+                            largeFontSize: largeFontSize,
+                            isLeft: false,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
