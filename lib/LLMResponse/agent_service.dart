@@ -319,7 +319,7 @@ class AgentService {
 
           final hitSentenceEnd =
               char == '.'; // Extend with other punctuation if desired.
-          final hitWordLimit = wordCount >= 30;
+          final hitWordLimit = wordCount >= 50;
 
           if (hitSentenceEnd || hitWordLimit) {
             speakCount++;
@@ -347,7 +347,7 @@ class AgentService {
         speakCount++;
         final speakText = Devicehelper.cleanAgentResponse(currentText).trim();
         if (speakText.isNotEmpty) {
-          print('[TTS FINAL START #$speakCount]');
+          print('[TTS FINAL START #$speakCount] textLength=${speakText.length}');
           await ttsService?.speak(speakText, sessionId: streamSessionId);
           print('[TTS FINAL DONE #$speakCount]');
         }

@@ -18,4 +18,36 @@ enum UserStatus {
   paymentPending, // continue to payment process
   active, // continue to home screen
   noInternet, // no internet connection
+  apkKilled, // APK version is killed
+}
+
+enum SubscriptionBundleType {
+  firstMonthFree,
+  oneMonth,
+  threeMonths,
+  sixMonths,
+  oneYear;
+
+  @override
+  String toString() {
+    switch (this) {
+      case SubscriptionBundleType.firstMonthFree:
+        return 'First Month Free';
+      case SubscriptionBundleType.oneMonth:
+        return '1 Month';
+      case SubscriptionBundleType.threeMonths:
+        return '3 Months';
+      case SubscriptionBundleType.sixMonths:
+        return '6 Months';
+      case SubscriptionBundleType.oneYear:
+        return '1 Year';
+      default:
+        return name;
+    }
+  }
+}
+
+enum SubscriptionTier{
+  free,
+  paid,
 }
