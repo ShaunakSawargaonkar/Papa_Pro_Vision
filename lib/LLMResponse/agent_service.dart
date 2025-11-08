@@ -301,8 +301,9 @@ class AgentService {
   Future<void> sendStreamingMessage(
     Content content,
     TextToSpeechService? ttsService,
-    Function onStartSpeaking,
-  ) async {
+    Function onStartSpeaking, {
+    String inputLanguage = 'en_IN',
+  }) async {
     try {
       var isInternetAvailable =
           await Devicehelper.hasInternetConnectionAndNotify(
@@ -321,6 +322,13 @@ class AgentService {
 
       streamSessionId = await ttsService?.startSession() ?? 0;
 
+      Analyticshelper.updateResponseCount("ResponseCount");
+
+      if (inputLanguage == 'en_IN') {
+        Analyticshelper.updateResponseCount("EnglishResponseCount");
+      } else {
+        Analyticshelper.updateResponseCount("MarathiResponseCount");
+      }
       // Local buffering variables captured by the listener closure.
       String currentText = '';
       int wordCount = 0;

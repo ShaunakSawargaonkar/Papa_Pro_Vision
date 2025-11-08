@@ -142,7 +142,12 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
         verificationId: _verificationId!,
         smsCode: code,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential cred = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('UserUId', cred.user?.uid ?? '');
       HapticFeedback.lightImpact();
     } catch (e) {
       setState(() {

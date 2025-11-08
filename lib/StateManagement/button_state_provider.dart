@@ -205,6 +205,7 @@ class ConversationController extends ChangeNotifier {
         content,
         _ttsService,
         onStartSpeaking,
+        inputLanguage: inputLanguage,
       );
     }
     // response = await _agentService?.generateResponse(content, inputLanguage);
