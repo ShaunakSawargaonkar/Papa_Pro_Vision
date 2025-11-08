@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/Helper/AnalyticsHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
-import 'package:papa_pro_vision/UI/Txt2Speech/AudioPlayer/audio_player.dart';
-import 'package:papa_pro_vision/UI/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/audio_player.dart';
+import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:papa_pro_vision/secrets.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
@@ -95,11 +95,11 @@ class GoogleTTSService implements TextToSpeechService {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
       final words = trimmed.split(RegExp(r'\s+'));
-      if (words.length > 20) {
-        // Split into chunks of 20 words
-        for (var i = 0; i < words.length; i += 20) {
+      if (words.length > 100) {
+        // Split into chunks of 100 words
+        for (var i = 0; i < words.length; i += 100) {
           final chunk = words
-              .sublist(i, (i + 20 < words.length) ? i + 20 : words.length)
+              .sublist(i, (i + 100 < words.length) ? i + 100 : words.length)
               .join(' ');
           sentences.add(chunk);
         }

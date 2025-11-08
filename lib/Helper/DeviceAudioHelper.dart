@@ -63,6 +63,13 @@ class DeviceAudioHelper {
     await _audioManager.playSound('delete', ['sounds/mag-remove-92075.mp3']);
   }
 
+  static Future<void> playVideoStartSound() async {
+    await _audioManager.playSound('videoStart', [
+      '/system/media/audio/ui/camera_focus.ogg',
+      '/system/media/audio/ui/VideoRecord.ogg',
+    ]);
+  }
+
   static Future<void> playInternetNotAvailableSound() async {
     print("Playing Internet Not Available Sound2");
     final FlutterTts _flutterTts = FlutterTts();

@@ -27,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   SharedPreferences? prefs;
   List<CameraDescription>? _cameras;
   bool _isInitializing = true;
+  Timer? _longPressTimer;
+  bool _timerCompleted = false;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _longPressTimer?.cancel();
     cameraController?.dispose();
     super.dispose();
   }
@@ -481,12 +484,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         onLongPressStart: (details) async {
                           await controller.unsetHistoryMode();
                           await _startRecording(controller);
+
+                          // Start timer for 3 seconds
+                          _timerCompleted = false;
+                          _longPressTimer = Timer(
+                            const Duration(seconds: 7),
+                            () async {
+                              _timerCompleted = true;
+                              if (controller.state.conversationState ==
+                                  ConversationState.videoRecording) {
+                                await _stopRecording(controller);
+                                onToggleListening(controller);
+                              }
+                            },
+                          );
                         },
                         onLongPressEnd: (details) async {
-                          await _stopRecording(controller);
-                          onToggleListening(controller);
+                          // Cancel the timer if user releases before timer ends
+                          _longPressTimer?.cancel();
+                          _longPressTimer = null;
+
+                          // Check if user lifted finger before timer completed
+                          if (!_timerCompleted) {
+                            print("User lifted finger before 3 seconds");
+                            await _stopRecording(controller);
+                            onToggleListening(controller);
+                          }
+
+                          // Reset flag for next interaction
+                          _timerCompleted = false;
                         },
                         onLongPressCancel: () async {
+                          // Cancel the timer if long press is cancelled
+                          _longPressTimer?.cancel();
+                          _longPressTimer = null;
+
                           await _cancelRecording(controller);
                         },
                         child: Container(

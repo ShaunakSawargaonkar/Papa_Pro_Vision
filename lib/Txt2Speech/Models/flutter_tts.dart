@@ -1,6 +1,6 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/UI/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 class FlutterTTSService implements TextToSpeechService {

@@ -9,9 +9,10 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:http/http.dart' as http;
 import 'package:papa_pro_vision/LLMResponse/system_prompt_enums.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/UI/Txt2Speech/service_locator.dart';
+import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:papa_pro_vision/enums.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AgentService {
   late GenerativeModel _generativeModel;
@@ -123,11 +124,19 @@ class AgentService {
     }
   }
 
-  Future<String> getResponseFromRender(String query) async {
+  Future<String> getResponseFromRender(String query, {String? userId}) async {
     String encodedQuery = Uri.encodeComponent(query);
-    final url = Uri.parse(
-      'https://vercelgooglesearch.onrender.com/search/$encodedQuery',
-    );
+    print("Encoded Query: $encodedQuery");
+
+    String urlString =
+        'https://vercelgooglesearch.onrender.com/search/$encodedQuery';
+
+    // Add user_id parameter if provided
+    if (userId != null) {
+      urlString += '?user_id=${Uri.encodeComponent(userId)}';
+    }
+
+    final url = Uri.parse(urlString);
 
     final response = await http.get(
       url,
@@ -140,6 +149,25 @@ class AgentService {
       throw Exception('Failed to search: ${response.statusCode}');
     }
   }
+  // Future<String> getResponseFromRender(String query) async {
+  //   String encodedQuery = Uri.encodeComponent(query);
+  //   print("Encoded Query: $encodedQuery");
+
+  //   final url = Uri.parse(
+  //     'https://vercelgooglesearch.onrender.com/search/$encodedQuery',
+  //   );
+
+  //   final response = await http.get(
+  //     url,
+  //     headers: {'Content-Type': 'application/json'},
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     return json.decode(response.body)['response'];
+  //   } else {
+  //     throw Exception('Failed to search: ${response.statusCode}');
+  //   }
+  // }
 
   int chatHistoryCount() {
     print("Insideeee chat history length: ${_chat.history.length}");
@@ -156,7 +184,12 @@ class AgentService {
     }
     // Get Response From Render
     try {
-      final response = await getResponseFromRender(inputText);
+      final prefs = await SharedPreferences.getInstance();
+      final contactNumber = prefs.getString('contactNumber');
+      final response = await getResponseFromRender(
+        inputText,
+        userId: contactNumber,
+      );
       Analyticshelper.updateResponseCount("ResponseCount");
 
       if (inputLanguage == 'en_IN') {
@@ -319,7 +352,7 @@ class AgentService {
 
           final hitSentenceEnd =
               char == '.'; // Extend with other punctuation if desired.
-          final hitWordLimit = wordCount >= 30;
+          final hitWordLimit = wordCount >= 100;
 
           if (hitSentenceEnd || hitWordLimit) {
             speakCount++;

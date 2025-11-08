@@ -52,7 +52,8 @@ class MyApp extends StatelessWidget {
           final user = authSnapshot.data;
           if (user == null) {
             // Not signed in -> show minimal phone OTP page
-            return RegistrationPage(phoneNumber: '9561112577');
+            return const PhoneAuthPage();
+            // return RegistrationPage(phoneNumber: '9561112577');
             // return const PaymentGateway(isFirstPayment: true);
             // return PaymentGateway(isFirstPayment: false);
           }
@@ -78,9 +79,11 @@ class MyApp extends StatelessWidget {
                 } else if (data.userStatus == UserStatus.notRegistered) {
                   return RegistrationPage(phoneNumber: user.phoneNumber ?? '');
                 } else if (data.userStatus == UserStatus.firstPaymentPending) {
-                  return const PaymentGateway(isFirstPayment: true);
+                  return const HomeScreen();
+                  // return const PaymentGateway(isFirstPayment: true);
                 } else if (data.userStatus == UserStatus.paymentPending) {
                   return const PaymentGateway(isFirstPayment: false);
+                  // return const PaymentGateway(isFirstPayment: false);
                 } else if (data.userStatus == UserStatus.active) {
                   return const HomeScreen();
                 } else if (data.userStatus == UserStatus.noInternet) {

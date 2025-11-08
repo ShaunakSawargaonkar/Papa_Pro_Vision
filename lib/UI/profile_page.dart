@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../Helper/DeviceAudioHelper.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -146,7 +147,9 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 16),
               SwitchListTile(
                 title: const Text('Enable Translation'),
-                subtitle: const Text('Translate text to selected input language'),
+                subtitle: const Text(
+                  'Translate text to selected input language',
+                ),
                 value: _enableTranslation,
                 onChanged: (value) {
                   setState(() {
@@ -181,6 +184,21 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text('Save Profile'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    DeviceAudioHelper.playVideoStartSound();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Play Video Start Sound'),
                 ),
               ),
             ],
