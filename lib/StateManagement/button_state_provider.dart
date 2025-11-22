@@ -148,7 +148,8 @@ class ConversationController extends ChangeNotifier {
     if (!state.isHistoryMode) {
       _agentService?.reset();
     }
-    if ((!state.isHistoryMode || state.hasUploadedImage) && imageBytes != null) {
+    if ((!state.isHistoryMode || state.hasUploadedImage) &&
+        imageBytes != null) {
       print("Inside image generate Response call");
       content =
           await _agentService?.CreateContentForResponse(
@@ -204,6 +205,7 @@ class ConversationController extends ChangeNotifier {
         content,
         _ttsService,
         onStartSpeaking,
+        inputLanguage: inputLanguage,
       );
     }
     // response = await _agentService?.generateResponse(content, inputLanguage);
@@ -251,7 +253,8 @@ class ConversationController extends ChangeNotifier {
     _appContentState.userRecognisedWords = '';
     _imageBytes = Uint8List(0);
     notifyListeners();
-    DeviceAudioHelper.playDeleteSound();
+    // DeviceAudioHelper.playDeleteSound();
+    DeviceAudioHelper.playVideoStartSound();
   }
 
   Future<void> stopVideoRecording({File? file}) async {
@@ -263,7 +266,8 @@ class ConversationController extends ChangeNotifier {
     _appContentState.userRecognisedWords = '';
     _imageBytes = Uint8List(0);
     notifyListeners();
-    DeviceAudioHelper.playDeleteSound();
+    // DeviceAudioHelper.playDeleteSound();
+    // DeviceAudioHelper.playVideoEndSound();
   }
 
   Future<void> startListening(String inputLanguage) async {
@@ -436,13 +440,20 @@ class ConversationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setUploadedImageMode(Uint8List imageBytes, String communicationLanguage, bool enableTranslation,) async {
+  Future<void> setUploadedImageMode(
+    Uint8List imageBytes,
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
     _appContentState.hasUploadedImage = true;
     setImageBytes(imageBytes);
     notifyListeners();
   }
 
-  Future<void> unsetUploadedImageMode(String communicationLanguage, bool enableTranslation) async {
+  Future<void> unsetUploadedImageMode(
+    String communicationLanguage,
+    bool enableTranslation,
+  ) async {
     if (_appContentState.hasUploadedImage) {
       _appContentState.interactionMode = InteractionMode.normal;
       _appContentState.hasUploadedImage = false;

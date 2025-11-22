@@ -20,12 +20,20 @@ class ImagePreview extends StatelessWidget {
         child: Image.memory(
           imageBytes!,
           fit: BoxFit.cover,
-          width: cameraController.value.previewSize!.height,
-          height: cameraController.value.previewSize!.width,
+          width: double.infinity,
+          height: double.infinity,
         ),
       );
     } else {
-      return CameraPreview(cameraController);
+      // Camera preview fills entire width while maintaining aspect ratio
+      return FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: cameraController.value.previewSize!.height,
+          height: cameraController.value.previewSize!.width,
+          child: CameraPreview(cameraController),
+        ),
+      );
     }
   }
 }

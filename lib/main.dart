@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasInternet.dart';
+import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
+import 'package:papa_pro_vision/UI/auth/phone_auth_page.dart';
+import 'package:papa_pro_vision/UI/home_Screen.dart';
 import 'package:provider/provider.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
-import 'package:papa_pro_vision/UI/home_screen.dart';
-import 'package:papa_pro_vision/UI/RegisterPage/registration_page.dart';
 import 'package:papa_pro_vision/UI/RegisterPage/AlasPage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:papa_pro_vision/UI/auth/phone_auth_page.dart';
+import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 import 'package:flutter/services.dart';
+import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
+import 'package:papa_pro_vision/enums.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,8 +41,6 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.blue,
       ),
-      // Show Phone OTP flow when not signed in. When signed in, keep the
-      // original FutureBuilder that chooses the correct app page.
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, authSnapshot) {
@@ -49,16 +49,23 @@ class MyApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-
-          final user = authSnapshot.data;
-          if (user == null) {
+          var user = authSnapshot.data;
+          // user = null;
+          if (user == null ||
+              user.phoneNumber == null ||
+              user.uid.isEmpty ||
+              user.phoneNumber!.isEmpty) {
             // Not signed in -> show minimal phone OTP page
-            return const PhoneAuthPage();
+            return PhoneAuthPage();
+            // return RegistrationPage(phoneNumber: '9561112577', userUID: '9561112577');
+            // return HomeScreen();
+            // return PaymentGateway(isFirstPayment: true, userUID: '', phoneNumber: '9561112577');
+            // return PaymentGateway(isFirstPayment: false);
           }
           print("User is signed in: ${user.uid} _ email: ${user.phoneNumber}");
           // Signed in -> show the existing registration/device check
-          return FutureBuilder<WhichPageFromMain>(
-            future: Devicehelper.checkRegistration(),
+          return FutureBuilder<UserStatusResponse>(
+            future: DatabaseHelper.checkUserStatus(userUID: user.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
@@ -66,20 +73,50 @@ class MyApp extends StatelessWidget {
                 );
               }
               if (snapshot.hasData) {
+                print("User status: ${snapshot.data?.userStatus}");
                 final data = snapshot.data!;
-                if (data == WhichPageFromMain.AlasInternetPage) {
-                  return const AlasInternetPage();
-                } else if (data == WhichPageFromMain.AlasPage) {
-                  return const AlasPage();
-                } else if (data == WhichPageFromMain.HomeScreen) {
+                if (data.userStatus == UserStatus.errorState) {
+                  return AlasPage(
+                    title: 'Please Contact Support',
+                    message:
+                        data.message ??
+                        'An error occurred. Please contact support.',
+                  );
+                } else if (data.userStatus == UserStatus.notRegistered) {
+                  return RegistrationPage(
+                    phoneNumber: user?.phoneNumber ?? '',
+                    userUID: user?.uid ?? '',
+                  );
+                } else if (data.userStatus == UserStatus.firstPaymentPending) {
+                  return PaymentGateway(
+                    isFirstPayment: true,
+                    userUID: user?.uid ?? '',
+                    phoneNumber: user?.phoneNumber ?? '',
+                  );
+                } else if (data.userStatus == UserStatus.paymentPending) {
+                  return PaymentGateway(
+                    isFirstPayment: false,
+                    userUID: user?.uid ?? '',
+                    phoneNumber: user?.phoneNumber ?? '',
+                  );
+                } else if (data.userStatus == UserStatus.active) {
                   return const HomeScreen();
-                } else if (data == WhichPageFromMain.RegistrationPage) {
-                  return const RegistrationPage();
-                } else {
+                } else if (data.userStatus == UserStatus.noInternet) {
                   return const AlasInternetPage();
+                } else if (data.userStatus == UserStatus.apkKilled) {
+                  return AlasPage(
+                    title: data.reasonTitle ?? 'Please update your app',
+                    message:
+                        data.message ??
+                        'Your app version is not supported. Please update to the latest version.',
+                  );
                 }
               }
-              return const AlasInternetPage();
+              return AlasPage(
+                message:
+                    "Something went wrong. Please try again later or contact support.",
+                title: "Something Went Wrong",
+              );
             },
           );
         },
@@ -87,5 +124,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// Phone auth page moved to `lib/UI/auth/phone_auth_page.dart`.
