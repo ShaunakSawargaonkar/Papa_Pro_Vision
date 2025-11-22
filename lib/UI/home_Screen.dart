@@ -27,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   SharedPreferences? prefs;
   List<CameraDescription>? _cameras;
   bool _isInitializing = true;
+  Timer? _longPressTimer;
+  bool _timerCompleted = false;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _longPressTimer?.cancel();
     cameraController?.dispose();
     super.dispose();
   }
@@ -234,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       print('Stopping speaking');
       Analyticshelper.updateResponseCount("CancelledRequestCount");
-      if (controller.chatHistoryCount() == 0) {
+      if (controller.chatHistoryCount() == 0 && controller.state.isHistoryMode) {
         print("Insideee Stopping google search speaking");
         await controller.stopSpeakingForGoogleSearch();
       } else {
@@ -359,7 +362,6 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Column(
             children: [
               SizedBox(
-                // width: cameraController!.value.previewSize!.height,
                 height: deviceHeight * 0.55,
                 child: Stack(
                   children: [
@@ -371,10 +373,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       excludeSemantics: true,
                       child: InkWell(
                         onTap: () => clearImageBuffer(controller),
-                        child: Center(
+                        child: ClipRect(
                           child: SizedBox(
-                            width: cameraController!.value.previewSize!.height,
-                            height: cameraController!.value.previewSize!.width,
+                            width: double.infinity,
+                            height: double.infinity,
                             child: ImagePreview(
                               cameraController: cameraController!,
                               hasUploadedImage:
@@ -387,43 +389,45 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     // TOP LAYER: Left and Right sidebars positioned on top
-                    Row(
-                      children: [
-                        // LEFT clickable border
-                        SideBarButton(
-                          buttonText: "Reader Mode",
-                          onTap: () async {
-                            await controller.unsetHistoryMode();
-                            await controller.setAutoReadingMode(
-                              prefs?.getString('inputLanguage') ?? 'en_IN',
-                              prefs?.getBool('enableTranslation') ?? false,
-                            );
-                            onToggleListening(controller);
-                          },
-                          height: cameraController!.value.previewSize!.width,
-                          largeFontSize: largeFontSize,
-                          isLeft: true,
-                        ),
+                    Positioned.fill(
+                      child: Row(
+                        children: [
+                          // LEFT clickable border
+                          SideBarButton(
+                            buttonText: "Reader Mode",
+                            onTap: () async {
+                              await controller.unsetHistoryMode();
+                              await controller.setAutoReadingMode(
+                                prefs?.getString('inputLanguage') ?? 'en_IN',
+                                prefs?.getBool('enableTranslation') ?? false,
+                              );
+                              onToggleListening(controller);
+                            },
+                            height: double.infinity,
+                            largeFontSize: largeFontSize,
+                            isLeft: true,
+                          ),
 
-                        // SPACER - to push right sidebar to the right
-                        Spacer(),
+                          // SPACER - to push right sidebar to the right
+                          Spacer(),
 
-                        // RIGHT clickable border
-                        SideBarButton(
-                          buttonText: "Smart View Mode",
-                          onTap: () async {
-                            await controller.unsetHistoryMode();
-                            controller.setSmartViewMode(
-                              prefs?.getString('inputLanguage') ?? 'en_IN',
-                              prefs?.getBool('enableTranslation') ?? false,
-                            );
-                            onToggleListening(controller);
-                          },
-                          height: cameraController!.value.previewSize!.width,
-                          largeFontSize: largeFontSize,
-                          isLeft: false,
-                        ),
-                      ],
+                          // RIGHT clickable border
+                          SideBarButton(
+                            buttonText: "Smart View Mode",
+                            onTap: () async {
+                              await controller.unsetHistoryMode();
+                              controller.setSmartViewMode(
+                                prefs?.getString('inputLanguage') ?? 'en_IN',
+                                prefs?.getBool('enableTranslation') ?? false,
+                              );
+                              onToggleListening(controller);
+                            },
+                            height: double.infinity,
+                            largeFontSize: largeFontSize,
+                            isLeft: false,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -480,12 +484,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         onLongPressStart: (details) async {
                           await controller.unsetHistoryMode();
                           await _startRecording(controller);
+
+                          // Start timer for 3 seconds
+                          _timerCompleted = false;
+                          _longPressTimer = Timer(
+                            const Duration(seconds: 7),
+                            () async {
+                              _timerCompleted = true;
+                              if (controller.state.conversationState ==
+                                  ConversationState.videoRecording) {
+                                await _stopRecording(controller);
+                                onToggleListening(controller);
+                              }
+                            },
+                          );
                         },
                         onLongPressEnd: (details) async {
-                          await _stopRecording(controller);
-                          onToggleListening(controller);
+                          // Cancel the timer if user releases before timer ends
+                          _longPressTimer?.cancel();
+                          _longPressTimer = null;
+
+                          // Check if user lifted finger before timer completed
+                          if (!_timerCompleted) {
+                            print("User lifted finger before 3 seconds");
+                            await _stopRecording(controller);
+                            onToggleListening(controller);
+                          }
+
+                          // Reset flag for next interaction
+                          _timerCompleted = false;
                         },
                         onLongPressCancel: () async {
+                          // Cancel the timer if long press is cancelled
+                          _longPressTimer?.cancel();
+                          _longPressTimer = null;
+
                           await _cancelRecording(controller);
                         },
                         child: Container(

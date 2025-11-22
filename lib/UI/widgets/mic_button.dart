@@ -35,7 +35,8 @@ class MicButton extends StatelessWidget {
                 color:
                     conversationState == ConversationState.listening ||
                         conversationState == ConversationState.speaking ||
-                        conversationState == ConversationState.videoRecording
+                        conversationState == ConversationState.videoRecording ||
+                        conversationState == ConversationState.processing
                     ? Colors.white
                     : baseColor,
                 shape: BoxShape.circle,
@@ -45,13 +46,17 @@ class MicButton extends StatelessWidget {
                   switch (conversationState) {
                     ConversationState.listening => Icons.mic_off,
                     ConversationState.speaking => Icons.pause,
+                    ConversationState.videoRecording => Icons.play_arrow,
+                    ConversationState.processing => Icons.loop,
                     _ => Icons.mic,
                   },
                   size: buttonWidth * 0.5,
                   color:
                       conversationState == ConversationState.listening ||
                           conversationState == ConversationState.speaking ||
-                          conversationState == ConversationState.videoRecording
+                          conversationState ==
+                              ConversationState.videoRecording ||
+                          conversationState == ConversationState.processing
                       ? baseColor
                       : Colors.white,
                 ),
