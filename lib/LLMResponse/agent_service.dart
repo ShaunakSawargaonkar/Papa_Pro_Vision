@@ -20,6 +20,7 @@ class AgentService {
   late ChatSession _chat;
   late AppContentState _appContentState;
   List<Content> chatHistory = [];
+  StreamSubscription<void>? _streamSubscription;
 
   String _getSystemPrompt(
     InteractionMode mode,
@@ -105,18 +106,30 @@ class AgentService {
     // Get Response From Gemini
     try {
       final response = await _chat.sendMessage(content);
-      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "ResponseCount",
+        _appContentState.userUID,
+      );
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "EnglishResponseCount",
+          _appContentState.userUID,
+        );
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "MarathiResponseCount",
+          _appContentState.userUID,
+        );
       }
       return Devicehelper.cleanAgentResponse(response.text!);
     }
     //Error logging
     on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "PromptErrorCount",
+        _appContentState.userUID,
+      );
       print("Error from AI Service: $e");
       return "Error from AI Service: $e";
     } catch (e) {
@@ -190,18 +203,30 @@ class AgentService {
         inputText,
         userId: contactNumber,
       );
-      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "ResponseCount",
+        _appContentState.userUID,
+      );
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "EnglishResponseCount",
+          _appContentState.userUID,
+        );
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "MarathiResponseCount",
+          _appContentState.userUID,
+        );
       }
       return Devicehelper.cleanAgentResponse(response);
     }
     //Error logging
     on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "PromptErrorCount",
+        _appContentState.userUID,
+      );
       print("Error from AI Service: $e");
       return "Error from AI Service: $e";
     } catch (e) {
@@ -285,14 +310,15 @@ class AgentService {
     }
   }
 
-  void stopStream(
+  Future<void> stopStream(
     String apiKey,
     InteractionMode mode,
     String communicationLanguage,
     bool enableTranslation,
-  ) {
+  ) async {
     streamSessionId = -1;
     chatHistory.add(Content.model([TextPart(_appContentState.agentResponse)]));
+    await _streamSubscription?.cancel();
     initialize(apiKey, mode, communicationLanguage, enableTranslation);
     print('Stream stopped');
   }
@@ -320,81 +346,131 @@ class AgentService {
       );
       chatHistory = _chat.history.toList();
 
-      streamSessionId = await ttsService?.startSession() ?? 0;
+      final int localSessionId = await ttsService?.startSession() ?? 0;
+      streamSessionId = localSessionId;
 
-      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "ResponseCount",
+        _appContentState.userUID,
+      );
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "EnglishResponseCount",
+          _appContentState.userUID,
+        );
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
+        Analyticshelper.updateResponseCount(
+          "MarathiResponseCount",
+          _appContentState.userUID,
+        );
       }
-      // Local buffering variables captured by the listener closure.
+
       String currentText = '';
       int wordCount = 0;
       int chunkCount = 0;
       int speakCount = 0;
 
-      // Iterate over the stream using await for so we can manage control flow directly.
-      await for (final chunk in stream) {
-        chunkCount++;
-        if (streamSessionId == -1) {
-          print('[STREAM] Stop requested – breaking loop at chunk $chunkCount');
-          break; // Exit loop; any remaining chunks will be dropped.
-        }
+      _streamSubscription = stream
+          .asyncMap((chunk) async {
+            chunkCount++;
 
-        final text = chunk.text;
-        print(
-          '[][][][][STREAM CHUNK $chunkCount] textLength=${text?.length ?? 0}',
-        );
-        if (text == null || text.isEmpty) {
-          continue; // Still counted, but nothing to process.
-        }
-
-        _appContentState.agentResponse += text;
-
-        for (int i = 0; i < text.length; i++) {
-          final char = text[i];
-          currentText += char;
-          if (char == ' ') wordCount++;
-
-          final hitSentenceEnd =
-              char == '.'; // Extend with other punctuation if desired.
-          final hitWordLimit = wordCount >= 100;
-
-          if (hitSentenceEnd || hitWordLimit) {
-            speakCount++;
-            final speakText = Devicehelper.cleanAgentResponse(
-              currentText,
-            ).trim();
-            if (speakText.isNotEmpty) {
-              onStartSpeaking();
+            // 🔴 Stop requested
+            if (streamSessionId != localSessionId) {
               print(
-                '[][][][][TTS START #$speakCount] fromChunk=$chunkCount words=$wordCount len=${speakText.length}',
+                '[STREAM] Stop requested – breaking loop at chunk $chunkCount',
               );
-              // Await so playback order matches text order.
-              await ttsService?.speak(speakText, sessionId: streamSessionId);
-            } else {
-              print('[TTS SKIP] Empty after cleaning');
+              await _streamSubscription?.cancel();
+              return;
             }
-            currentText = '';
-            wordCount = 0;
-          }
-        }
-      }
 
-      // Flush remainder after stream ends or stop requested.
-      if (currentText.trim().isNotEmpty && streamSessionId != -1) {
-        speakCount++;
-        final speakText = Devicehelper.cleanAgentResponse(currentText).trim();
-        if (speakText.isNotEmpty) {
-          print(
-            '[TTS FINAL START #$speakCount] textLength=${speakText.length}',
+            final text = chunk.text;
+
+            print(
+              '[][][][][STREAM CHUNK $chunkCount] textLength=${text?.length ?? 0} text=$text',
+            );
+
+            if (text == null || text.isEmpty) {
+              return;
+            }
+
+            _appContentState.agentResponse += text;
+
+            for (int i = 0; i < text.length; i++) {
+              final char = text[i];
+              currentText += char;
+
+              if (char == ' ') wordCount++;
+
+              final hitSentenceEnd = char == '.';
+              final hitWordLimit = wordCount >= 100;
+
+              if (hitSentenceEnd || hitWordLimit) {
+                speakCount++;
+
+                final speakText = Devicehelper.cleanAgentResponse(
+                  currentText,
+                ).trim();
+
+                currentText = '';
+                wordCount = 0;
+
+                if (speakText.isNotEmpty) {
+                  // 🔴 Double-check before speaking
+                  if (streamSessionId != localSessionId) {
+                    print(
+                      '[STREAM] Stop detected before TTS at speakCount=$speakCount',
+                    );
+                    await _streamSubscription?.cancel();
+                    return;
+                  }
+
+                  onStartSpeaking();
+
+                  print(
+                    '[][][][][TTS START #$speakCount] fromChunk=$chunkCount words=$wordCount len=${speakText.length} speakText=$speakText',
+                  );
+
+                  await ttsService?.speak(speakText, sessionId: localSessionId);
+                } else {
+                  print('[TTS SKIP] Empty after cleaning');
+                }
+              }
+            }
+          })
+          .listen(
+            (_) {},
+            onDone: () async {
+              print(
+                '[STREAM DONE] chunkCount=$chunkCount speakCount=$speakCount',
+              );
+
+              if (streamSessionId != localSessionId) {
+                print('[STREAM DONE] Ignored due to session mismatch');
+                return;
+              }
+
+              if (currentText.trim().isNotEmpty) {
+                speakCount++;
+
+                final speakText = Devicehelper.cleanAgentResponse(
+                  currentText,
+                ).trim();
+
+                if (speakText.isNotEmpty) {
+                  print(
+                    '[TTS FINAL START #$speakCount] textLength=${speakText.length}',
+                  );
+
+                  await ttsService?.speak(speakText, sessionId: localSessionId);
+                }
+              }
+            },
+            onError: (error) {
+              print('Error in streaming: $error');
+            },
+            cancelOnError: true,
           );
-          await ttsService?.speak(speakText, sessionId: streamSessionId);
-          print('[TTS FINAL DONE #$speakCount]');
-        }
-      }
       print('[STREAM DONE] chunks=$chunkCount spoken=$speakCount');
     } catch (e) {
       print('Error in streaming: $e');
