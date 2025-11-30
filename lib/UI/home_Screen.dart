@@ -212,16 +212,17 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // Reading modes
       else {
-        print('Capturing image in smart');
         // For non-normal interaction modes, process immediately
-        if (controller.state.isHistoryMode) {
+        if (controller.state.hasUploadedImage) {
+          print('Processing uploaded image in reading modes');
           await controller.processInput(
             prefs?.getString('inputLanguage') ?? 'en_IN',
+            imageBytes: controller.getImageBytes(),
           );
         } else {
+          print('Capturing image in reading modes');
           // Wait a bit for the background image capture to complete before processing
           Uint8List? imageBytes = Uint8List(0);
-          print('Capturing image ss');
           imageBytes = await _captureImage(controller);
           if (imageBytes != null) {
             print('Setting image bytes ss');
@@ -475,10 +476,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: GestureDetector(
                         onTap: () async => {
                           await controller.unsetHistoryMode(),
-                          await controller.unsetUploadedImageMode(
-                            prefs?.getString('inputLanguage') ?? 'en_IN',
-                            prefs?.getBool('enableTranslation') ?? false,
-                          ),
                           onToggleListening(controller),
                         },
                         onLongPressStart: (details) async {

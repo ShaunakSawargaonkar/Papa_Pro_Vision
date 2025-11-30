@@ -149,7 +149,7 @@ class ConversationController extends ChangeNotifier {
       _agentService?.reset();
     }
     if ((!state.isHistoryMode || state.hasUploadedImage) &&
-        imageBytes != null) {
+        imageBytes != null && imageBytes != Uint8List(0)) {
       print("Inside image generate Response call");
       content =
           await _agentService?.CreateContentForResponse(
@@ -181,7 +181,7 @@ class ConversationController extends ChangeNotifier {
     int chatHistoryCount = _agentService!.chatHistoryCount();
     bool ifGoogle = false;
 
-    if (state.isHistoryMode && chatHistoryCount == 0) {
+    if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
       ifGoogle = true;
     }
 
