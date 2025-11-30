@@ -14,7 +14,7 @@ class Analyticshelper {
     final prefs = await SharedPreferences.getInstance();
     var temp = await FirebaseFirestore.instance
         .collection('Users')
-        .where('UserUID', isEqualTo: prefs.getString('UserUID'))
+        .where('UserUID', isEqualTo: '3BXiqNdtvKgD8ri9IQtT9CWyWlD2')
         .get();
 
     for (var doc in temp.docs) {

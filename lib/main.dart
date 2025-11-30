@@ -56,7 +56,8 @@ class MyApp extends StatelessWidget {
               user.uid.isEmpty ||
               user.phoneNumber!.isEmpty) {
             // Not signed in -> show minimal phone OTP page
-            return PhoneAuthPage();
+            // return PhoneAuthPage();
+            return HomeScreen();
             // return RegistrationPage(phoneNumber: '9561112577', userUID: '9561112577');
             // return HomeScreen();
             // return PaymentGateway(isFirstPayment: true, userUID: '', phoneNumber: '9561112577');
@@ -74,43 +75,44 @@ class MyApp extends StatelessWidget {
               }
               if (snapshot.hasData) {
                 print("User status: ${snapshot.data?.userStatus}");
-                final data = snapshot.data!;
-                if (data.userStatus == UserStatus.errorState) {
-                  return AlasPage(
-                    title: 'Please Contact Support',
-                    message:
-                        data.message ??
-                        'An error occurred. Please contact support.',
-                  );
-                } else if (data.userStatus == UserStatus.notRegistered) {
-                  return RegistrationPage(
-                    phoneNumber: user?.phoneNumber ?? '',
-                    userUID: user?.uid ?? '',
-                  );
-                } else if (data.userStatus == UserStatus.firstPaymentPending) {
-                  return PaymentGateway(
-                    isFirstPayment: true,
-                    userUID: user?.uid ?? '',
-                    phoneNumber: user?.phoneNumber ?? '',
-                  );
-                } else if (data.userStatus == UserStatus.paymentPending) {
-                  return PaymentGateway(
-                    isFirstPayment: false,
-                    userUID: user?.uid ?? '',
-                    phoneNumber: user?.phoneNumber ?? '',
-                  );
-                } else if (data.userStatus == UserStatus.active) {
-                  return const HomeScreen();
-                } else if (data.userStatus == UserStatus.noInternet) {
-                  return const AlasInternetPage();
-                } else if (data.userStatus == UserStatus.apkKilled) {
-                  return AlasPage(
-                    title: data.reasonTitle ?? 'Please update your app',
-                    message:
-                        data.message ??
-                        'Your app version is not supported. Please update to the latest version.',
-                  );
-                }
+                // final data = snapshot.data!;
+                return HomeScreen();
+                // if (data.userStatus == UserStatus.errorState) {
+                //   return AlasPage(
+                //     title: 'Please Contact Support',
+                //     message:
+                //         data.message ??
+                //         'An error occurred. Please contact support.',
+                //   );
+                // } else if (data.userStatus == UserStatus.notRegistered) {
+                //   return RegistrationPage(
+                //     phoneNumber: user?.phoneNumber ?? '',
+                //     userUID: user?.uid ?? '',
+                //   );
+                // } else if (data.userStatus == UserStatus.firstPaymentPending) {
+                //   return PaymentGateway(
+                //     isFirstPayment: true,
+                //     userUID: user?.uid ?? '',
+                //     phoneNumber: user?.phoneNumber ?? '',
+                //   );
+                // } else if (data.userStatus == UserStatus.paymentPending) {
+                //   return PaymentGateway(
+                //     isFirstPayment: false,
+                //     userUID: user?.uid ?? '',
+                //     phoneNumber: user?.phoneNumber ?? '',
+                //   );
+                // } else if (data.userStatus == UserStatus.active) {
+                //   return const HomeScreen();
+                // } else if (data.userStatus == UserStatus.noInternet) {
+                //   return const AlasInternetPage();
+                // } else if (data.userStatus == UserStatus.apkKilled) {
+                //   return AlasPage(
+                //     title: data.reasonTitle ?? 'Please update your app',
+                //     message:
+                //         data.message ??
+                //         'Your app version is not supported. Please update to the latest version.',
+                //   );
+                // }
               }
               return AlasPage(
                 message:
