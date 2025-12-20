@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Analyticshelper {
-  static Future<void> updateResponseCount(String type) async {
+  static Future<void> updateResponseCount(String type, String userUID) async {
     var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'updateResponseCount',
     );
@@ -11,10 +10,9 @@ class Analyticshelper {
       print("No internet connection. Cannot update response count.");
       return;
     }
-    final prefs = await SharedPreferences.getInstance();
     var temp = await FirebaseFirestore.instance
         .collection('Users')
-        .where('UserUID', isEqualTo: prefs.getString('UserUID'))
+        .where('UserUID', isEqualTo: userUID)
         .get();
 
     for (var doc in temp.docs) {

@@ -105,12 +105,12 @@ class _RegistrationPageState extends State<RegistrationPage>
       _isLoading = false;
     });
 
-    print('Navigating to Payment Page');
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    }
+    // print('Navigating to Payment Page');
+    // if (mounted) {
+    //   Navigator.of(context).pushReplacement(
+    //     MaterialPageRoute(builder: (context) => HomeScreen(userUID: widget.userUID)),
+    //   );
+    // }
   }
 
   Future<void> _submitForm() async {
@@ -180,7 +180,7 @@ class _RegistrationPageState extends State<RegistrationPage>
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text),
+          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text, userUID: widget.userUID),
         ),
       );
     }
@@ -642,7 +642,7 @@ class _RegistrationPageState extends State<RegistrationPage>
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text),
+          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text, userUID: widget.userUID),
         ),
       );
     }

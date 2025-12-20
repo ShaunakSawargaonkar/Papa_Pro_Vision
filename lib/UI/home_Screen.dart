@@ -16,7 +16,8 @@ import 'package:papa_pro_vision/UI/widgets/image_preview.dart';
 import 'package:papa_pro_vision/UI/widgets/side_bar_button.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userUID;
+  const HomeScreen({super.key, required this.userUID});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -101,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return null;
     }
     try {
-      Analyticshelper.updateResponseCount("ImageCaptureCount");
+      Analyticshelper.updateResponseCount("ImageCaptureCount", widget.userUID);
       DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
       if (controller.state.interactionMode == InteractionMode.normal) {
@@ -189,14 +190,16 @@ class _HomeScreenState extends State<HomeScreen> {
             if (controller.state.hasUploadedImage) {
               Analyticshelper.updateResponseCount(
                 "LLMInteractionWithUploadedImageCount",
+                widget.userUID,
               );
             } else {
               Analyticshelper.updateResponseCount(
                 "LLMInteractionWithImageCount",
+                widget.userUID,
               );
             }
           } else {
-            Analyticshelper.updateResponseCount("JustLLMInteractionCount");
+            Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
           }
         }
         await controller.startListening(
@@ -205,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // Video mode
       else if (controller.state.interactionMode == InteractionMode.video) {
-        Analyticshelper.updateResponseCount("VideoModeCount");
+        Analyticshelper.updateResponseCount("VideoModeCount", widget.userUID);
         await controller.startListening(
           prefs?.getString('inputLanguage') ?? 'en_IN',
         );
@@ -237,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       print('Stopping speaking');
-      Analyticshelper.updateResponseCount("CancelledRequestCount");
+      Analyticshelper.updateResponseCount("CancelledRequestCount", widget.userUID);
       if (controller.chatHistoryCount() == 0 && controller.state.isHistoryMode) {
         print("Insideee Stopping google search speaking");
         await controller.stopSpeakingForGoogleSearch();
@@ -333,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
         future: controller.initialize(
           prefs?.getString('inputLanguage') ?? 'en_IN',
           prefs?.getBool('enableTranslation') ?? false,
+          widget.userUID,
         ),
         builder: (context, snapshot) {
           return Scaffold(
@@ -356,6 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
       future: controller.initialize(
         prefs?.getString('inputLanguage') ?? 'en_IN',
         prefs?.getBool('enableTranslation') ?? false,
+        widget.userUID,
       ),
       builder: (context, snapshot) {
         return Scaffold(

@@ -20,6 +20,7 @@ class AppContentState {
   InteractionMode? interactionMode = InteractionMode.normal;
   bool isHistoryMode = false;
   bool hasUploadedImage = false;
+  String userUID = '';
 
   AppContentState();
 }
@@ -35,7 +36,8 @@ class ConversationController extends ChangeNotifier {
   FileSharingHelper? _fileSharingHelper;
   File videoFile = File('');
 
-  Future<void> initialize(String inputLanguage, bool enableTranslation) async {
+  Future<void> initialize(String inputLanguage, bool enableTranslation, String userUID) async {
+    _appContentState.userUID = userUID;
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
       _agentService = AgentService(this);
@@ -182,7 +184,7 @@ class ConversationController extends ChangeNotifier {
     bool ifGoogle = false;
 
     if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
-      ifGoogle = true;
+      ifGoogle = false;  // disabled till we have a server
     }
 
     if (ifGoogle == true) {
@@ -374,7 +376,7 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
-    Analyticshelper.updateResponseCount("SmartViewModeCount");
+    Analyticshelper.updateResponseCount("SmartViewModeCount", _appContentState.userUID);
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
     initializeAgent(
@@ -410,7 +412,7 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
-    Analyticshelper.updateResponseCount("ReaderModeCount");
+    Analyticshelper.updateResponseCount("ReaderModeCount", _appContentState.userUID);
     _appContentState.interactionMode = InteractionMode.autoReading;
     initializeAgent(
       communicationLanguage,
@@ -418,7 +420,7 @@ class ConversationController extends ChangeNotifier {
       InteractionMode.autoReading,
     );
     if (enableTranslation) {
-      Analyticshelper.updateResponseCount("TranslationCount");
+      Analyticshelper.updateResponseCount("TranslationCount", _appContentState.userUID);
     }
     _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
