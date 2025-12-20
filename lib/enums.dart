@@ -45,6 +45,24 @@ enum SubscriptionBundleType {
         return name;
     }
   }
+
+  int getDaysDuration() {
+    switch (this) {
+      case SubscriptionBundleType.firstMonthFree:
+        return 30;
+      case SubscriptionBundleType.oneMonth:
+        return 30;
+      case SubscriptionBundleType.threeMonths:
+        return 90;
+      case SubscriptionBundleType.sixMonths:
+        return 180;
+      case SubscriptionBundleType.oneYear:
+        return 365;
+      default:
+        return 30;
+    }
+  }
+
 }
 
 enum SubscriptionTier{

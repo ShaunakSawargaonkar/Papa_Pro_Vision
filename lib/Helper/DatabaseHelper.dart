@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/enums.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -52,8 +51,9 @@ class UserStatusResponse {
   final String? message;
   final String? reasonTitle;
   final UserStatus userStatus;
+  final DocumentReference? referralKeyRef;
 
-  UserStatusResponse({this.message, this.reasonTitle, required this.userStatus});
+  UserStatusResponse({this.message, this.reasonTitle, required this.userStatus, this.referralKeyRef});
 }
 
 class ReferralKeyResponse {
@@ -83,7 +83,11 @@ class CreateUserResponse {
     this.userRef,
     this.orgRef,
     this.referralKeyRef,
-  });
+  }){
+    if(success){
+      assert(userRef != null && orgRef != null && referralKeyRef != null, 'User, organization and referral key are required');
+    }
+  }
 }
 
 class KilledAPKVersionResponse {
@@ -306,10 +310,15 @@ class DatabaseHelper {
             userStatus: UserStatus.apkKilled,
           );
         }
-        // UserStatus userStatus = checkSubscriptionStatus(
-        //   userData: userData,
-        // );
-        return UserStatusResponse(userStatus: UserStatus.active);
+
+        DocumentSnapshot referralKeyDoc = await userData['ReferralKey'].get();
+        if (referralKeyDoc.exists) {
+          Map<String, dynamic> referralKeyData = referralKeyDoc.data() as Map<String, dynamic>;
+          UserStatus userStatus = checkSubscriptionStatus(
+            referralKeyData: referralKeyData,
+          );
+          return UserStatusResponse(userStatus: userStatus, referralKeyRef: referralKeyDoc.reference);
+        }
       }
       return UserStatusResponse(userStatus: UserStatus.notRegistered);
     } catch (e) {
@@ -345,16 +354,30 @@ class DatabaseHelper {
   }
 
   static UserStatus checkSubscriptionStatus({
-    required Map<String, dynamic> userData,
+    required Map<String, dynamic> referralKeyData,
   }) {
-    if (userData['SubscriptionEndDate'] == null) {
+    if (referralKeyData['SubscriptionEndDate'] == null) {
       return UserStatus.firstPaymentPending;
     }
 
-    if (userData['SubscriptionEndDate'].isAfter(DateTime.now())) {
+    if (referralKeyData['SubscriptionEndDate'].toDate().isAfter(DateTime.now())) {
       return UserStatus.active;
     }
 
     return UserStatus.paymentPending;
   }
+
+  static Future<void> setSubscriptionInformation({
+    required DocumentReference referralKeyRef,
+    required SubscriptionBundleType subscriptionBundleType,
+  }) async {
+    SubscriptionTier subscriptionTier = (subscriptionBundleType == SubscriptionBundleType.firstMonthFree ? SubscriptionTier.free : SubscriptionTier.paid);
+    DateTime subscriptionEndDate = DateTime.now().add(Duration(days: subscriptionBundleType.getDaysDuration()));
+    DocumentSnapshot referralKeyDoc = await referralKeyRef.get();
+    if (referralKeyDoc.exists) {
+      print('Updating subscription information for referral key: ${referralKeyRef.id}');
+      await referralKeyRef.update({'SubscriptionBundleType': subscriptionBundleType.toString(), 'SubscriptionTier': subscriptionTier.toString(), 'SubscriptionEndDate': subscriptionEndDate});
+    }
+  }
+
 }
