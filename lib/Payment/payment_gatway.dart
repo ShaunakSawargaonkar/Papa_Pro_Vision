@@ -12,12 +12,14 @@ class PaymentGateway extends StatefulWidget {
   final bool isFirstPayment;
   final DocumentReference referralKeyRef;
   final String phoneNumber;
+  final String userUID;
 
   const PaymentGateway({
     super.key,
     required this.isFirstPayment,
     required this.referralKeyRef,
     required this.phoneNumber,
+    required this.userUID,
   });
 
   @override
@@ -313,7 +315,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       await Future.delayed(const Duration(seconds: 1));
 
       await DatabaseHelper.setSubscriptionInformation(referralKeyRef: widget.referralKeyRef, subscriptionBundleType: subscriptionPlans[selectedPlan]['duration'] as SubscriptionBundleType);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen(userUID: widget.userUID)));
     }
   }
 

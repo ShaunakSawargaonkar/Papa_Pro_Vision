@@ -105,18 +105,18 @@ class AgentService {
     // Get Response From Gemini
     try {
       final response = await _chat.sendMessage(content);
-      Analyticshelper.updateResponseCount("ResponseCount");
+      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount");
+        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount");
+        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
       }
       return Devicehelper.cleanAgentResponse(response.text!);
     }
     //Error logging
     on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount");
+      Analyticshelper.updateResponseCount("PromptErrorCount", _appContentState.userUID);
       print("Error from AI Service: $e");
       return "Error from AI Service: $e";
     } catch (e) {
@@ -190,18 +190,18 @@ class AgentService {
         inputText,
         userId: contactNumber,
       );
-      Analyticshelper.updateResponseCount("ResponseCount");
+      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount");
+        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount");
+        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
       }
       return Devicehelper.cleanAgentResponse(response);
     }
     //Error logging
     on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount");
+      Analyticshelper.updateResponseCount("PromptErrorCount", _appContentState.userUID);
       print("Error from AI Service: $e");
       return "Error from AI Service: $e";
     } catch (e) {
@@ -322,12 +322,12 @@ class AgentService {
 
       streamSessionId = await ttsService?.startSession() ?? 0;
 
-      Analyticshelper.updateResponseCount("ResponseCount");
+      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
 
       if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount");
+        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
       } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount");
+        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
       }
       // Local buffering variables captured by the listener closure.
       String currentText = '';

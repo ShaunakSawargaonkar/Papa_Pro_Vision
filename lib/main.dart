@@ -94,15 +94,17 @@ class MyApp extends StatelessWidget {
                     isFirstPayment: true,
                     referralKeyRef: data.referralKeyRef as DocumentReference,
                     phoneNumber: user.phoneNumber ?? '',
+                    userUID: user.uid,
                   );
                 } else if (data.userStatus == UserStatus.paymentPending) {
                   return PaymentGateway(
                     isFirstPayment: false,
                     referralKeyRef: data.referralKeyRef as DocumentReference,
                     phoneNumber: user.phoneNumber ?? '',
+                    userUID: user.uid,
                   );
                 } else if (data.userStatus == UserStatus.active) {
-                  return const HomeScreen();
+                  return HomeScreen(userUID: user.uid);
                 } else if (data.userStatus == UserStatus.noInternet) {
                   return const AlasInternetPage();
                 } else if (data.userStatus == UserStatus.apkKilled) {

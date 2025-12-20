@@ -186,21 +186,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: const Text('Save Profile'),
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    DeviceAudioHelper.playVideoStartSound();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Play Video Start Sound'),
-                ),
-              ),
             ],
           ),
         ),
