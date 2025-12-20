@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
 import 'package:papa_pro_vision/enums.dart';
 
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
               if (snapshot.hasData) {
                 print("User status: ${snapshot.data?.userStatus}");
                 final data = snapshot.data!;
+                print('Referral key ID: ${data.referralKeyRef?.id}');
                 if (data.userStatus == UserStatus.errorState) {
                   return AlasPage(
                     title: 'Please Contact Support',
@@ -84,20 +86,20 @@ class MyApp extends StatelessWidget {
                   );
                 } else if (data.userStatus == UserStatus.notRegistered) {
                   return RegistrationPage(
-                    phoneNumber: user?.phoneNumber ?? '',
-                    userUID: user?.uid ?? '',
+                    phoneNumber: user.phoneNumber,
+                    userUID: user.uid,
                   );
                 } else if (data.userStatus == UserStatus.firstPaymentPending) {
                   return PaymentGateway(
                     isFirstPayment: true,
-                    userUID: user?.uid ?? '',
-                    phoneNumber: user?.phoneNumber ?? '',
+                    referralKeyRef: data.referralKeyRef as DocumentReference,
+                    phoneNumber: user.phoneNumber ?? '',
                   );
                 } else if (data.userStatus == UserStatus.paymentPending) {
                   return PaymentGateway(
                     isFirstPayment: false,
-                    userUID: user?.uid ?? '',
-                    phoneNumber: user?.phoneNumber ?? '',
+                    referralKeyRef: data.referralKeyRef as DocumentReference,
+                    phoneNumber: user.phoneNumber ?? '',
                   );
                 } else if (data.userStatus == UserStatus.active) {
                   return const HomeScreen();

@@ -6,6 +6,7 @@ import 'package:papa_pro_vision/UI/home_screen.dart';
 import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/enums.dart';
+import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String? phoneNumber;
@@ -179,8 +180,7 @@ class _RegistrationPageState extends State<RegistrationPage>
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          // builder: (context) => PaymentGateway(isFirstPayment: true, userUID: widget.userUID, phoneNumber: _phoneController.text),
-          builder: (context) => HomeScreen(),
+          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text),
         ),
       );
     }
@@ -642,9 +642,7 @@ class _RegistrationPageState extends State<RegistrationPage>
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          // builder: (context) => PaymentGateway(isFirstPayment: true, userUID: widget.userUID, phoneNumber: _phoneController.text),
-          builder: (context) => HomeScreen(),
-
+          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text),
         ),
       );
     }

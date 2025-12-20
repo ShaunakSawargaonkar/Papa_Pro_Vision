@@ -5,16 +5,18 @@ import 'package:papa_pro_vision/Payment/payment_utils.dart';
 import 'package:papa_pro_vision/enums.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaymentGateway extends StatefulWidget {
   final bool isFirstPayment;
-  final String userUID;
+  final DocumentReference referralKeyRef;
   final String phoneNumber;
 
   const PaymentGateway({
     super.key,
     required this.isFirstPayment,
-    required this.userUID,
+    required this.referralKeyRef,
     required this.phoneNumber,
   });
 
@@ -172,7 +174,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     }
 
     var options = <String, dynamic>{
-      'key': 'rzp_test_RaVDdVb2vZXMGO',
+      'key': 'rzp_live_Rs0d9WEg1h6UPg',
       'amount': price * 100, // Amount in paise
       'name': 'Let See',
       'description':
@@ -310,10 +312,8 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       // Navigate after a short delay to show the success message
       await Future.delayed(const Duration(seconds: 1));
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      await DatabaseHelper.setSubscriptionInformation(referralKeyRef: widget.referralKeyRef, subscriptionBundleType: subscriptionPlans[selectedPlan]['duration'] as SubscriptionBundleType);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
     }
   }
 
