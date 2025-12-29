@@ -29,110 +29,125 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
     super.dispose();
   }
 
+  void _setLoading(bool loading, {String? error}) {
+    if (mounted) {
+      setState(() {
+        _loading = loading;
+        _error = error;
+      });
+    }
+  }
+
+  void _showSnackBar(String message, {bool isSuccess = true}) {
+    if (!mounted) return;
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isSuccess ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      // Context no longer valid, ignore
+    }
+  }
+
+  Future<void> _handleSignIn(UserCredential cred) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('UserUId', cred.user?.uid ?? '');
+    HapticFeedback.lightImpact();
+  }
+
+  String _getFirebaseErrorMessage(String code) {
+    return switch (code) {
+      'invalid-phone-number' =>
+        'Invalid phone number format. Please include country code (e.g., +911234567890)',
+      'too-many-requests' =>
+        'Too many attempts. Please try again after some time.',
+      'app-not-authorized' =>
+        'App not authorized. Please check Firebase configuration.',
+      _ => 'Verification failed. Please try again.',
+    };
+  }
+
   Future<void> _sendCode() async {
-    // Validate form first
     if (!_formKey.currentState!.validate()) {
       HapticFeedback.heavyImpact();
       return;
     }
 
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    // Provide haptic feedback
+    _setLoading(true);
     HapticFeedback.mediumImpact();
 
     final phone = _phoneController.text.trim();
-    // Check if phone number starts with + and contains only digits after that
-    if (!phone.startsWith('+') || phone.length < 8) {
-      setState(() {
-        _error =
-            'Please enter a valid phone number with country code (e.g., +911234567890)';
-        _loading = false;
-      });
-      HapticFeedback.heavyImpact();
-      return;
-    }
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          setState(() {
-            _loading = true;
-          });
+          if (!mounted) return;
+          _setLoading(true);
+          try {
+            UserCredential cred = await FirebaseAuth.instance
+                .signInWithCredential(credential);
+            if (!mounted) return;
+            await _handleSignIn(cred);
+            setState(() => _codeSent = false);
+            _setLoading(false);
+            _showSnackBar('Phone automatically verified and user signed in.');
+          } catch (e) {
+            if (!mounted) return;
+            _setLoading(false, error: e.toString());
+            HapticFeedback.heavyImpact();
+          }
         },
         verificationFailed: (FirebaseAuthException e) {
-          setState(() {
-            _error = switch (e.code) {
-              'invalid-phone-number' =>
-                'Invalid phone number format. Please include country code (e.g., +911234567890)',
-              'too-many-requests' =>
-                'Too many attempts. Please try again after some time.',
-              'app-not-authorized' =>
-                'App not authorized. Please check Firebase configuration.',
-              _ => e.message ?? 'Verification failed. Please try again.',
-            };
-            _loading = false;
-          });
+          if (!mounted) return;
+          _setLoading(false, error: _getFirebaseErrorMessage(e.code));
         },
         codeSent: (String verificationId, int? resendToken) {
+          if (!mounted) return;
           setState(() {
             _verificationId = verificationId;
             _codeSent = true;
             _loading = false;
             _error = null;
           });
-          // Save phone number to shared preferences
-          SharedPreferences.getInstance().then((prefs) {
-            prefs.setString('contactNumber', phone);
-          });
-          HapticFeedback.lightImpact();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'OTP sent successfully! Please check your messages.',
-              ),
-              backgroundColor: Colors.green,
-            ),
+          SharedPreferences.getInstance().then(
+            (prefs) => prefs.setString('contactNumber', phone),
           );
+          HapticFeedback.lightImpact();
+          _showSnackBar('OTP sent successfully! Please check your messages.');
         },
         codeAutoRetrievalTimeout: (String verificationId) {
+          if (!mounted) return;
           _verificationId = verificationId;
-          if (mounted) {
-            setState(() {
-              _error = 'Code verification timed out. Please try again.';
-              _loading = false;
-            });
-          }
+          _setLoading(
+            false,
+            error: 'Code verification timed out. Please try again.',
+          );
         },
       );
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      if (!mounted) return;
+      _setLoading(false, error: e.toString());
     }
   }
 
   Future<void> _verifyCode() async {
-    // Provide haptic feedback
     HapticFeedback.mediumImpact();
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    _setLoading(true);
 
     final code = _codeController.text.trim();
-    if (code.isEmpty || _verificationId == null) {
-      setState(() {
-        _error = 'Please enter the OTP code';
-        _loading = false;
-      });
+    if (code.isEmpty) {
+      _setLoading(false, error: 'Please enter the OTP code');
+      HapticFeedback.heavyImpact();
+      return;
+    }
+
+    if (_verificationId == null) {
+      _setLoading(false, error: 'OTP session expired. Please send a new code.');
       HapticFeedback.heavyImpact();
       return;
     }
@@ -145,15 +160,13 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
       UserCredential cred = await FirebaseAuth.instance.signInWithCredential(
         credential,
       );
-
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setString('UserUId', cred.user?.uid ?? '');
-      HapticFeedback.lightImpact();
+      if (!mounted) return;
+      await _handleSignIn(cred);
+      _setLoading(false);
+      _showSnackBar('Verification successful.');
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      if (!mounted) return;
+      _setLoading(false, error: e.toString());
       HapticFeedback.heavyImpact();
     }
   }
@@ -188,7 +201,7 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
         ),
         filled: true,
         fillColor: Colors.grey[50],
-        counterText: "", // Hide character counter
+        counterText: "",
       ),
       validator: validator,
       onTap: () => HapticFeedback.selectionClick(),
@@ -217,7 +230,7 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(
-                color: Colors.white,
+                color: Colors.yellow,
                 semanticsLabel: 'Loading, please wait',
               ),
             )
@@ -378,7 +391,7 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                                         height: 20,
                                         width: 20,
                                         child: CircularProgressIndicator(
-                                          color: Colors.white,
+                                          color: Colors.purple,
                                           strokeWidth: 2,
                                         ),
                                       )
@@ -401,6 +414,7 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                                           _codeSent = false;
                                           _codeController.clear();
                                           _error = null;
+                                          _verificationId = null;
                                         });
                                         HapticFeedback.lightImpact();
                                       },
@@ -416,39 +430,40 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                             ],
 
                             // Error Message
-                            if (_error != null) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.red[200]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      color: Colors.red[700],
-                                      size: 20,
+                            if (_error != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.red[200]!,
+                                      width: 1,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _error!,
-                                        style: TextStyle(
-                                          color: Colors.red[700],
-                                          fontSize: 13,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red[700],
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _error!,
+                                          style: TextStyle(
+                                            color: Colors.red[700],
+                                            fontSize: 13,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ],
 
                             const SizedBox(height: 16),
 

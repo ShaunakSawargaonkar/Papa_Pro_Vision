@@ -31,7 +31,13 @@ class _PaymentGatewayState extends State<PaymentGateway> {
   int selectedPlan = 0;
   bool isLoading = true;
 
-  List<Map<String, dynamic>> subscriptionPlans = PaymentService.initialSubscriptionPlans;
+  List<Map<String, dynamic>> subscriptionPlans =
+      PaymentService.initialSubscriptionPlans;
+
+  // Responsive constants
+  static const Color primaryColor = Color(0xFFFCB853);
+  static const Color accentGreen = Colors.green;
+  static const Color accentBlue = Colors.blue;
 
   @override
   void initState() {
@@ -40,19 +46,76 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     _initializePaymentCosts();
   }
 
+  // Helper method to get responsive values - safe to call after build
+  Map<String, double> _getResponsiveValues() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return {
+      'borderRadius': (screenWidth * 0.03).clamp(8.0, 16.0),
+      'iconSize': (screenWidth * 0.04).clamp(20.0, 32.0),
+      'padding': (screenWidth * 0.04).clamp(12.0, 24.0),
+      'spacing': (screenWidth * 0.02).clamp(8.0, 16.0),
+      'snackBarBorderRadius': (screenWidth * 0.03).clamp(8.0, 12.0),
+    };
+  }
+
+  List<Map<String, dynamic>> _getDisplayPlans(
+    List<Map<String, dynamic>> allPlans,
+  ) {
+    List<Map<String, dynamic>> displayPlans = [];
+
+    if (widget.isFirstPayment) {
+      // Show firstMonthFree plan first
+      final firstMonthFreePlan = allPlans.firstWhere(
+        (plan) =>
+            (plan['duration'] as SubscriptionBundleType) ==
+            SubscriptionBundleType.firstMonthFree,
+        orElse: () => {},
+      );
+      if (firstMonthFreePlan.isNotEmpty) {
+        displayPlans.add(firstMonthFreePlan);
+      }
+    } else {
+      // Show oneMonth plan first (without first month free)
+      final oneMonthPlan = allPlans.firstWhere(
+        (plan) =>
+            (plan['duration'] as SubscriptionBundleType) ==
+            SubscriptionBundleType.oneMonth,
+        orElse: () => {},
+      );
+      if (oneMonthPlan.isNotEmpty) {
+        displayPlans.add(oneMonthPlan);
+      }
+    }
+
+    // Add 3 months, 6 months, and 1 year plans
+    displayPlans.addAll(
+      allPlans.where((plan) {
+        final duration = plan['duration'] as SubscriptionBundleType;
+        return duration == SubscriptionBundleType.threeMonths ||
+            duration == SubscriptionBundleType.sixMonths ||
+            duration == SubscriptionBundleType.oneYear;
+      }),
+    );
+
+    return displayPlans;
+  }
+
   Future<void> _initializePaymentCosts() async {
     try {
       // Fetch payment costs from Firestore
-      subscriptionPlans = await PaymentService.fetchPaymentCosts();
+      final allPlans = await PaymentService.fetchPaymentCosts();
       if (mounted) {
         setState(() {
-          subscriptionPlans = subscriptionPlans;
+          subscriptionPlans = _getDisplayPlans(allPlans);
           isLoading = false;
         });
       }
     } catch (e) {
       print('Error fetching payment costs: $e');
-      // Keep default prices if fetch fails
+      // Use filtered default plans if fetch fails
+      subscriptionPlans = _getDisplayPlans(
+        PaymentService.initialSubscriptionPlans,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -74,25 +137,37 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       // Show error to user with better styling
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
+          final responsive = _getResponsiveValues();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.white),
-                  SizedBox(width: 12),
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: responsive['iconSize']! * 0.8,
+                  ),
+                  SizedBox(width: responsive['spacing']),
                   Expanded(
                     child: Text(
                       'Payment gateway initialization failed. Please restart the app.',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(
+                        fontSize: (MediaQuery.of(context).size.width * 0.035)
+                            .clamp(12.0, 16.0),
+                      ),
                     ),
                   ),
                 ],
               ),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
+              duration: Duration(
+                seconds: (MediaQuery.of(context).size.width > 600 ? 4 : 5),
+              ),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(
+                  responsive['snackBarBorderRadius']!,
+                ),
               ),
             ),
           );
@@ -178,7 +253,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     var options = <String, dynamic>{
       'key': 'rzp_live_Rs0d9WEg1h6UPg',
       'amount': price * 100, // Amount in paise
-      'name': 'Let See',
+      'name': 'Papa Pro Vision',
       'description':
           'Premium Subscription - ${subscriptionPlans[selectedPlan]['duration'].toString()}',
       'timeout': 300, // 5 minutes timeout
@@ -193,7 +268,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
           'preferences': <String, dynamic>{'show_default_blocks': true},
         },
       },
-      'theme': <String, String>{'color': '#FCB853'}, // Match our theme color
+      'theme': <String, String>{'color': '#FCB853'},
     };
 
     try {
@@ -204,27 +279,42 @@ class _PaymentGatewayState extends State<PaymentGateway> {
 
       // Show loading indicator
       if (mounted) {
+        final responsive = _getResponsiveValues();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
                 SizedBox(
-                  width: 16,
-                  height: 16,
+                  width: responsive['iconSize']! * 0.6,
+                  height: responsive['iconSize']! * 0.6,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
                   ),
                 ),
-                SizedBox(width: 12),
-                Text('Opening payment gateway...'),
+                SizedBox(width: responsive['spacing']),
+                Text(
+                  'Opening payment gateway...',
+                  style: TextStyle(
+                    fontSize: (MediaQuery.of(context).size.width * 0.035).clamp(
+                      12.0,
+                      16.0,
+                    ),
+                  ),
+                ),
               ],
             ),
-            backgroundColor: const Color(0xFFFCB853),
-            duration: const Duration(seconds: 2),
+            backgroundColor: primaryColor,
+            duration: Duration(
+              seconds: (MediaQuery.of(context).size.width > 600 ? 1 : 2),
+            ),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(
+                responsive['snackBarBorderRadius']!,
+              ),
             ),
           ),
         );
@@ -236,25 +326,37 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       HapticFeedback.heavyImpact();
 
       if (mounted) {
+        final responsive = _getResponsiveValues();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
+                Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: responsive['iconSize']! * 0.8,
+                ),
+                SizedBox(width: responsive['spacing']),
                 Expanded(
                   child: Text(
                     "Failed to open payment gateway: ${e.toString()}",
-                    style: const TextStyle(fontSize: 14),
+                    style: TextStyle(
+                      fontSize: (MediaQuery.of(context).size.width * 0.035)
+                          .clamp(12.0, 16.0),
+                    ),
                   ),
                 ),
               ],
             ),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
+            duration: Duration(
+              seconds: (MediaQuery.of(context).size.width > 600 ? 3 : 4),
+            ),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(
+                responsive['snackBarBorderRadius']!,
+              ),
             ),
             action: SnackBarAction(
               label: 'Retry',
@@ -272,28 +374,35 @@ class _PaymentGatewayState extends State<PaymentGateway> {
 
     // Show success message with professional styling
     if (mounted) {
+      final responsive = _getResponsiveValues();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: responsive['iconSize']! * 0.8,
+              ),
+              SizedBox(width: responsive['spacing']),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Payment Successful!',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: (MediaQuery.of(context).size.width * 0.04)
+                            .clamp(14.0, 18.0),
                       ),
                     ),
                     Text(
-                      'Welcome to Letsee Premium',
+                      'Welcome to Papa Pro Vision Premium',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: (MediaQuery.of(context).size.width * 0.032)
+                            .clamp(12.0, 16.0),
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
@@ -302,11 +411,15 @@ class _PaymentGatewayState extends State<PaymentGateway> {
               ),
             ],
           ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
+          backgroundColor: accentGreen,
+          duration: Duration(
+            seconds: (MediaQuery.of(context).size.width > 600 ? 2 : 3),
+          ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(
+              responsive['snackBarBorderRadius']!,
+            ),
           ),
         ),
       );
@@ -314,8 +427,18 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       // Navigate after a short delay to show the success message
       await Future.delayed(const Duration(seconds: 1));
 
-      await DatabaseHelper.setSubscriptionInformation(referralKeyRef: widget.referralKeyRef, subscriptionBundleType: subscriptionPlans[selectedPlan]['duration'] as SubscriptionBundleType);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen(userUID: widget.userUID)));
+      await DatabaseHelper.setSubscriptionInformation(
+        referralKeyRef: widget.referralKeyRef,
+        subscriptionBundleType:
+            subscriptionPlans[selectedPlan]['duration']
+                as SubscriptionBundleType,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(userUID: widget.userUID),
+        ),
+      );
     }
   }
 
@@ -343,28 +466,35 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     print("Payment Error: $errorMessage");
 
     if (mounted) {
+      final responsive = _getResponsiveValues();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
+              Icon(
+                Icons.error_outline,
+                color: Colors.white,
+                size: responsive['iconSize']! * 0.8,
+              ),
+              SizedBox(width: responsive['spacing']),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Payment Failed',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: (MediaQuery.of(context).size.width * 0.04)
+                            .clamp(14.0, 18.0),
                       ),
                     ),
                     Text(
                       errorMessage.replaceFirst('Payment failed: ', ''),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: (MediaQuery.of(context).size.width * 0.032)
+                            .clamp(12.0, 16.0),
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
@@ -374,10 +504,14 @@ class _PaymentGatewayState extends State<PaymentGateway> {
             ],
           ),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
+          duration: Duration(
+            seconds: (MediaQuery.of(context).size.width > 600 ? 3 : 4),
+          ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(
+              responsive['snackBarBorderRadius']!,
+            ),
           ),
           action: SnackBarAction(
             label: 'Retry',
@@ -401,25 +535,39 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     HapticFeedback.lightImpact();
 
     if (mounted) {
+      final responsive = _getResponsiveValues();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.account_balance_wallet, color: Colors.white),
-              const SizedBox(width: 12),
+              Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: responsive['iconSize']! * 0.8,
+              ),
+              SizedBox(width: responsive['spacing']),
               Expanded(
                 child: Text(
                   'External wallet selected: ${response.walletName ?? 'Wallet'}',
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(
+                    fontSize: (MediaQuery.of(context).size.width * 0.035).clamp(
+                      12.0,
+                      16.0,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          backgroundColor: Colors.blue,
-          duration: const Duration(seconds: 2),
+          backgroundColor: accentBlue,
+          duration: Duration(
+            seconds: (MediaQuery.of(context).size.width > 600 ? 1 : 2),
+          ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(
+              responsive['snackBarBorderRadius']!,
+            ),
           ),
         ),
       );
@@ -447,77 +595,67 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFCB853) : Colors.grey[50],
-          borderRadius: BorderRadius.circular(
-            screenWidth * 0.03,
-          ), // 3% of screen width
+          color: isSelected ? primaryColor : Colors.grey[50],
+          borderRadius: BorderRadius.circular(screenWidth * 0.03),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFCB853) : Colors.grey[300]!,
-            width: isTablet ? 3 : 2, // Thicker border on tablets
+            color: isSelected ? primaryColor : Colors.grey[300]!,
+            width: isTablet ? 3 : 2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFFCB853).withOpacity(0.3),
-                    blurRadius: screenWidth * 0.02, // 2% of screen width
-                    offset: Offset(
-                      0,
-                      screenHeight * 0.004,
-                    ), // 0.4% of screen height
+                    color: primaryColor.withOpacity(0.3),
+                    blurRadius: screenWidth * 0.02,
+                    offset: Offset(0, screenHeight * 0.004),
                   ),
                 ]
               : [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
-                    blurRadius: screenWidth * 0.01, // 1% of screen width
-                    offset: Offset(
-                      0,
-                      screenHeight * 0.002,
-                    ), // 0.2% of screen height
+                    blurRadius: screenWidth * 0.01,
+                    offset: Offset(0, screenHeight * 0.002),
                   ),
                 ],
         ),
         child: Stack(
           children: [
-            if (plan['popular'])
+            // if (plan['popular'])
+            //   Positioned(
+            //     top: screenHeight * 0.01,
+            //     right: screenWidth * 0.02,
+            //     child: Container(
+            //       padding: EdgeInsets.symmetric(
+            //         horizontal: screenWidth * 0.02,
+            //         vertical: screenHeight * 0.005,
+            //       ),
+            //       decoration: BoxDecoration(
+            //         color: accentGreen,
+            //         borderRadius: BorderRadius.circular(screenWidth * 0.02),
+            //       ),
+            //       child: Text(
+            //         'POPULAR',
+            //         style: TextStyle(
+            //           color: Colors.white,
+            //           fontSize: badgeTextSize,
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            if (widget.isFirstPayment &&
+                (plan['duration'] as SubscriptionBundleType) ==
+                    SubscriptionBundleType.firstMonthFree)
               Positioned(
-                top: screenHeight * 0.01, // 1% of screen height
-                right: screenWidth * 0.02, // 2% of screen width
+                top: screenHeight * 0.01,
+                left: screenWidth * 0.02,
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.02, // 2% of screen width
-                    vertical: screenHeight * 0.005, // 0.5% of screen height
+                    horizontal: screenWidth * 0.02,
+                    vertical: screenHeight * 0.005,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(
-                      screenWidth * 0.02,
-                    ), // 2% of screen width
-                  ),
-                  child: Text(
-                    'POPULAR',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: badgeTextSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
-              Positioned(
-                top: screenHeight * 0.01, // 1% of screen height
-                left: screenWidth * 0.02, // 2% of screen width
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.02, // 2% of screen width
-                    vertical: screenHeight * 0.005, // 0.5% of screen height
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(
-                      screenWidth * 0.02,
-                    ), // 2% of screen width
+                    color: accentGreen,
+                    borderRadius: BorderRadius.circular(screenWidth * 0.02),
                   ),
                   child: Text(
                     'First month free',
@@ -531,22 +669,19 @@ class _PaymentGatewayState extends State<PaymentGateway> {
               ),
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04, // 4% of screen width
-                vertical: screenWidth * 0.04, // 4% of screen width
+                horizontal: screenWidth * 0.02,
+                vertical: screenWidth * 0.02,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Add equal padding for "First month free" badge to keep content centered
-                  if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
-                    SizedBox(
-                      height: screenHeight * 0.035,
-                    ) // 3.5% padding to balance the badge
+                  if (widget.isFirstPayment &&
+                      (plan['duration'] as SubscriptionBundleType) ==
+                          SubscriptionBundleType.firstMonthFree)
+                    SizedBox(height: screenHeight * 0.035)
                   else
-                    SizedBox(
-                      height: screenHeight * 0.01,
-                    ), // Small padding for other cards
+                    SizedBox(height: screenHeight * 0.01),
                   Text(
                     plan['duration'].toString(),
                     style: TextStyle(
@@ -556,12 +691,10 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(
-                    height: screenHeight * 0.015,
-                  ), // 1.5% of screen height
-                  // Show slashed original price and new price side by side for first month free
+                  SizedBox(height: screenHeight * 0.015),
                   if (widget.isFirstPayment &&
-                      (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth &&
+                      (plan['duration'] as SubscriptionBundleType) ==
+                          SubscriptionBundleType.firstMonthFree &&
                       plan['originalPrice'] != null)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -579,17 +712,13 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                             decorationThickness: 2,
                           ),
                         ),
-                        SizedBox(
-                          width: screenWidth * 0.02,
-                        ), // Space between prices
+                        SizedBox(width: screenWidth * 0.02),
                         Text(
                           plan['price'],
                           style: TextStyle(
                             fontSize: priceTextSize,
                             fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? Colors.white
-                                : const Color(0xFFFCB853),
+                            color: isSelected ? Colors.white : primaryColor,
                           ),
                         ),
                       ],
@@ -600,33 +729,27 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                       style: TextStyle(
                         fontSize: priceTextSize,
                         fontWeight: FontWeight.bold,
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFFFCB853),
+                        color: isSelected ? Colors.white : primaryColor,
                       ),
                     ),
-                  if (plan['savings'] != null) ...[
-                    SizedBox(
-                      height: screenHeight * 0.01,
-                    ), // 1% of screen height
-                    Text(
-                      plan['savings'],
-                      style: TextStyle(
-                        fontSize: savingsTextSize,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white70 : Colors.green,
-                      ),
-                    ),
-                  ],
-                  // Add bottom padding for 1 Month card to balance the top badge
-                  if (widget.isFirstPayment && (plan['duration'] as SubscriptionBundleType) == SubscriptionBundleType.oneMonth)
-                    SizedBox(
-                      height: screenHeight * 0.035,
-                    ) // 3.5% padding to balance
+                  // if (plan['savings'] != null && !widget.isFirstPayment) ...[
+                  //   SizedBox(height: screenHeight * 0.01),
+                  //   Text(
+                  //     // plan['savings'],
+                  //     "Hi",
+                  //     style: TextStyle(
+                  //       fontSize: savingsTextSize,
+                  //       fontWeight: FontWeight.w600,
+                  //       color: isSelected ? Colors.white70 : accentGreen,
+                  //     ),
+                  //   ),
+                  // ],
+                  if (widget.isFirstPayment &&
+                      (plan['duration'] as SubscriptionBundleType) ==
+                          SubscriptionBundleType.firstMonthFree)
+                    SizedBox(height: screenHeight * 0.035)
                   else
-                    SizedBox(
-                      height: screenHeight * 0.01,
-                    ), // Small padding for other cards
+                    SizedBox(height: screenHeight * 0.01),
                 ],
               ),
             ),
@@ -646,38 +769,43 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     final isTablet = screenWidth > 600;
     final isLargeScreen = screenWidth > 900;
 
-    // Define all text sizes at the top
+    // Responsive text sizes
     final durationTextSize = isTablet
-        ? 22.0
-        : (screenWidth * 0.04).clamp(18.0, 22.0);
+        ? (screenWidth * 0.04).clamp(18.0, 24.0)
+        : (screenWidth * 0.04).clamp(16.0, 22.0);
     final priceTextSize = isTablet
-        ? 32.0
-        : (screenWidth * 0.06).clamp(24.0, 32.0);
+        ? (screenWidth * 0.06).clamp(26.0, 36.0)
+        : (screenWidth * 0.06).clamp(20.0, 32.0);
     final originalPriceTextSize = isTablet
-        ? 20.0
-        : (screenWidth * 0.045).clamp(16.0, 20.0);
+        ? (screenWidth * 0.045).clamp(16.0, 24.0)
+        : (screenWidth * 0.045).clamp(14.0, 20.0);
     final savingsTextSize = isTablet
-        ? 14.0
+        ? (screenWidth * 0.032).clamp(12.0, 16.0)
         : (screenWidth * 0.03).clamp(10.0, 14.0);
     final badgeTextSize = isTablet
-        ? 12.0
+        ? (screenWidth * 0.028).clamp(10.0, 14.0)
         : (screenWidth * 0.025).clamp(8.0, 12.0);
+    final headerTextSize = isTablet
+        ? (screenWidth * 0.07).clamp(28.0, 40.0)
+        : (screenWidth * 0.07).clamp(24.0, 32.0);
+    final buttonTextSize = isTablet
+        ? (screenWidth * 0.045).clamp(18.0, 24.0)
+        : (screenWidth * 0.045).clamp(14.0, 20.0);
 
-    // Responsive spacing and sizing
-    final horizontalPadding = screenWidth * 0.05; // 5% of screen width
+    // Responsive spacing
+    final horizontalPadding = screenWidth * 0.05;
     final verticalPadding = isLandscape
-        ? screenHeight * 0.03
-        : screenHeight * 0.02; // Adjusted for landscape
-    final containerBorderRadius =
-        screenWidth * 0.05; // 5% of screen width, max 25
+        ? screenHeight * 0.02
+        : screenHeight * 0.02;
+    final containerBorderRadius = (screenWidth * 0.05).clamp(12.0, 25.0);
     final maxContainerWidth = isLargeScreen
-        ? 600.0
-        : (isTablet ? screenWidth * 0.8 : screenWidth * 0.95);
+        ? 700.0
+        : (isTablet ? screenWidth * 0.85 : screenWidth * 0.95);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCB853),
+      backgroundColor: primaryColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFCB853),
+        backgroundColor: primaryColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -698,17 +826,12 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      containerBorderRadius.clamp(15.0, 25.0),
-                    ),
+                    borderRadius: BorderRadius.circular(containerBorderRadius),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
-                        blurRadius: screenWidth * 0.025, // 2.5% of screen width
-                        offset: Offset(
-                          0,
-                          screenHeight * 0.006,
-                        ), // 0.6% of screen height
+                        blurRadius: screenWidth * 0.025,
+                        offset: Offset(0, screenHeight * 0.006),
                       ),
                     ],
                   ),
@@ -717,35 +840,23 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                     children: [
                       // Header Section
                       Container(
-                        padding: EdgeInsets.all(
-                          screenWidth * 0.06,
-                        ), // 6% of screen width
+                        padding: EdgeInsets.all(screenWidth * 0.06),
                         child: Column(
                           children: [
                             Icon(
                               Icons.workspace_premium,
-                              size: (screenWidth * 0.15).clamp(
-                                50.0,
-                                80.0,
-                              ), // 15% of screen width, clamped between 50-80
-                              color: const Color(0xFFFCB853),
+                              size: (screenWidth * 0.15).clamp(50.0, 80.0),
+                              color: primaryColor,
                             ),
-                            SizedBox(
-                              height: screenHeight * 0.02,
-                            ), // 2% of screen height
+                            SizedBox(height: screenHeight * 0.02),
                             Text(
                               widget.isFirstPayment
                                   ? 'Complete Payment'
                                   : 'Renew Subscription',
                               style: TextStyle(
-                                fontSize: isTablet
-                                    ? 32
-                                    : (screenWidth * 0.07).clamp(
-                                        24.0,
-                                        32.0,
-                                      ), // Dynamic font size
+                                fontSize: headerTextSize,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFFFCB853),
+                                color: primaryColor,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -758,23 +869,16 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                         child: Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: screenWidth * 0.06,
-                          ), // 6% of screen width
+                          ),
                           child: GridView.builder(
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: isLargeScreen
                                       ? 4
-                                      : (isTablet
-                                            ? 3
-                                            : 2), // Responsive column count
-                                  childAspectRatio: isTablet
-                                      ? 0.9
-                                      : 0.85, // Slightly taller cards on tablets
-                                  crossAxisSpacing:
-                                      screenWidth * 0.03, // 3% of screen width
-                                  mainAxisSpacing:
-                                      screenHeight *
-                                      0.015, // 1.5% of screen height
+                                      : (isTablet ? 2 : 2),
+                                  childAspectRatio: isTablet ? 0.9 : 0.85,
+                                  crossAxisSpacing: screenWidth * 0.03,
+                                  mainAxisSpacing: screenHeight * 0.015,
                                 ),
                             itemCount: subscriptionPlans.length,
                             itemBuilder: (context, index) => _buildPlanCard(
@@ -797,10 +901,10 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                         width: double.infinity,
                         margin: EdgeInsets.symmetric(
                           horizontal: screenWidth * 0.06,
-                        ), // 6% of screen width
+                        ),
                         padding: EdgeInsets.only(
-                          bottom: screenHeight * 0.02, // 2% of screen height
-                          top: screenHeight * 0.02, // 2% of screen height
+                          bottom: screenHeight * 0.02,
+                          top: screenHeight * 0.02,
                         ),
                         child: ElevatedButton(
                           onPressed: () {
@@ -815,28 +919,22 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFCB853),
+                            backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(
-                              vertical:
-                                  screenHeight * 0.02, // 2% of screen height
+                              vertical: screenHeight * 0.02,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
                                 screenWidth * 0.03,
-                              ), // 3% of screen width
+                              ),
                             ),
                             elevation: 3,
                           ),
                           child: Text(
                             'Continue with ${subscriptionPlans[selectedPlan]['duration'].toString()} - ${subscriptionPlans[selectedPlan]['price']}',
                             style: TextStyle(
-                              fontSize: isTablet
-                                  ? 20
-                                  : (screenWidth * 0.045).clamp(
-                                      16.0,
-                                      20.0,
-                                    ), // Dynamic font size
+                              fontSize: buttonTextSize,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
