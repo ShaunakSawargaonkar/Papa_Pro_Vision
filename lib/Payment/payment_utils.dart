@@ -10,10 +10,16 @@ class PaymentService {
       'popular': false,
     },
     {
+      'duration': SubscriptionBundleType.firstMonthFree,
+      'price': '₹1',
+      'savings': 'Free Trial',
+      'popular': false,
+    },
+    {
       'duration': SubscriptionBundleType.threeMonths,
       'price': '₹750',
       'savings': 'Save 16%',
-      'popular': true,
+      'popular': false,
     },
     {
       'duration': SubscriptionBundleType.sixMonths,
@@ -42,7 +48,8 @@ class PaymentService {
 
       // Update subscription plans with fetched prices
       for (int i = 0; i < subscriptionPlans.length; i++) {
-        final duration = subscriptionPlans[i]['duration'] as SubscriptionBundleType;
+        final duration =
+            subscriptionPlans[i]['duration'] as SubscriptionBundleType;
         final durationStr = duration.toString();
         if (data.containsKey(durationStr)) {
           subscriptionPlans[i]['price'] = '₹${data[durationStr]}';
@@ -55,7 +62,9 @@ class PaymentService {
   }
 }
 
-List<Map<String, dynamic>> _calculateSavings(List<Map<String, dynamic>> subscriptionPlans) {
+List<Map<String, dynamic>> _calculateSavings(
+  List<Map<String, dynamic>> subscriptionPlans,
+) {
   // Get monthly price for calculation
   final monthlyPriceStr =
       subscriptionPlans[0]['price']?.replaceAll(RegExp(r'[^\d]'), '') ?? '299';
