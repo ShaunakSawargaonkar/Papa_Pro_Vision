@@ -53,7 +53,12 @@ class UserStatusResponse {
   final UserStatus userStatus;
   final DocumentReference? referralKeyRef;
 
-  UserStatusResponse({this.message, this.reasonTitle, required this.userStatus, this.referralKeyRef});
+  UserStatusResponse({
+    this.message,
+    this.reasonTitle,
+    required this.userStatus,
+    this.referralKeyRef,
+  });
 }
 
 class ReferralKeyResponse {
@@ -83,9 +88,12 @@ class CreateUserResponse {
     this.userRef,
     this.orgRef,
     this.referralKeyRef,
-  }){
-    if(success){
-      assert(userRef != null && orgRef != null && referralKeyRef != null, 'User, organization and referral key are required');
+  }) {
+    if (success) {
+      assert(
+        userRef != null && orgRef != null && referralKeyRef != null,
+        'User, organization and referral key are required',
+      );
     }
   }
 }
@@ -95,7 +103,11 @@ class KilledAPKVersionResponse {
   final String? reasonTitle;
   final String? reasonMessage;
 
-  KilledAPKVersionResponse({required this.isKilled, this.reasonTitle, this.reasonMessage});
+  KilledAPKVersionResponse({
+    required this.isKilled,
+    this.reasonTitle,
+    this.reasonMessage,
+  });
 }
 
 class DatabaseHelper {
@@ -170,6 +182,7 @@ class DatabaseHelper {
         }
 
         await referralKeyRef.update({'NumberOfUsers': FieldValue.increment(1)});
+        await orgRef.update({'NumberOfUsers': FieldValue.increment(1)});
       }
 
       print('Creating user');
@@ -294,15 +307,18 @@ class DatabaseHelper {
             userStatus: UserStatus.errorState,
           );
         }
-        Map<String, dynamic> userData = userDoc.docs[0].data() as Map<String, dynamic>;
-        if (userData['IsEnabled'] ==
-            false) {
+        Map<String, dynamic> userData =
+            userDoc.docs[0].data() as Map<String, dynamic>;
+        if (userData['IsEnabled'] == false) {
           return UserStatusResponse(
             message: 'Your account is not active. Please contact support.',
             userStatus: UserStatus.errorState,
           );
         }
-        KilledAPKVersionResponse killedAPKVersionResponse = await checkKilledAPKVersions(APKVersion: userData['APKVersion'] ?? '');
+        KilledAPKVersionResponse killedAPKVersionResponse =
+            await checkKilledAPKVersions(
+              APKVersion: userData['APKVersion'] ?? '',
+            );
         if (killedAPKVersionResponse.isKilled) {
           return UserStatusResponse(
             message: killedAPKVersionResponse.reasonMessage,
@@ -313,11 +329,15 @@ class DatabaseHelper {
 
         DocumentSnapshot referralKeyDoc = await userData['ReferralKey'].get();
         if (referralKeyDoc.exists) {
-          Map<String, dynamic> referralKeyData = referralKeyDoc.data() as Map<String, dynamic>;
+          Map<String, dynamic> referralKeyData =
+              referralKeyDoc.data() as Map<String, dynamic>;
           UserStatus userStatus = checkSubscriptionStatus(
             referralKeyData: referralKeyData,
           );
-          return UserStatusResponse(userStatus: userStatus, referralKeyRef: referralKeyDoc.reference);
+          return UserStatusResponse(
+            userStatus: userStatus,
+            referralKeyRef: referralKeyDoc.reference,
+          );
         }
       }
       return UserStatusResponse(userStatus: UserStatus.notRegistered);
@@ -340,11 +360,18 @@ class DatabaseHelper {
           .collection(killedAPKVersionsTableName)
           .where('APKVersion', isEqualTo: APKVersion)
           .get();
-      print("Killed APK versions query done, found ${killedAPKVersions.docs.length} documents");
+      print(
+        "Killed APK versions query done, found ${killedAPKVersions.docs.length} documents",
+      );
       if (killedAPKVersions.docs.isNotEmpty) {
         var killedAPKVersionDoc = killedAPKVersions.docs.first;
-        var killedAPKVersionData = killedAPKVersionDoc.data() as Map<String, dynamic>;
-        return KilledAPKVersionResponse(isKilled: true, reasonTitle: killedAPKVersionData['ReasonTitle'], reasonMessage: killedAPKVersionData['ReasonMessage']);
+        var killedAPKVersionData =
+            killedAPKVersionDoc.data() as Map<String, dynamic>;
+        return KilledAPKVersionResponse(
+          isKilled: true,
+          reasonTitle: killedAPKVersionData['ReasonTitle'],
+          reasonMessage: killedAPKVersionData['ReasonMessage'],
+        );
       }
       return KilledAPKVersionResponse(isKilled: false);
     } catch (e) {
@@ -360,7 +387,9 @@ class DatabaseHelper {
       return UserStatus.firstPaymentPending;
     }
 
-    if (referralKeyData['SubscriptionEndDate'].toDate().isAfter(DateTime.now())) {
+    if (referralKeyData['SubscriptionEndDate'].toDate().isAfter(
+      DateTime.now(),
+    )) {
       return UserStatus.active;
     }
 
@@ -371,13 +400,23 @@ class DatabaseHelper {
     required DocumentReference referralKeyRef,
     required SubscriptionBundleType subscriptionBundleType,
   }) async {
-    SubscriptionTier subscriptionTier = (subscriptionBundleType == SubscriptionBundleType.firstMonthFree ? SubscriptionTier.free : SubscriptionTier.paid);
-    DateTime subscriptionEndDate = DateTime.now().add(Duration(days: subscriptionBundleType.getDaysDuration()));
+    SubscriptionTier subscriptionTier =
+        (subscriptionBundleType == SubscriptionBundleType.firstMonthFree
+        ? SubscriptionTier.free
+        : SubscriptionTier.paid);
+    DateTime subscriptionEndDate = DateTime.now().add(
+      Duration(days: subscriptionBundleType.getDaysDuration()),
+    );
     DocumentSnapshot referralKeyDoc = await referralKeyRef.get();
     if (referralKeyDoc.exists) {
-      print('Updating subscription information for referral key: ${referralKeyRef.id}');
-      await referralKeyRef.update({'SubscriptionBundleType': subscriptionBundleType.toString(), 'SubscriptionTier': subscriptionTier.toString(), 'SubscriptionEndDate': subscriptionEndDate});
+      print(
+        'Updating subscription information for referral key: ${referralKeyRef.id}',
+      );
+      await referralKeyRef.update({
+        'SubscriptionBundleType': subscriptionBundleType.toString(),
+        'SubscriptionTier': subscriptionTier.toString(),
+        'SubscriptionEndDate': subscriptionEndDate,
+      });
     }
   }
-
 }

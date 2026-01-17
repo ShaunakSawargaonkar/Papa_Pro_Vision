@@ -253,7 +253,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     var options = <String, dynamic>{
       'key': 'rzp_live_Rs0d9WEg1h6UPg',
       'amount': price * 100, // Amount in paise
-      'name': 'Papa Pro Vision',
+      'name': 'Letsee',
       'description':
           'Premium Subscription - ${subscriptionPlans[selectedPlan]['duration'].toString()}',
       'timeout': 300, // 5 minutes timeout

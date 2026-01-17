@@ -11,7 +11,11 @@ import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 class RegistrationPage extends StatefulWidget {
   final String? phoneNumber;
   final String userUID;
-  const RegistrationPage({super.key, required this.phoneNumber, required this.userUID});
+  const RegistrationPage({
+    super.key,
+    required this.phoneNumber,
+    required this.userUID,
+  });
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
@@ -180,7 +184,12 @@ class _RegistrationPageState extends State<RegistrationPage>
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text, userUID: widget.userUID),
+          builder: (context) => PaymentGateway(
+            isFirstPayment: true,
+            referralKeyRef: result.referralKeyRef as DocumentReference,
+            phoneNumber: _phoneController.text,
+            userUID: widget.userUID,
+          ),
         ),
       );
     }
@@ -204,7 +213,9 @@ class _RegistrationPageState extends State<RegistrationPage>
     return TextFormField(
       controller: controller,
       enabled: !isDisabled,
-      textCapitalization: isNumeric ? TextCapitalization.none : TextCapitalization.words,
+      textCapitalization: isNumeric
+          ? TextCapitalization.none
+          : TextCapitalization.words,
       keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       inputFormatters: isNumeric
           ? [FilteringTextInputFormatter.digitsOnly]
@@ -225,7 +236,9 @@ class _RegistrationPageState extends State<RegistrationPage>
           horizontal: fontSizeMedium,
           vertical: fontSizeSmall,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(borderRadiusMedium)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(borderRadiusMedium),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadiusMedium),
           borderSide: const BorderSide(color: Color(0xFFFCB853), width: 2),
@@ -272,7 +285,11 @@ class _RegistrationPageState extends State<RegistrationPage>
                   _referralKeyRef = null;
                 });
               },
-              icon: Icon(Icons.edit, size: iconSizeSmall, color: Colors.grey[600]),
+              icon: Icon(
+                Icons.edit,
+                size: iconSizeSmall,
+                color: Colors.grey[600],
+              ),
               label: Text(
                 'Change Organization',
                 style: TextStyle(
@@ -307,7 +324,9 @@ class _RegistrationPageState extends State<RegistrationPage>
           controller: _phoneController,
           validator: (value) =>
               value.isEmpty ? 'Please enter your phone number' : null,
-          isDisabled: _phoneController.text.isNotEmpty && _phoneController.text != '+91',
+          isDisabled:
+              _phoneController.text.isNotEmpty &&
+              _phoneController.text != '+91',
           fontSizeSmall: fontSizeSmall,
           fontSizeMedium: fontSizeMedium,
           iconSizeMedium: iconSizeMedium,
@@ -332,7 +351,9 @@ class _RegistrationPageState extends State<RegistrationPage>
               horizontal: fontSizeMedium,
               vertical: fontSizeSmall,
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(borderRadiusMedium)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(borderRadiusMedium),
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(borderRadiusMedium),
               borderSide: const BorderSide(color: Color(0xFFFCB853), width: 2),
@@ -347,7 +368,10 @@ class _RegistrationPageState extends State<RegistrationPage>
                 label: '',
                 child: Text(
                   'Male',
-                  style: TextStyle(fontSize: fontSizeMedium, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: fontSizeMedium,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -357,7 +381,10 @@ class _RegistrationPageState extends State<RegistrationPage>
                 label: '',
                 child: Text(
                   'Female',
-                  style: TextStyle(fontSize: fontSizeMedium, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: fontSizeMedium,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -367,7 +394,10 @@ class _RegistrationPageState extends State<RegistrationPage>
                 label: '',
                 child: Text(
                   'Other',
-                  style: TextStyle(fontSize: fontSizeMedium, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: fontSizeMedium,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -382,7 +412,7 @@ class _RegistrationPageState extends State<RegistrationPage>
         SizedBox(height: spacingMedium),
 
         // Date of Birth Field - Optional
-       _buildFormField(
+        _buildFormField(
           labelText: 'Age',
           hintText: 'Enter your age',
           isNumeric: true,
@@ -424,7 +454,10 @@ class _RegistrationPageState extends State<RegistrationPage>
           ),
           child: Text(
             'Register',
-            style: TextStyle(fontSize: fontSizeLarge, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: fontSizeLarge,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         SizedBox(height: spacingSmall),
@@ -457,7 +490,11 @@ class _RegistrationPageState extends State<RegistrationPage>
           ),
           child: Column(
             children: [
-              Icon(Icons.info_outline, size: iconSizeLarge, color: Colors.blue[700]),
+              Icon(
+                Icons.info_outline,
+                size: iconSizeLarge,
+                color: Colors.blue[700],
+              ),
               SizedBox(height: spacingSmall),
               Text(
                 'About Organizations',
@@ -517,7 +554,10 @@ class _RegistrationPageState extends State<RegistrationPage>
           ),
           child: Text(
             'Join Organization',
-            style: TextStyle(fontSize: fontSizeLarge, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: fontSizeLarge,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
 
@@ -533,7 +573,11 @@ class _RegistrationPageState extends State<RegistrationPage>
           ),
           child: Column(
             children: [
-              Icon(Icons.email_outlined, size: iconSizeLarge, color: Colors.green[700]),
+              Icon(
+                Icons.email_outlined,
+                size: iconSizeLarge,
+                color: Colors.green[700],
+              ),
               SizedBox(height: spacingSmall * 0.8),
               Text(
                 'Need an Organization Key?',
@@ -547,7 +591,10 @@ class _RegistrationPageState extends State<RegistrationPage>
               SizedBox(height: spacingSmall * 0.5),
               Text(
                 'Contact us to create your organization:',
-                style: TextStyle(fontSize: fontSizeSmall, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: fontSizeSmall,
+                  color: Colors.grey[700],
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: spacingSmall * 0.5),
@@ -573,7 +620,7 @@ class _RegistrationPageState extends State<RegistrationPage>
     // Haptic feedback
     HapticFeedback.mediumImpact();
 
-    if(_phoneController.text.isEmpty || _phoneController.text == '+91') {
+    if (_phoneController.text.isEmpty || _phoneController.text == '+91') {
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -588,7 +635,6 @@ class _RegistrationPageState extends State<RegistrationPage>
     });
 
     print('Skipping registration - creating minimal user');
-
     CreateUserResponse result = await DatabaseHelper.createUser(
       userUID: FirebaseAuth.instance.currentUser?.uid ?? '',
       age: -1,
@@ -596,9 +642,11 @@ class _RegistrationPageState extends State<RegistrationPage>
       name: '',
       phoneNumber: _phoneController.text,
       occupation: '',
-      userType: UserType.single,
-      referralKeyRef: null,
-      orgRef: null,
+      userType: (_isOrganizationVerified)
+          ? UserType.organization
+          : UserType.single,
+      referralKeyRef: _referralKeyRef,
+      orgRef: _orgRef,
     );
 
     print('Skip registration result: $result');
@@ -640,11 +688,28 @@ class _RegistrationPageState extends State<RegistrationPage>
     // Navigate to Payment Page
     print('Navigating to Payment Page');
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => PaymentGateway(isFirstPayment: true, referralKeyRef: result.referralKeyRef as DocumentReference, phoneNumber: _phoneController.text, userUID: widget.userUID),
-        ),
-      );
+      // _isOrganizationVerified will only be true when is a org user
+      // Skip button is only shown when organization is verified
+      // it is false for single user
+      if (_isOrganizationVerified) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(userUID: widget.userUID),
+          ),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => PaymentGateway(
+              isFirstPayment: true,
+              referralKeyRef: result.referralKeyRef as DocumentReference,
+              phoneNumber: _phoneController.text,
+              userUID: widget.userUID,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -653,39 +718,41 @@ class _RegistrationPageState extends State<RegistrationPage>
     // Get screen dimensions
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Define responsive constants
     // Spacing
     final spacingXSmall = screenHeight * 0.008; // ~6px on standard phone
     final spacingSmall = screenHeight * 0.015; // ~12px
     final spacingMedium = screenHeight * 0.020; // ~16px
     final spacingLarge = screenHeight * 0.030; // ~24px
-    
+
     // Font sizes
     final fontSizeSmall = screenWidth * 0.035; // ~13px
     final fontSizeMedium = screenWidth * 0.040; // ~16px
     final fontSizeLarge = screenWidth * 0.045; // ~18px
     final fontSizeXLarge = screenWidth * 0.055; // ~22px
     final fontSizeTitle = screenWidth * 0.070; // ~28px
-    
+
     // Icon sizes
     final iconSizeSmall = screenWidth * 0.040; // ~16px
     final iconSizeMedium = screenWidth * 0.050; // ~20px
     final iconSizeLarge = screenWidth * 0.090; // ~36px
-    
+
     // Border radius
     final borderRadiusSmall = screenWidth * 0.025; // ~10px
     final borderRadiusMedium = screenWidth * 0.030; // ~12px
     final borderRadiusLarge = screenWidth * 0.050; // ~20px
-    
+
     // Padding
     final paddingHorizontal = screenWidth * 0.060; // ~24px
     final paddingVertical = screenHeight * 0.020; // ~16px
     final paddingSmall = screenWidth * 0.040; // ~16px
-    
+
     // Container constraints
-    final maxContainerWidth = screenWidth * 0.95 > 550 ? 550.0 : screenWidth * 0.95;
-    
+    final maxContainerWidth = screenWidth * 0.95 > 550
+        ? 550.0
+        : screenWidth * 0.95;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFCB853),
       appBar: AppBar(
@@ -694,24 +761,25 @@ class _RegistrationPageState extends State<RegistrationPage>
         elevation: 0,
         actions: [
           // Skip button - only show for single users
-          if (_tabController.index == 0 && !_isOrganizationVerified)
+          if (_tabController.index == 0 || _isOrganizationVerified)
             Semantics(
               label: 'Skip button',
               child: TextButton.icon(
-                  onPressed: _skipRegistration,
-                  icon: Icon(Icons.arrow_forward, 
+                onPressed: _skipRegistration,
+                icon: Icon(
+                  Icons.arrow_forward,
+                  color: Colors.white,
+                  size: iconSizeMedium,
+                ),
+                label: Text(
+                  'Skip',
+                  style: TextStyle(
                     color: Colors.white,
-                    size: iconSizeMedium,
-                  ),
-                  label: Text(
-                    'Skip',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: fontSizeMedium,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontSize: fontSizeMedium,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
             ),
         ],
       ),
@@ -758,7 +826,9 @@ class _RegistrationPageState extends State<RegistrationPage>
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.green[50],
-                                  borderRadius: BorderRadius.circular(borderRadiusLarge),
+                                  borderRadius: BorderRadius.circular(
+                                    borderRadiusLarge,
+                                  ),
                                   border: Border.all(
                                     color: Colors.green[200]!,
                                     width: 1,
@@ -815,9 +885,13 @@ class _RegistrationPageState extends State<RegistrationPage>
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(borderRadiusMedium),
+                            borderRadius: BorderRadius.circular(
+                              borderRadiusMedium,
+                            ),
                           ),
-                          margin: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+                          margin: EdgeInsets.symmetric(
+                            horizontal: paddingHorizontal,
+                          ),
                           padding: EdgeInsets.all(spacingXSmall * 0.5),
                           child: TabBar(
                             controller: _tabController,
@@ -829,7 +903,9 @@ class _RegistrationPageState extends State<RegistrationPage>
                             },
                             indicator: BoxDecoration(
                               color: const Color(0xFFFCB853),
-                              borderRadius: BorderRadius.circular(borderRadiusSmall),
+                              borderRadius: BorderRadius.circular(
+                                borderRadiusSmall,
+                              ),
                             ),
                             indicatorSize: TabBarIndicatorSize.tab,
                             labelColor: Colors.white,
@@ -864,7 +940,9 @@ class _RegistrationPageState extends State<RegistrationPage>
                       // Content Area
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: paddingHorizontal,
+                          ),
                           child: Form(
                             key: _formKey,
                             child: _isOrganizationVerified
@@ -898,7 +976,8 @@ class _RegistrationPageState extends State<RegistrationPage>
                                           fontSizeLarge: fontSizeLarge,
                                           iconSizeMedium: iconSizeMedium,
                                           iconSizeSmall: iconSizeSmall,
-                                          borderRadiusMedium: borderRadiusMedium,
+                                          borderRadiusMedium:
+                                              borderRadiusMedium,
                                           paddingSmall: paddingSmall,
                                         ),
                                       ),
@@ -914,7 +993,8 @@ class _RegistrationPageState extends State<RegistrationPage>
                                           fontSizeLarge: fontSizeLarge,
                                           fontSizeXLarge: fontSizeXLarge,
                                           iconSizeLarge: iconSizeLarge,
-                                          borderRadiusMedium: borderRadiusMedium,
+                                          borderRadiusMedium:
+                                              borderRadiusMedium,
                                           paddingSmall: paddingSmall,
                                         ),
                                       ),
