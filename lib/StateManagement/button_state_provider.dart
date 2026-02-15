@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -6,6 +7,7 @@ import 'package:papa_pro_vision/Helper/DeviceAudioHelper.dart';
 import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/Helper/FileSharingHelper.dart';
 import 'package:papa_pro_vision/LLMResponse/agent_service.dart';
+import 'package:papa_pro_vision/LLMResponse/image_correction_service.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +18,7 @@ import 'package:papa_pro_vision/enums.dart';
 class AppContentState {
   String agentResponse = '';
   String userRecognisedWords = '';
+  String speechEndRemark = '';
   ConversationState? conversationState = ConversationState.idle;
   InteractionMode? interactionMode = InteractionMode.normal;
   bool isHistoryMode = false;
@@ -35,8 +38,13 @@ class ConversationController extends ChangeNotifier {
   final TextService _textService = TextService();
   FileSharingHelper? _fileSharingHelper;
   File videoFile = File('');
+  ImageCorrectionService? _imageCorrectionService;
 
-  Future<void> initialize(String inputLanguage, bool enableTranslation, String userUID) async {
+  Future<void> initialize(
+    String inputLanguage,
+    bool enableTranslation,
+    String userUID,
+  ) async {
     _appContentState.userUID = userUID;
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
@@ -48,6 +56,10 @@ class ConversationController extends ChangeNotifier {
             'English',
         enableTranslation,
       );
+    }
+
+    if (_imageCorrectionService == null) {
+      _imageCorrectionService = ImageCorrectionService();
     }
 
     if (_fileSharingHelper == null) {
@@ -101,6 +113,31 @@ class ConversationController extends ChangeNotifier {
     return _agentService!.chatHistoryCount();
   }
 
+  Future<void> runImageCorrection(
+    String promptText,
+    Uint8List? imageBytes,
+  ) async {
+    print('IMAGE CORRECTION: Running image correction');
+    ImageCorrectionResponse? imageCorrectionResponse =
+        await _imageCorrectionService?.checkIfImageIsCorrect(
+          promptText,
+          imageBytes,
+        );
+    if (imageCorrectionResponse != null &&
+        imageCorrectionResponse.isImageCorrect == false) {
+      _appContentState.speechEndRemark = imageCorrectionResponse.response ?? '';
+      if (imageCorrectionResponse.recaptureRequired == true) {
+        print('IMAGE CORRECTION: Stopping speaking');
+        await stopSpeaking();
+        print('IMAGE CORRECTION: Speaking end remark');
+        await _ttsService?.speak(
+          _appContentState.speechEndRemark,
+          isIntermediate: true,
+        );
+      }
+    }
+  }
+
   Future<void> processInput(
     String inputLanguage, {
     bool historyMode = false,
@@ -124,7 +161,7 @@ class ConversationController extends ChangeNotifier {
       inputLanguage,
       state.interactionMode,
     );
-    var promptText = state.userRecognisedWords.isNotEmpty
+    String promptText = state.userRecognisedWords.isNotEmpty
         ? state.userRecognisedWords
         : defaultPrompt;
 
@@ -136,6 +173,8 @@ class ConversationController extends ChangeNotifier {
       promptText = defaultPrompt;
       _appContentState.userRecognisedWords = 'AUTO READING MODE';
     }
+
+    unawaited(runImageCorrection(promptText, imageBytes));
 
     //Calling Gemini
     _appContentState.conversationState = ConversationState.processing;
@@ -151,7 +190,8 @@ class ConversationController extends ChangeNotifier {
       _agentService?.reset();
     }
     if ((!state.isHistoryMode || state.hasUploadedImage) &&
-        imageBytes != null && imageBytes != Uint8List(0)) {
+        imageBytes != null &&
+        imageBytes != Uint8List(0)) {
       print("Inside image generate Response call");
       content =
           await _agentService?.CreateContentForResponse(
@@ -183,8 +223,10 @@ class ConversationController extends ChangeNotifier {
     int chatHistoryCount = _agentService!.chatHistoryCount();
     bool ifGoogle = false;
 
-    if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
-      ifGoogle = false;  // disabled till we have a server
+    if (state.isHistoryMode &&
+        chatHistoryCount == 0 &&
+        !state.hasUploadedImage) {
+      ifGoogle = false; // disabled till we have a server
     }
 
     if (ifGoogle == true) {
@@ -295,7 +337,7 @@ class ConversationController extends ChangeNotifier {
       _appContentState.interactionMode = InteractionMode.normal;
     }
     _appContentState.userRecognisedWords = '';
-    _agentService?.stopStream(
+    await _agentService?.stopStream(
       Secrets.geminiApiKey,
       InteractionMode.normal,
       TextService.inputLanguageToCommunicationLanguage[prefs.getString(
@@ -311,11 +353,12 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> stopSpeakingForGoogleSearch() async {
     _appContentState.conversationState = ConversationState.idle;
+    await _ttsService?.stop();
     if (_appContentState.interactionMode != InteractionMode.normal) {
       _appContentState.interactionMode = InteractionMode.normal;
     }
     _appContentState.userRecognisedWords = '';
-    await _ttsService?.stop();
+    _appContentState.speechEndRemark = '';
     notifyListeners();
   }
 
@@ -330,6 +373,14 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> doneSpeaking() async {
     if (_appContentState.conversationState == ConversationState.speaking) {
+      await _ttsService?.stop();
+      if (_appContentState.speechEndRemark.isNotEmpty) {
+        await _ttsService?.speak(
+          _appContentState.speechEndRemark,
+          isIntermediate: true,
+        );
+        _appContentState.speechEndRemark = '';
+      }
       _appContentState.conversationState = ConversationState.idle;
       if (_appContentState.interactionMode != InteractionMode.normal) {
         SharedPreferences? prefs = await SharedPreferences.getInstance();
@@ -343,7 +394,6 @@ class ConversationController extends ChangeNotifier {
       }
 
       _appContentState.userRecognisedWords = '';
-      await _ttsService?.stop();
       notifyListeners();
     }
   }
@@ -376,7 +426,10 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
-    Analyticshelper.updateResponseCount("SmartViewModeCount", _appContentState.userUID);
+    Analyticshelper.updateResponseCount(
+      "SmartViewModeCount",
+      _appContentState.userUID,
+    );
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
     initializeAgent(
@@ -412,7 +465,10 @@ class ConversationController extends ChangeNotifier {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
-    Analyticshelper.updateResponseCount("ReaderModeCount", _appContentState.userUID);
+    Analyticshelper.updateResponseCount(
+      "ReaderModeCount",
+      _appContentState.userUID,
+    );
     _appContentState.interactionMode = InteractionMode.autoReading;
     initializeAgent(
       communicationLanguage,
@@ -420,7 +476,10 @@ class ConversationController extends ChangeNotifier {
       InteractionMode.autoReading,
     );
     if (enableTranslation) {
-      Analyticshelper.updateResponseCount("TranslationCount", _appContentState.userUID);
+      Analyticshelper.updateResponseCount(
+        "TranslationCount",
+        _appContentState.userUID,
+      );
     }
     _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
