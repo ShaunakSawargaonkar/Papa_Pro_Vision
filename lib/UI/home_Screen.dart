@@ -181,7 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _onToggleListeningInner(ConversationController controller) async {
+  Future<void> _onToggleListeningInner(
+    ConversationController controller,
+  ) async {
     print(
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );

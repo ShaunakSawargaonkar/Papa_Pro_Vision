@@ -38,7 +38,8 @@ class ConversationController extends ChangeNotifier {
   final TextService _textService = TextService();
   FileSharingHelper? _fileSharingHelper;
   File videoFile = File('');
-  int _operationId = 0; // monotonic counter — incremented on every new operation and cancel
+  int _operationId =
+      0; // monotonic counter — incremented on every new operation and cancel
   bool _isProcessingInput = false; // reentry guard for processInput
   ImageCorrectionService? _imageCorrectionService;
 
@@ -77,9 +78,13 @@ class ConversationController extends ChangeNotifier {
           if (status == 'done') {
             DeviceAudioHelper.playMicOFFSound();
             // Only proceed if we're still in a state that expects STT results
-            if (_appContentState.conversationState != ConversationState.processing &&
-                _appContentState.conversationState != ConversationState.listening) {
-              print('STT done but state is ${_appContentState.conversationState} — ignoring');
+            if (_appContentState.conversationState !=
+                    ConversationState.processing &&
+                _appContentState.conversationState !=
+                    ConversationState.listening) {
+              print(
+                'STT done but state is ${_appContentState.conversationState} — ignoring',
+              );
               return;
             }
             if (state.userRecognisedWords.isNotEmpty) {
@@ -269,7 +274,8 @@ class ConversationController extends ChangeNotifier {
         );
         if (_operationId != localOpId) return; // cancelled during google search
         if (response != null &&
-            _appContentState.conversationState == ConversationState.processing) {
+            _appContentState.conversationState ==
+                ConversationState.processing) {
           _appContentState.agentResponse = response;
           _appContentState.conversationState = ConversationState.speaking;
           notifyListeners();

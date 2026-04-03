@@ -323,8 +323,11 @@ class AgentService {
       final previousSessionId = streamSessionId;
       streamSessionId = -1;
       // Only add to chat history if there's an active response and we haven't already saved it
-      if (previousSessionId != -1 && _appContentState.agentResponse.isNotEmpty) {
-        chatHistory.add(Content.model([TextPart(_appContentState.agentResponse)]));
+      if (previousSessionId != -1 &&
+          _appContentState.agentResponse.isNotEmpty) {
+        chatHistory.add(
+          Content.model([TextPart(_appContentState.agentResponse)]),
+        );
       }
       await _streamSubscription?.cancel();
       _streamSubscription = null;
