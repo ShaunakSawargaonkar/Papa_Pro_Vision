@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isInitializing = true;
   Timer? _longPressTimer;
   bool _timerCompleted = false;
+  bool _isToggling = false; // debounce guard for onToggleListening
 
   @override
   void initState() {
@@ -167,6 +168,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> onToggleListening(ConversationController controller) async {
+    // Debounce: if already processing a toggle, skip
+    if (_isToggling) {
+      print('onToggleListening: debounced — already in progress');
+      return;
+    }
+    _isToggling = true;
+    try {
+      await _onToggleListeningInner(controller);
+    } finally {
+      _isToggling = false;
+    }
+  }
+
+  Future<void> _onToggleListeningInner(ConversationController controller) async {
     print(
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
@@ -199,7 +214,10 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
           } else {
-            Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
+            Analyticshelper.updateResponseCount(
+              "JustLLMInteractionCount",
+              widget.userUID,
+            );
           }
         }
         await controller.startListening(
@@ -240,8 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       print('Stopping speaking');
-      Analyticshelper.updateResponseCount("CancelledRequestCount", widget.userUID);
-      if (controller.chatHistoryCount() == 0 && controller.state.isHistoryMode) {
+      Analyticshelper.updateResponseCount(
+        "CancelledRequestCount",
+        widget.userUID,
+      );
+      if (controller.chatHistoryCount() == 0 &&
+          controller.state.isHistoryMode) {
         print("Insideee Stopping google search speaking");
         await controller.stopSpeakingForGoogleSearch();
       } else {
@@ -569,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               SizedBox(
-                height: deviceHeight * 0.04,
+                height: deviceHeight * 0.01,
               ), // Add some spacing at the bottom
             ],
           ),

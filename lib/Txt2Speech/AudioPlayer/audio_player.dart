@@ -6,6 +6,7 @@ class AudioPlayerService {
   final List<Uint8List> _queue = [];
   bool _isPlaying = false;
   bool _isStopped = false;
+  int _playGeneration = 0; // tracks stop/reset cycles to discard stale plays
 
   AudioPlayerService() {
     print('AudioPlayerService constructor');
@@ -35,6 +36,7 @@ class AudioPlayerService {
     _queue.clear();
     _isPlaying = false;
     _isStopped = false; // allow new session
+    _playGeneration++;
   }
 
   Future<void> enqueue(Uint8List audioBytes) async {
@@ -56,25 +58,38 @@ class AudioPlayerService {
       return;
     }
     _isPlaying = true;
+    final gen = _playGeneration;
     final bytes = _queue.removeAt(0);
     
-    await _audioPlayer.play(BytesSource(bytes));
+    try {
+      await _audioPlayer.play(BytesSource(bytes));
+    } catch (e) {
+      print('AudioPlayer play error: $e');
+      // If generation changed during play, this was expected (stop was called)
+      if (gen != _playGeneration) return;
+      // Otherwise try to continue with next chunk
+      _playNext();
+    }
   }
 
   Future<void> stop() async {
     _isStopped = true;
     _queue.clear();
     _isPlaying = false;
+    _playGeneration++;
 
-    await _audioPlayer.stop();
-    await _audioPlayer.release();
-    
+    try {
+      await _audioPlayer.stop();
+    } catch (e) {
+      print('AudioPlayer stop error: $e');
+    }
   }
 
   Future<void> dispose() async {
     _isStopped = true;
     _queue.clear();
     _isPlaying = false;
+    _playGeneration++;
     await _audioPlayer.dispose();
     print("dispose called ${_isStopped}");
   }

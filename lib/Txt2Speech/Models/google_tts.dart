@@ -23,6 +23,7 @@ class GoogleTTSService implements TextToSpeechService {
     };
   }
 
+  static int _sessionCounter = 0; // monotonic counter — never collides
   int _sessionId = 0;
 
   @override
@@ -86,7 +87,8 @@ class GoogleTTSService implements TextToSpeechService {
 
     print('Resetting audio player');
     _audioPlayerService?.reset();
-    _sessionId = DateTime.now().microsecond + DateTime.now().minute;
+    _sessionCounter++;
+    _sessionId = _sessionCounter;
     final currentSession = _sessionId;
 
     // Split text into sentences, then further split long sentences (>20 words)
@@ -147,16 +149,15 @@ class GoogleTTSService implements TextToSpeechService {
   Future<void> stop() async {
     print("Stopping playback");
 
-    _sessionId =
-        DateTime.now().microsecond +
-        DateTime.now().minute; // new session // invalidate current session
-    // _audioPlayerService.reset(); // clear any queued audio
+    _sessionCounter++;
+    _sessionId = _sessionCounter; // invalidate current session
     await _audioPlayerService?.stop();
   }
 
   @override
   Future<int> startSession() async {
-    _sessionId = DateTime.now().microsecond + DateTime.now().minute;
+    _sessionCounter++;
+    _sessionId = _sessionCounter;
     _audioPlayerService?.reset();
     return _sessionId;
   }

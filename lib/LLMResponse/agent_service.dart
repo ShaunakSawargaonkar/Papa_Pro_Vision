@@ -21,6 +21,7 @@ class AgentService {
   late AppContentState _appContentState;
   List<Content> chatHistory = [];
   StreamSubscription<void>? _streamSubscription;
+  bool _isStopping = false; // guard against double stopStream calls
 
   String _getSystemPrompt(
     InteractionMode mode,
@@ -316,11 +317,22 @@ class AgentService {
     String communicationLanguage,
     bool enableTranslation,
   ) async {
-    streamSessionId = -1;
-    chatHistory.add(Content.model([TextPart(_appContentState.agentResponse)]));
-    await _streamSubscription?.cancel();
-    initialize(apiKey, mode, communicationLanguage, enableTranslation);
-    print('Stream stopped');
+    if (_isStopping) return; // already stopping — skip duplicate call
+    _isStopping = true;
+    try {
+      final previousSessionId = streamSessionId;
+      streamSessionId = -1;
+      // Only add to chat history if there's an active response and we haven't already saved it
+      if (previousSessionId != -1 && _appContentState.agentResponse.isNotEmpty) {
+        chatHistory.add(Content.model([TextPart(_appContentState.agentResponse)]));
+      }
+      await _streamSubscription?.cancel();
+      _streamSubscription = null;
+      initialize(apiKey, mode, communicationLanguage, enableTranslation);
+      print('Stream stopped');
+    } finally {
+      _isStopping = false;
+    }
   }
 
   // Method 1: Using sendMessageStream for continuous streaming
@@ -391,6 +403,13 @@ class AgentService {
             );
 
             if (text == null || text.isEmpty) {
+              return;
+            }
+
+            // Guard: only accumulate response if this session is still active
+            if (streamSessionId != localSessionId) {
+              print('[STREAM] Session invalidated — discarding chunk');
+              await _streamSubscription?.cancel();
               return;
             }
 

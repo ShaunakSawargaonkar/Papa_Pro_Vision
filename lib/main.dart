@@ -90,19 +90,21 @@ class MyApp extends StatelessWidget {
                     userUID: user.uid,
                   );
                 } else if (data.userStatus == UserStatus.firstPaymentPending) {
-                  return PaymentGateway(
-                    isFirstPayment: true,
-                    referralKeyRef: data.referralKeyRef as DocumentReference,
-                    phoneNumber: user.phoneNumber ?? '',
-                    userUID: user.uid,
-                  );
+                  return HomeScreen(userUID: user.uid);
+                  // return PaymentGateway(
+                  //   isFirstPayment: true,
+                  //   referralKeyRef: data.referralKeyRef as DocumentReference,
+                  //   phoneNumber: user.phoneNumber ?? '',
+                  //   userUID: user.uid,
+                  // );
                 } else if (data.userStatus == UserStatus.paymentPending) {
-                  return PaymentGateway(
-                    isFirstPayment: false,
-                    referralKeyRef: data.referralKeyRef as DocumentReference,
-                    phoneNumber: user.phoneNumber ?? '',
-                    userUID: user.uid,
-                  );
+                  return HomeScreen(userUID: user.uid);
+                  // return PaymentGateway(
+                  //   isFirstPayment: false,
+                  //   referralKeyRef: data.referralKeyRef as DocumentReference,
+                  //   phoneNumber: user.phoneNumber ?? '',
+                  //   userUID: user.uid,
+                  // );
                 } else if (data.userStatus == UserStatus.active) {
                   return HomeScreen(userUID: user.uid);
                 } else if (data.userStatus == UserStatus.noInternet) {
