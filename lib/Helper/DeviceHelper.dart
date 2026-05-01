@@ -70,7 +70,7 @@ class Devicehelper {
   }
 
   static String cleanAgentResponse(String responseText) {
-    return responseText.replaceAll('*', ' ').replaceAll('"', '').replaceAll('.','');
+    return responseText.replaceAll('*', ' ').replaceAll('"', '');
   }
 
   static Future<WhichPageFromMain> checkRegistration() async {
