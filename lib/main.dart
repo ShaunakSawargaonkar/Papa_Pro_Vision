@@ -57,9 +57,9 @@ class MyApp extends StatelessWidget {
               user.uid.isEmpty ||
               user.phoneNumber!.isEmpty) {
             // Not signed in -> show minimal phone OTP page
-            // return PhoneAuthPage();
+            return PhoneAuthPage();
             // return RegistrationPage(phoneNumber: '9561112577', userUID: '9561112577');
-            return HomeScreen(userUID: '9213532',);
+            // return HomeScreen();
             // return PaymentGateway(isFirstPayment: true, userUID: '', phoneNumber: '9561112577');
             // return PaymentGateway(isFirstPayment: false);
           }
