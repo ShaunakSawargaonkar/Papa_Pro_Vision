@@ -6,7 +6,7 @@
 |---|---|---|
 | **Network** | No internet, timeout, DNS failure | TTS alert + action abort |
 | **Gemini API** | `GenerativeAIException`, rate limit, invalid input | Error message spoken to user |
-| **Google TTS API** | HTTP error, invalid response | Sentence skipped, queue continues |
+| **Google TTS API** | HTTP error, invalid response, 15s timeout | Sentence skipped, queue continues |
 | **Firebase Auth** | Invalid phone, too many requests, timeout | SnackBar error message |
 | **Firestore** | Read/write failures, permission denied | Error message in response DTO |
 | **Razorpay** | Payment failure, gateway error | Toast message |
@@ -45,7 +45,7 @@
 ### Detection
 `Devicehelper.hasInternetConnectionAndNotify()`:
 - DNS lookup to `google.com` with 2-second timeout
-- On failure: `DeviceAudioHelper.playInternetNotAvailableSound()` (FlutterTTS speaks alert)
+- On failure: `DeviceAudioHelper.playInternetNotAvailableSound()` (FlutterTTS speaks alert — awaited with language set to `en-IN`)
 - Returns `false` to caller
 
 ### Call Sites
@@ -84,7 +84,7 @@ catch (e) {
 }
 ```
 
-Failed sentence is skipped. Audio queue continues with next sentence.
+HTTP requests have a **15-second timeout** (`http.post(...).timeout(Duration(seconds: 15))`). On timeout, a `TimeoutException` is thrown and caught — the failed sentence is skipped. Audio queue continues with next sentence.
 
 ### Razorpay
 

@@ -112,7 +112,7 @@
 | **Dependencies** | Gemini API |
 | **Known Limitations** | History only retained for current mode; mode changes clear history |
 
-### F-11: Image Correction Guidance
+### F-11: Image Correction Guidance (DISABLED)
 
 | Aspect | Detail |
 |---|---|
@@ -121,7 +121,8 @@
 | **Services** | `ImageCorrectionService` |
 | **Models** | `ImageCorrectionResponse` |
 | **Dependencies** | Gemini 2.5 Flash API |
-| **Known Limitations** | Runs in parallel — may complete after main response is already speaking; guidance is spoken after main response or interrupts if recapture required |
+| **Status** | **Disabled** — `runImageCorrection()` call is commented out in `processInput()`. Code preserved for future re-enablement. |
+| **Known Limitations** | When enabled: runs in parallel — may complete after main response is already speaking; guidance is spoken after main response or interrupts if recapture required |
 
 ### F-12: Receive Shared Images
 
@@ -132,7 +133,7 @@
 | **Services** | `FileSharingHelper`, `ReceiveSharingIntent` |
 | **Models** | `SharedMediaFile` |
 | **Dependencies** | `receive_sharing_intent` plugin |
-| **Known Limitations** | Only first shared file is processed; only image files supported |
+| **Known Limitations** | Only first shared file is processed; only image files supported. Null/empty file paths and non-existent files are guarded against. |
 
 ### F-13: Profile / Settings
 
@@ -154,7 +155,7 @@
 | **Services** | `DeviceAudioHelper` |
 | **Models** | None |
 | **Dependencies** | `audioplayers`, system sound files, `flutter_tts` |
-| **Known Limitations** | Fallback sound paths depend on Android system files being present |
+| **Known Limitations** | Fallback sound paths depend on Android system files being present. `_isPlaying` flag is reset in `finally` block to prevent stuck state. `playInternetNotAvailableSound()` is awaited with explicit language set. |
 
 ### F-15: Analytics Tracking
 

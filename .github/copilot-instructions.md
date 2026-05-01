@@ -17,7 +17,7 @@ Letsee is a Flutter app for **blind and visually impaired users** in India. It c
 ## Architecture Quick Reference
 
 - **State management:** Single `ConversationController` (ChangeNotifier) via Provider
-- **LLM:** `AgentService` wraps `gemini-2.0-flash`. `ImageCorrectionService` uses `gemini-2.5-flash`
+- **LLM:** `AgentService` wraps `gemini-2.0-flash`. `ImageCorrectionService` uses `gemini-2.5-flash` (currently **disabled**)
 - **TTS:** `GoogleTTSService` (primary) → Google Cloud TTS REST API → `AudioPlayerService` (queue)
 - **STT:** `speech_to_text` plugin (on-device)
 - **Auth:** Firebase Phone OTP

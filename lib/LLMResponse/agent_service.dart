@@ -79,13 +79,13 @@ class AgentService {
         'English';
     if (mode == InteractionMode.normal) {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
         apiKey: apiKey,
       );
       _chat = _generativeModel.startChat(history: chatHistory);
     } else {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
         apiKey: apiKey,
         systemInstruction: Content.system(
           _getSystemPrompt(mode, communicationLanguage, enableTranslation),
@@ -420,12 +420,19 @@ class AgentService {
 
             for (int i = 0; i < text.length; i++) {
               final char = text[i];
+              print("DEBUGSPEAK-2 : $char");
+              final nextChar = i < text.length - 1 ? text[i + 1] : ' ';
+              final prevChar = i > 0 ? text[i - 1] : ' ';
               currentText += char;
 
               if (char == ' ') wordCount++;
 
-              final hitSentenceEnd = char == '.';
+              final hitSentenceEnd =
+                  char == '.' &&
+                  !(int.tryParse(prevChar) != null &&
+                      int.tryParse(nextChar) != null);
               final hitWordLimit = wordCount >= 100;
+              print("DEBUGSPEAK-1 : $currentText");
 
               if (hitSentenceEnd || hitWordLimit) {
                 speakCount++;
@@ -436,7 +443,7 @@ class AgentService {
 
                 currentText = '';
                 wordCount = 0;
-
+                print("DEBUGSPEAK : $speakText");
                 if (speakText.isNotEmpty) {
                   // 🔴 Double-check before speaking
                   if (streamSessionId != localSessionId) {

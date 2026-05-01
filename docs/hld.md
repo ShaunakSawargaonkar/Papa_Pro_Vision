@@ -47,11 +47,12 @@ User taps right mic → _captureImage() → camera captures JPEG bytes
                     → STT records speech
                     → STT onStatus='done'
                     → controller.processInput(language, imageBytes)
-                    → [parallel] runImageCorrection(prompt, imageBytes)
                     → AgentService.CreateContentForResponse(prompt, imageBytes)
+                    → agentResponse cleared at processInput start
                     → AgentService.sendStreamingMessage(content, ttsService)
+                    → sendStreamingMessage awaits stream completion via Completer
                     → Gemini streaming chunks arrive
-                    → Each sentence → GoogleTTSService.speak() → Google Cloud TTS API → audio bytes
+                    → Each sentence → GoogleTTSService.speak() → Google Cloud TTS API (15s timeout) → audio bytes
                     → AudioPlayerService.enqueue(audioBytes) → played sequentially
                     → Stream done → remaining text spoken → doneSpeaking()
 ```
@@ -73,8 +74,11 @@ User taps sidebar → controller.setSmartViewMode() or setAutoReadingMode()
 User long-presses right mic → startVideoRecording() → camera records video
                             → Release or 7s timer → stopVideoRecording()
                             → controller.startListening(locale) → user speaks
-                            → STT done → processInput(language, videoFile: file)
+                            → STT done → videoFile cleared (set to empty File)
+                            → processInput(language, videoFile: file)
+                            → agentResponse cleared at processInput start
                             → Video bytes sent to Gemini (full MP4)
+                            → sendStreamingMessage awaits stream via Completer
                             → Same streaming + TTS pipeline
 ```
 

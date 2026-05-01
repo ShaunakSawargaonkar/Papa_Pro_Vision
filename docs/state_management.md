@@ -13,7 +13,7 @@ There is no Bloc, Riverpod, or other state management library.
 | Conversation state (idle/listening/etc.) | `AppContentState.conversationState` | In-memory |
 | Interaction mode | `AppContentState.interactionMode` | In-memory |
 | Current image bytes | `ConversationController._imageBytes` | In-memory |
-| Video file | `ConversationController.videoFile` | Temp file on disk |
+| Video file | `ConversationController.videoFile` | Temp file on disk (cleared to empty `File('')` before each `processInput` call) |
 | Agent response text | `AppContentState.agentResponse` | In-memory |
 | User recognized speech | `AppContentState.userRecognisedWords` | In-memory |
 | Chat history | `AgentService.chatHistory` / `ChatSession` | In-memory |
@@ -27,7 +27,8 @@ There is no Bloc, Riverpod, or other state management library.
 |---|---|---|
 | **App-wide (shared)** | `ConversationController` via Provider | Accessed by `HomeScreen`, `ProfilePage` (indirectly via settings) |
 | **Screen-local** | Camera controller, form controllers, loading flags | `_HomeScreenState`, `_RegistrationPageState`, etc. |
-| **Service-internal** | TTS session ID, audio queue, stream subscription | `GoogleTTSService`, `AudioPlayerService`, `AgentService` |
+| **Service-internal** | TTS session ID (monotonic counter), audio queue + generation, stream subscription + stopping guard | `GoogleTTSService`, `AudioPlayerService`, `AgentService` |
+| **Operation guards** | `_operationId` (monotonic), `_isProcessingInput` reentry guard, `_isToggling` UI debounce | `ConversationController`, `_HomeScreenState` |
 
 ## Async State Lifecycle
 
@@ -88,7 +89,7 @@ There is no Bloc, Riverpod, or other state management library.
 | Mode changes re-initialize AgentService | `initializeAgent()` called with new mode's system prompt |
 | `stopSpeaking()` resets to idle | Cancels stream, stops TTS, resets mode to normal |
 | `doneSpeaking()` auto-fires on queue empty | TTS service callback → controller method |
-| `processInput()` is the main pipeline | Handles internet check, prompt construction, Gemini call, streaming |
+| `processInput()` is the main pipeline | Handles internet check, prompt construction, Gemini call, streaming. Clears `agentResponse` at entry. `sendStreamingMessage` uses a `Completer` so the guard is not released until the stream completes. |
 
 ## SharedPreferences Keys
 

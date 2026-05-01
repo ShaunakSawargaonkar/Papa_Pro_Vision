@@ -124,6 +124,10 @@ Content-Type: application/json
 }
 ```
 
+### Timeout
+
+HTTP requests have a **15-second timeout** per call. On timeout, the sentence is skipped and the audio queue continues.
+
 ### Response
 
 **Success (200):**

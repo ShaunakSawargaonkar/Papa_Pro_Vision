@@ -105,8 +105,9 @@ Gemini API stream → AgentService.sendStreamingMessage()
 ### Session Invalidation
 
 - `AgentService.streamSessionId` tracks current stream session
-- `stopStream()` sets `streamSessionId = -1`, adds partial response to chat history, cancels subscription
-- Before each TTS call, session ID is checked — mismatches cause the chunk to be skipped
+- `stopStream()` sets `streamSessionId = -1`, adds partial response to chat history (guarded by `_isStopping` flag to prevent duplicate calls), cancels subscription
+- Before each TTS call **and before accumulating `agentResponse`**, session ID is checked — mismatches discard the chunk
+- `GoogleTTSService` uses a monotonic `_sessionCounter` (not DateTime) to guarantee unique session IDs
 
 ## Response Validation and Post-Processing
 

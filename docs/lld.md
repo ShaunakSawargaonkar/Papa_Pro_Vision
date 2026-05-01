@@ -59,7 +59,7 @@ The **central orchestrator**. A `ChangeNotifier` provided via `Provider` at the 
 | Orchestrates `AgentService` | Initializes, resets, triggers Gemini calls |
 | Orchestrates `TextToSpeechService` | Starts/stops TTS, handles `doneSpeaking` |
 | Manages `SpeechToText` | Initializes STT, handles status and error callbacks |
-| Manages `ImageCorrectionService` | Runs parallel image quality check |
+| Manages `ImageCorrectionService` | Parallel image quality check (currently **disabled**) |
 | Manages `FileSharingHelper` | Receives images shared from other apps |
 | Mode switching | `setSmartViewMode()`, `setAutoReadingMode()`, `setHistoryMode()`, etc. |
 | Input processing | `processInput()` — the main pipeline from user input to Gemini response |
@@ -70,7 +70,7 @@ The **central orchestrator**. A `ChangeNotifier` provided via `Provider` at the 
 |---|---|---|
 | `agentResponse` | `String` | Accumulated Gemini response text |
 | `userRecognisedWords` | `String` | STT-recognized user speech |
-| `speechEndRemark` | `String` | Image correction guidance to speak after main response |
+| `speechEndRemark` | `String` | Image correction guidance to speak after main response (currently unused — image correction disabled) |
 | `conversationState` | `ConversationState?` | Current state machine state |
 | `interactionMode` | `InteractionMode?` | Current interaction mode |
 | `isHistoryMode` | `bool` | Whether follow-up questions use chat history |
@@ -94,11 +94,12 @@ idle ──► listening ──► processing ──► speaking ──► idle
 | Wraps `GenerativeModel` | Creates Gemini model with system prompt per mode |
 | Chat session management | Maintains `ChatSession` with history |
 | `CreateContentForResponse()` | Builds `Content` objects from text/image/video |
-| `sendStreamingMessage()` | Streams Gemini response, segments by sentence, calls TTS per segment |
+| `sendStreamingMessage()` | Streams Gemini response, segments by sentence, calls TTS per segment. Uses a `Completer<void>` to block until the stream fully completes (onDone/onError), ensuring `_isProcessingInput` is not released prematurely |
 | `generateResponse()` | Non-streaming Gemini call (not currently used in main flow) |
 | `sendGoogleSearchMessage()` | Calls Render server proxy (currently disabled) |
 | `stopStream()` | Cancels active stream, saves partial response to chat history |
 | Stream session management | Uses `streamSessionId` to invalidate old streams |
+| Double-stop guard | `_isStopping` flag prevents duplicate `stopStream()` calls |
 
 **Streaming Chunking Logic:**
 - Characters accumulated until `.` (sentence end) or 100 words
@@ -124,7 +125,7 @@ idle ──► listening ──► processing ──► speaking ──► idle
 | Voice selection | `en-IN-Chirp3-HD-Alnilam` for English, `mr-IN-Chirp3-HD-Achird` for Marathi |
 | Speech rate | Read from SharedPreferences (`speechRate`, default 1.0) |
 | Audio output | Base64-decoded MP3 bytes enqueued to `AudioPlayerService` |
-| Session management | `startSession()` returns session ID; old sessions invalidated on stop |
+| Session management | Monotonic `_sessionCounter` — `startSession()` increments and returns unique ID; no DateTime collision risk |
 | `speak()` | Single chunk — for streaming pipeline |
 | `speak2()` | Full text — splits by sentences, then by 100-word chunks |
 | `onQueueEmptyAndComplete` | Callback fires `controller.doneSpeaking()` when audio queue empty |
@@ -135,7 +136,8 @@ idle ──► listening ──► processing ──► speaking ──► idle
 |---|---|
 | Sequential audio queue | `List<Uint8List>` of MP3 audio bytes |
 | Auto-advance | `onPlayerComplete` triggers `_playNext()` |
-| Stop/reset | `stop()` clears queue and halts playback; `reset()` clears queue without stopping |
+| Stop/reset | `stop()` clears queue and halts playback (no `release()`); `reset()` clears queue and re-enables enqueue |
+| Generation tracking | `_playGeneration` counter — `_playNext()` detects if stop/reset occurred mid-play |
 | Queue empty callback | Fires `onQueueEmptyAndComplete` when playing finishes and queue is empty |
 
 ### `DatabaseHelper` (lib/Helper/DatabaseHelper.dart)
@@ -171,7 +173,7 @@ Singleton `_AudioManager` manages audio playback for UI sounds.
 | `playVideoStartSound()` | System `/system/media/audio/ui/camera_focus.ogg` |
 | `playMicONSound()` | System `/system/media/audio/ui/VideoRecord.ogg` |
 | `playMicOFFSound()` | System `/system/media/audio/ui/VideoStop.ogg` |
-| `playInternetNotAvailableSound()` | FlutterTTS speaks "Internet not available..." |
+| `playInternetNotAvailableSound()` | FlutterTTS speaks "Internet not available..." (awaited, language set to `en-IN`, `_isPlaying` reset in `finally` block) |
 
 ### `TextService` (lib/text_service.dart)
 
@@ -189,7 +191,7 @@ Provides mode-specific and language-specific prompt text and UI strings.
 | Method | Purpose |
 |---|---|
 | `initialize()` | Subscribes to `ReceiveSharingIntent` media stream |
-| `processSharedImage()` | Reads first shared file as bytes, calls `controller.setUploadedImageMode()` |
+| `processSharedImage()` | Validates file path (null/empty check) and file existence before reading bytes; calls `controller.setUploadedImageMode()` |
 
 ### `AnalyticsHelper` (lib/Helper/AnalyticsHelper.dart)
 
