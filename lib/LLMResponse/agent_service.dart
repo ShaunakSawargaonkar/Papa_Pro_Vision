@@ -77,13 +77,13 @@ class AgentService {
         'English';
     if (mode == InteractionMode.normal) {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
         apiKey: apiKey,
       );
       _chat = _generativeModel.startChat(history: chatHistory);
     } else {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash-lite',
         apiKey: apiKey,
         systemInstruction: Content.system(
           _getSystemPrompt(mode, communicationLanguage, enableTranslation),
@@ -355,11 +355,15 @@ class AgentService {
 
         for (int i = 0; i < text.length; i++) {
           final char = text[i];
+          final previousChar = i > 0 ? text[i - 1] : '';
+          final nextChar = i < text.length - 1 ? text[i + 1] : '';
           currentText += char;
           if (char == ' ') wordCount++;
 
+          final is_prev_last_number = int.tryParse(previousChar) != null && int.tryParse(nextChar) != null;
           final hitSentenceEnd =
-              char == '.'; // Extend with other punctuation if desired.
+              char == '.' && !is_prev_last_number; // Extend with other punctuation if desired.
+          
           final hitWordLimit = wordCount >= 100;
 
           if (hitSentenceEnd || hitWordLimit) {
