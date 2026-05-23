@@ -383,6 +383,8 @@ class DatabaseHelper {
   static UserStatus checkSubscriptionStatus({
     required Map<String, dynamic> referralKeyData,
   }) {
+    return UserStatus.active;
+    //TODO for time being we are giving access to all users, we will implement subscription checks in future
     if (referralKeyData['SubscriptionEndDate'] == null) {
       return UserStatus.firstPaymentPending;
     }

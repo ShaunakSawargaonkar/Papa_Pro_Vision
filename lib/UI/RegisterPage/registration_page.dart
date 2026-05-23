@@ -6,7 +6,6 @@ import 'package:papa_pro_vision/UI/home_screen.dart';
 import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/enums.dart';
-import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 
 class RegistrationPage extends StatefulWidget {
   final String? phoneNumber;
@@ -179,17 +178,12 @@ class _RegistrationPageState extends State<RegistrationPage>
     // Success haptic feedback
     HapticFeedback.lightImpact();
 
-    // Navigate to Payment Page
-    print('Navigating to Payment Page');
+    // Navigate to Home Screen
+    print('Navigating to Home Screen');
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => PaymentGateway(
-            isFirstPayment: true,
-            referralKeyRef: result.referralKeyRef as DocumentReference,
-            phoneNumber: _phoneController.text,
-            userUID: widget.userUID,
-          ),
+          builder: (context) => HomeScreen(userUID: widget.userUID),
         ),
       );
     }
@@ -685,31 +679,15 @@ class _RegistrationPageState extends State<RegistrationPage>
       );
     }
 
-    // Navigate to Payment Page
-    print('Navigating to Payment Page');
+    // Navigate to Home Screen
+    print('Navigating to Home Screen');
     if (mounted) {
-      // _isOrganizationVerified will only be true when is a org user
-      // Skip button is only shown when organization is verified
-      // it is false for single user
-      if (_isOrganizationVerified) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(userUID: widget.userUID),
-          ),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => PaymentGateway(
-              isFirstPayment: true,
-              referralKeyRef: result.referralKeyRef as DocumentReference,
-              phoneNumber: _phoneController.text,
-              userUID: widget.userUID,
-            ),
-          ),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(userUID: widget.userUID),
+        ),
+      );
     }
   }
 
