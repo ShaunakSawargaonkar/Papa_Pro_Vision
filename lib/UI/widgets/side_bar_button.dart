@@ -7,6 +7,7 @@ class SideBarButton extends StatelessWidget {
   final double height;
   final double largeFontSize;
   final bool isLeft;
+  final Color color;
 
   const SideBarButton({
     super.key,
@@ -15,6 +16,7 @@ class SideBarButton extends StatelessWidget {
     required this.height,
     required this.largeFontSize,
     required this.isLeft,
+    required this.color,
   });
 
   @override
@@ -83,7 +85,7 @@ class SideBarButton extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: largeFontSize,
-                  color: Colors.white,
+                  color: color,
                   // Bolder weight for better visibility
                   fontWeight: FontWeight.w700,
                   // Enhanced text shadows with multiple layers for better contrast

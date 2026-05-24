@@ -412,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: double.infinity,
                             largeFontSize: largeFontSize,
                             isLeft: true,
+                            color: Colors.yellow,
                           ),
 
                           // SPACER - to push right sidebar to the right
@@ -431,6 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: double.infinity,
                             largeFontSize: largeFontSize,
                             isLeft: false,
+                            color: Colors.yellow,
                           ),
                         ],
                       ),
@@ -569,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               SizedBox(
-                height: deviceHeight * 0.04,
+                height: deviceHeight * 0.025,
               ), // Add some spacing at the bottom
             ],
           ),
