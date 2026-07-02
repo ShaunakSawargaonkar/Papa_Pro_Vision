@@ -6,12 +6,19 @@ class AudioPlayerService {
   final List<Uint8List> _queue = [];
   bool _isPlaying = false;
   bool _isStopped = false;
+  // Session tagging. reset()/stop() bump _sessionId. Each clip records the
+  // session it started under in _playingSession. A completion event that
+  // arrives after a reset/stop (e.g. delayed device audio callback) will carry
+  // a stale session and is ignored, so it cannot advance the NEW queue,
+  // double-drain it, or fire the queue-empty callback early.
+  int _sessionId = 0;
+  int _playingSession = -1;
 
   AudioPlayerService() {
     print('AudioPlayerService constructor');
     _audioPlayer.onPlayerComplete.listen((_) {
       print('Some Audio complete ${_isStopped}');
-      if (!_isStopped) {
+      if (!_isStopped && _playingSession == _sessionId) {
         _playNext();
       }
     });
@@ -35,6 +42,7 @@ class AudioPlayerService {
     _queue.clear();
     _isPlaying = false;
     _isStopped = false; // allow new session
+    _sessionId++; // invalidate any in-flight completion from the old session
   }
 
   Future<void> enqueue(Uint8List audioBytes) async {
@@ -57,7 +65,8 @@ class AudioPlayerService {
     }
     _isPlaying = true;
     final bytes = _queue.removeAt(0);
-    
+    _playingSession = _sessionId; // tag this clip with the current session
+
     await _audioPlayer.play(BytesSource(bytes));
   }
 
@@ -65,6 +74,7 @@ class AudioPlayerService {
     _isStopped = true;
     _queue.clear();
     _isPlaying = false;
+    _sessionId++; // invalidate any in-flight completion from the old session
 
     await _audioPlayer.stop();
     await _audioPlayer.release();

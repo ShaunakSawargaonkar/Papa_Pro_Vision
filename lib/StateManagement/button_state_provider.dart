@@ -36,6 +36,12 @@ class ConversationController extends ChangeNotifier {
   FileSharingHelper? _fileSharingHelper;
   File videoFile = File('');
 
+  // Re-entrancy guard: set synchronously at the very start of processInput so a
+  // second (rapid) trigger cannot start a concurrent LLM stream / TTS pipeline
+  // while one is already in flight. Only guards the start path; stop paths stay
+  // responsive because they never go through processInput.
+  bool _isProcessingInput = false;
+
   Future<void> initialize(String inputLanguage, bool enableTranslation, String userUID) async {
     _appContentState.userUID = userUID;
     _ttsService ??= setupTTSService('google', this);
@@ -107,123 +113,147 @@ class ConversationController extends ChangeNotifier {
     Uint8List? imageBytes,
     File? videoFile,
   }) async {
-    SharedPreferences? prefs;
-    Content content;
-    var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
-      methodCallName: 'processInput',
-    );
-    if (!hasInternet) {
-      print('No internet connection. Cannot process input.');
-      _appContentState.conversationState = ConversationState.idle;
-      notifyListeners();
+    // Re-entrancy guard set BEFORE any await so a rapid second tap (while the
+    // internet check / image capture is still awaiting) cannot start a second
+    // concurrent pipeline. Stop actions never call processInput, so they are
+    // unaffected and remain responsive.
+    if (_isProcessingInput) {
+      print('processInput ignored: a request is already in flight');
       return;
     }
-    prefs = await SharedPreferences.getInstance();
-    inputLanguage = prefs.getString('inputLanguage') ?? 'en_IN';
-    String defaultPrompt = _textService.getPromptText(
-      inputLanguage,
-      state.interactionMode,
-    );
-    var promptText = state.userRecognisedWords.isNotEmpty
-        ? state.userRecognisedWords
-        : defaultPrompt;
-
-    if (_appContentState.interactionMode == InteractionMode.smartView) {
-      promptText = defaultPrompt;
-      _appContentState.userRecognisedWords = 'SMART READING MODE';
-    } else if (_appContentState.interactionMode ==
-        InteractionMode.autoReading) {
-      promptText = defaultPrompt;
-      _appContentState.userRecognisedWords = 'AUTO READING MODE';
-    }
-
-    //Calling Gemini
-    _appContentState.conversationState = ConversationState.processing;
-    notifyListeners();
-    if (_appContentState.interactionMode == InteractionMode.normal ||
-        _appContentState.interactionMode == InteractionMode.video) {
-      await _ttsService?.speak(
-        _textService.getProcessingResponseText(inputLanguage),
-        isIntermediate: true,
+    _isProcessingInput = true;
+    try {
+      SharedPreferences? prefs;
+      Content content;
+      var hasInternet = await Devicehelper.hasInternetConnectionAndNotify(
+        methodCallName: 'processInput',
       );
-    }
-    if (!state.isHistoryMode) {
-      _agentService?.reset();
-    }
-    if ((!state.isHistoryMode || state.hasUploadedImage) &&
-        imageBytes != null && imageBytes != Uint8List(0)) {
-      print("Inside image generate Response call");
-      content =
-          await _agentService?.CreateContentForResponse(
-                promptText,
-                imageBytes: imageBytes,
-                inputLanguage,
-              )
-              as Content;
-    } else if (!state.isHistoryMode && videoFile != null) {
-      print("Inside video generate Response call");
-      content =
-          await _agentService?.CreateContentForResponse(
-                promptText,
-                videoFile: videoFile,
-                inputLanguage,
-              )
-              as Content;
-    } else {
-      print("Inside history generate Response call");
-      content =
-          await _agentService?.CreateContentForResponse(
-                promptText,
-                inputLanguage,
-              )
-              as Content;
-    }
-
-    // Check Gemini or GoogleRenderer
-    int chatHistoryCount = _agentService!.chatHistoryCount();
-    bool ifGoogle = false;
-
-    if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
-      ifGoogle = false;  // disabled till we have a server
-    }
-
-    if (ifGoogle == true) {
-      print("Insideeee google search Response call");
-      var response = await _agentService?.sendGoogleSearchMessage(
-        promptText,
-        inputLanguage,
-      );
-      if (response != null &&
-          _appContentState.conversationState == ConversationState.processing) {
-        _appContentState.agentResponse = response;
-        _appContentState.conversationState = ConversationState.speaking;
+      if (!hasInternet) {
+        print('No internet connection. Cannot process input.');
+        _appContentState.conversationState = ConversationState.idle;
         notifyListeners();
-        await _ttsService?.speak2(response);
-        resetAgentChat();
+        return;
       }
-    } else {
-      print("Insideeee streaming Response call");
-      await _agentService?.sendStreamingMessage(
-        content,
-        _ttsService,
-        onStartSpeaking,
-        inputLanguage: inputLanguage,
+      prefs = await SharedPreferences.getInstance();
+      inputLanguage = prefs.getString('inputLanguage') ?? 'en_IN';
+      String defaultPrompt = _textService.getPromptText(
+        inputLanguage,
+        state.interactionMode,
       );
+      var promptText = state.userRecognisedWords.isNotEmpty
+          ? state.userRecognisedWords
+          : defaultPrompt;
+
+      if (_appContentState.interactionMode == InteractionMode.smartView) {
+        promptText = defaultPrompt;
+        _appContentState.userRecognisedWords = 'SMART READING MODE';
+      } else if (_appContentState.interactionMode ==
+          InteractionMode.autoReading) {
+        promptText = defaultPrompt;
+        _appContentState.userRecognisedWords = 'AUTO READING MODE';
+      }
+      // Clear any previous answer so reading modes (which skip startListening)
+      // do not accumulate/concatenate the prior response onto the new stream.
+      _appContentState.agentResponse = '';
+
+      //Calling Gemini
+      _appContentState.conversationState = ConversationState.processing;
+      notifyListeners();
+      if (_appContentState.interactionMode == InteractionMode.normal ||
+          _appContentState.interactionMode == InteractionMode.video) {
+        await _ttsService?.speak(
+          _textService.getProcessingResponseText(inputLanguage),
+          isIntermediate: true,
+        );
+      }
+      if (!state.isHistoryMode) {
+        _agentService?.reset();
+      }
+      if ((!state.isHistoryMode || state.hasUploadedImage) &&
+          imageBytes != null && imageBytes != Uint8List(0)) {
+        print("Inside image generate Response call");
+        content =
+            await _agentService?.CreateContentForResponse(
+                  promptText,
+                  imageBytes: imageBytes,
+                  inputLanguage,
+                )
+                as Content;
+      } else if (!state.isHistoryMode && videoFile != null) {
+        print("Inside video generate Response call");
+        content =
+            await _agentService?.CreateContentForResponse(
+                  promptText,
+                  videoFile: videoFile,
+                  inputLanguage,
+                )
+                as Content;
+      } else {
+        print("Inside history generate Response call");
+        content =
+            await _agentService?.CreateContentForResponse(
+                  promptText,
+                  inputLanguage,
+                )
+                as Content;
+      }
+
+      // Check Gemini or GoogleRenderer
+      int chatHistoryCount = _agentService!.chatHistoryCount();
+      bool ifGoogle = false;
+
+      if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
+        ifGoogle = false;  // disabled till we have a server
+      }
+
+      if (ifGoogle == true) {
+        print("Insideeee google search Response call");
+        var response = await _agentService?.sendGoogleSearchMessage(
+          promptText,
+          inputLanguage,
+        );
+        if (response != null &&
+            _appContentState.conversationState == ConversationState.processing) {
+          _appContentState.agentResponse = response;
+          _appContentState.conversationState = ConversationState.speaking;
+          notifyListeners();
+          await _ttsService?.speak2(response);
+          resetAgentChat();
+        }
+      } else { 
+        print("Insideeee streaming Response call");
+        await _agentService?.sendStreamingMessage(
+          content,
+          _ttsService,
+          onStartSpeaking,
+          inputLanguage: inputLanguage,
+        );
+      }
+      // Safety net: if the stream produced no speech at all (e.g. empty/failed
+      // response), nothing ever flipped us to 'speaking' and no audio-complete
+      // callback will fire, which would otherwise strand the UI in 'processing'.
+      // Return to idle so the buttons stay usable.
+      if (_appContentState.conversationState == ConversationState.processing) {
+        _appContentState.conversationState = ConversationState.idle;
+        notifyListeners();
+      }
+      // response = await _agentService?.generateResponse(content, inputLanguage);
+
+      // print("Received chunked FINALLLLL: $response");
+
+      // if (response != null &&
+      //     response.isNotEmpty &&
+      //     _appContentState.conversationState == ConversationState.processing) {
+      //   _appContentState.agentResponse = response;
+      //   _appContentState.conversationState = ConversationState.speaking;
+      //   notifyListeners();
+      //   await _ttsService?.speak(response);
+      //   // _appContentState.conversationState = ConversationState.idle;
+      //   // notifyListeners();
+      // }
+    } finally {
+      _isProcessingInput = false;
     }
-    // response = await _agentService?.generateResponse(content, inputLanguage);
-
-    // print("Received chunked FINALLLLL: $response");
-
-    // if (response != null &&
-    //     response.isNotEmpty &&
-    //     _appContentState.conversationState == ConversationState.processing) {
-    //   _appContentState.agentResponse = response;
-    //   _appContentState.conversationState = ConversationState.speaking;
-    //   notifyListeners();
-    //   await _ttsService?.speak(response);
-    //   // _appContentState.conversationState = ConversationState.idle;
-    //   // notifyListeners();
-    // }
   }
 
   Future<void> onStartSpeaking() async {

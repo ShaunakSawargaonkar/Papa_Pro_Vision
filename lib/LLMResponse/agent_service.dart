@@ -392,6 +392,11 @@ class AgentService {
         speakCount++;
         final speakText = Devicehelper.cleanAgentResponse(currentText).trim();
         if (speakText.isNotEmpty) {
+          // Same as the in-loop path: flip processing -> speaking BEFORE
+          // speak(), otherwise speak()'s guard (conversationState != speaking)
+          // silently drops audio for responses that had no mid-stream sentence
+          // break and only reach this flush branch.
+          onStartSpeaking();
           print(
             '[TTS FINAL START #$speakCount] textLength=${speakText.length}',
           );

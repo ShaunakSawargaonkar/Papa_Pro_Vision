@@ -50,3 +50,14 @@ pubspec.lock
 secrets.dart
 android/build/reports/problems/problems-report.html
 pubspec.lock
+
+# Graphify cache
+graphify-out/cache/
+pubspec.lock
+pubspec.lock
+macos/Podfile
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Release.xcconfig
+ios/Flutter/Release.xcconfig
+ios/Flutter/Debug.xcconfig
+ios/Podfile
