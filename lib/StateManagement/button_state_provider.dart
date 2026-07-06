@@ -203,7 +203,7 @@ class ConversationController extends ChangeNotifier {
       bool ifGoogle = false;
 
       if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
-        ifGoogle = false;  // disabled till we have a server
+        ifGoogle = true;  // disabled till we have a server
       }
 
       if (ifGoogle == true) {

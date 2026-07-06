@@ -124,31 +124,78 @@ class AgentService {
     }
   }
 
-  Future<String> getResponseFromRender(String query, {String? userId}) async {
-    String encodedQuery = Uri.encodeComponent(query);
-    print("Encoded Query: $encodedQuery");
+ // for TimeoutException
+// you already have: import 'dart:convert';  (json)
+// you already have: import 'package:http/http.dart' as http;
 
-    String urlString =
-        'https://vercelgooglesearch.onrender.com/search/$encodedQuery';
+Future<String> getResponseFromRender(String query, {String? userId}) async {
+  final url = Uri.parse(
+    'https://googlesearchmultipleuserworking.onrender.com/search',
+  );
 
-    // Add user_id parameter if provided
-    if (userId != null) {
-      urlString += '?user_id=${Uri.encodeComponent(userId)}';
-    }
+  final body = json.encode({
+    'query': query,
+    if (userId != null) 'user_id': userId,
+  });
 
-    final url = Uri.parse(urlString);
+  print("Search POST -> $url  body: $body");
 
-    final response = await http.get(
-      url,
-      headers: {'Content-Type': 'application/json'},
-    );
+  Future<http.Response> send() => http
+      .post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      )
+      .timeout(const Duration(seconds: 90)); // Render free-tier cold start
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body)['response'];
-    } else {
-      throw Exception('Failed to search: ${response.statusCode}');
-    }
+  http.Response response;
+  try {
+    response = await send();
+  } on TimeoutException {
+    // one retry — first request often wakes a sleeping Render instance
+    response = await send();
   }
+
+  if (response.statusCode == 200) {
+    return json.decode(response.body)['response'] as String;
+  }
+
+  // Surface the server's friendly message (e.g. "Please say what you'd like to search for.")
+  String detail;
+  try {
+    detail = json.decode(response.body)['detail']?.toString() ?? response.body;
+  } catch (_) {
+    detail = response.body;
+  }
+  throw Exception('Failed to search (${response.statusCode}): $detail');
+}
+
+  // Future<String> getResponseFromRender(String query, {String? userId}) async {
+  //   String encodedQuery = Uri.encodeComponent(query);
+
+  //   String urlString =
+  //       'https://vercelgooglesearch.onrender.com/search/$encodedQuery';
+
+  //   // Add user_id parameter if provided
+  //   if (userId != null) {
+  //     urlString += '?user_id=${Uri.encodeComponent(userId)}';
+  //   }
+
+  //   final url = Uri.parse(urlString);
+
+  //   print("URLStringgg Query: $urlString");
+
+  //   final response = await http.get(
+  //     url,
+  //     headers: {'Content-Type': 'application/json'},
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     return json.decode(response.body)['response'];
+  //   } else {
+  //     throw Exception('Failed to search: ${response.statusCode}');
+  //   }
+  // }
   // Future<String> getResponseFromRender(String query) async {
   //   String encodedQuery = Uri.encodeComponent(query);
   //   print("Encoded Query: $encodedQuery");
