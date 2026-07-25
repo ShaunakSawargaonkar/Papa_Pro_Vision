@@ -30,6 +30,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isInitializing = true;
   Timer? _longPressTimer;
   bool _timerCompleted = false;
+  // Synchronous guard for the START/capture path of onToggleListening. Set
+  // before any await so rapid double-taps during camera capture / speech setup
+  // cannot launch two capture+listen+process pipelines. The STOP path is never
+  // guarded, so the user can always cancel an in-progress interaction.
+  bool _isStartingInteraction = false;
 
   @override
   void initState() {
@@ -103,16 +108,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     try {
       Analyticshelper.updateResponseCount("ImageCaptureCount", widget.userUID);
+      // Play the shutter sound first so feedback is instant (no waiting for the
+      // capture to finish). If the capture then fails, the catch below plays an
+      // error sound so the user isn't left thinking the shot succeeded.
       DeviceAudioHelper.playCameraClickSound();
       final XFile picture = await cameraController!.takePicture();
       if (controller.state.interactionMode == InteractionMode.normal) {
         await Future.delayed(
-          Duration(milliseconds: 500),
+          Duration(milliseconds: 250),
         ); // wait for camera sound to complete
       }
       return await picture.readAsBytes();
     } catch (e) {
       print("Error taking picture or processing: $e");
+      DeviceAudioHelper.playDeleteSound();
       return null;
     }
   }
@@ -176,67 +185,78 @@ class _HomeScreenState extends State<HomeScreen> {
     print(prefs?.getString('inputLanguage'));
 
     if (controller.state.conversationState == ConversationState.idle) {
-      if (controller.state.interactionMode == InteractionMode.normal) {
-        //Capture image
-        Uint8List? imageBytes = Uint8List(0);
-        if (!controller.state.isHistoryMode &&
-            !controller.state.hasUploadedImage) {
-          imageBytes = await _captureImage(controller);
-          if (imageBytes != null) {
-            controller.setImageBytes(imageBytes);
-          }
-        } else {
-          if (controller.getImageBytes().isNotEmpty) {
-            if (controller.state.hasUploadedImage) {
-              Analyticshelper.updateResponseCount(
-                "LLMInteractionWithUploadedImageCount",
-                widget.userUID,
-              );
-            } else {
-              Analyticshelper.updateResponseCount(
-                "LLMInteractionWithImageCount",
-                widget.userUID,
-              );
+      // Ignore rapid re-taps while a start/capture is already underway. Set
+      // synchronously (before the first await) so it actually closes the race.
+      if (_isStartingInteraction) {
+        print('Ignoring rapid tap: interaction already starting');
+        return;
+      }
+      _isStartingInteraction = true;
+      try {
+        if (controller.state.interactionMode == InteractionMode.normal) {
+          //Capture image
+          Uint8List? imageBytes = Uint8List(0);
+          if (!controller.state.isHistoryMode &&
+              !controller.state.hasUploadedImage) {
+            imageBytes = await _captureImage(controller);
+            if (imageBytes != null) {
+              controller.setImageBytes(imageBytes);
             }
           } else {
-            Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
+            if (controller.getImageBytes().isNotEmpty) {
+              if (controller.state.hasUploadedImage) {
+                Analyticshelper.updateResponseCount(
+                  "LLMInteractionWithUploadedImageCount",
+                  widget.userUID,
+                );
+              } else {
+                Analyticshelper.updateResponseCount(
+                  "LLMInteractionWithImageCount",
+                  widget.userUID,
+                );
+              }
+            } else {
+              Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
+            }
           }
-        }
-        await controller.startListening(
-          prefs?.getString('inputLanguage') ?? 'en_IN',
-        );
-      }
-      // Video mode
-      else if (controller.state.interactionMode == InteractionMode.video) {
-        Analyticshelper.updateResponseCount("VideoModeCount", widget.userUID);
-        await controller.startListening(
-          prefs?.getString('inputLanguage') ?? 'en_IN',
-        );
-      }
-      // Reading modes
-      else {
-        // For non-normal interaction modes, process immediately
-        if (controller.state.hasUploadedImage) {
-          print('Processing uploaded image in reading modes');
-          await controller.processInput(
+          await controller.startListening(
             prefs?.getString('inputLanguage') ?? 'en_IN',
-            imageBytes: controller.getImageBytes(),
           );
-        } else {
-          print('Capturing image in reading modes');
-          // Wait a bit for the background image capture to complete before processing
-          Uint8List? imageBytes = Uint8List(0);
-          imageBytes = await _captureImage(controller);
-          if (imageBytes != null) {
-            print('Setting image bytes ss');
-            controller.setImageBytes(imageBytes);
-          }
+        }
+        // Video mode
+        else if (controller.state.interactionMode == InteractionMode.video) {
+          Analyticshelper.updateResponseCount("VideoModeCount", widget.userUID);
+          await controller.startListening(
+            prefs?.getString('inputLanguage') ?? 'en_IN',
+          );
+        }
+        // Reading modes
+        else {
+          // For non-normal interaction modes, process immediately
+          if (controller.state.hasUploadedImage) {
+            print('Processing uploaded image in reading modes');
+            await controller.processInput(
+              prefs?.getString('inputLanguage') ?? 'en_IN',
+              imageBytes: controller.getImageBytes(),
+            );
+          } else {
+            print('Capturing image in reading modes');
+            // Wait a bit for the background image capture to complete before processing
+            Uint8List? imageBytes = Uint8List(0);
+            imageBytes = await _captureImage(controller);
+            if (imageBytes != null) {
+              print('Setting image bytes ss');
+              controller.setImageBytes(imageBytes);
+            }
 
-          await controller.processInput(
-            prefs?.getString('inputLanguage') ?? 'en_IN',
-            imageBytes: imageBytes,
-          );
+            await controller.processInput(
+              prefs?.getString('inputLanguage') ?? 'en_IN',
+              imageBytes: imageBytes,
+            );
+          }
         }
+      } finally {
+        _isStartingInteraction = false;
       }
     } else {
       print('Stopping speaking');
