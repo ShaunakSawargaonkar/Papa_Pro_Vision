@@ -199,12 +199,12 @@ class ConversationController extends ChangeNotifier {
       }
 
       // Check Gemini or GoogleRenderer
-      int chatHistoryCount = _agentService!.chatHistoryCount();
+      // int chatHistoryCount = _agentService!.chatHistoryCount();
       bool ifGoogle = false;
 
-      if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
-        ifGoogle = true;  // disabled till we have a server
-      }
+      // if (state.isHistoryMode && chatHistoryCount == 0 && !state.hasUploadedImage) {
+      //   ifGoogle = true;  // disabled till we have a server
+      // }
 
       if (ifGoogle == true) {
         print("Insideeee google search Response call");
