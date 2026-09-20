@@ -11,9 +11,12 @@ import 'package:papa_pro_vision/enums.dart';
 
 class GoogleTTSService implements TextToSpeechService {
   AudioPlayerService? _audioPlayerService = AudioPlayerService();
-  late AppContentState _appContentState = AppContentState();
+  late AppContentState _appContentState;
 
   GoogleTTSService(ConversationController controller) {
+    // Seed immediately rather than waiting for the first notifyListeners(),
+    // otherwise the guards below read a detached default state object.
+    _appContentState = controller.state;
     controller.addListener(() {
       _appContentState = controller.state;
     });
@@ -23,14 +26,26 @@ class GoogleTTSService implements TextToSpeechService {
     };
   }
 
-  // Monotonic session id. The previous implementation used
-  // `DateTime.now().microsecond + DateTime.now().minute`, whose range is only
-  // ~0-1058 and can collide (or even repeat) for calls made close together,
-  // defeating the stale-audio guard and stop() invalidation. A strictly
-  // increasing counter guarantees every new session is distinct.
-  int _sessionCounter = 0;
+  // The current interaction token, owned by ConversationController. 0 means no
+  // session is open. Tokens are strictly increasing, so a larger token always
+  // means "a newer interaction has started" and a smaller one always means
+  // "this work belongs to an interaction the user has already moved on from".
   int _sessionId = 0;
-  int _newSessionId() => ++_sessionCounter;
+
+  /// Adopts [sessionId] if it supersedes the current session, or reports that
+  /// the caller is stale and should abandon its work.
+  bool _claimSession(int sessionId) {
+    if (sessionId > _sessionId) {
+      _sessionId = sessionId;
+      _audioPlayerService?.beginSession(sessionId);
+      return true;
+    }
+    if (sessionId != _sessionId) {
+      print('Skipping TTS for stale session $sessionId (current $_sessionId)');
+      return false;
+    }
+    return true;
+  }
 
   @override
   Future<void> speak(
@@ -38,15 +53,15 @@ class GoogleTTSService implements TextToSpeechService {
     int sessionId = -1,
     bool isIntermediate = false,
   }) async {
-    if (_appContentState.conversationState != ConversationState.speaking &&
-        !isIntermediate)
+    // Intermediate announcements used to skip every guard and force a player
+    // reset, so a late "mode on" clip could wipe or interleave with a live
+    // response. They are now session-scoped like everything else.
+    if (!_claimSession(sessionId)) return;
+
+    if (!isIntermediate &&
+        _appContentState.conversationState != ConversationState.speaking) {
       return;
-
-    if (isIntermediate || sessionId == -1) {
-      _audioPlayerService?.reset();
     }
-
-    print('Resetting audio player');
 
     String trimmed = text.trim();
 
@@ -59,7 +74,7 @@ class GoogleTTSService implements TextToSpeechService {
       } else {
         audioContent = await getWAVFromGoogle(trimmed, "en-IN");
       }
-      if (sessionId != _sessionId && !isIntermediate) {
+      if (sessionId != _sessionId) {
         print("Skipping old audio (session invalidated)");
         return;
       }
@@ -67,10 +82,11 @@ class GoogleTTSService implements TextToSpeechService {
       final audioBytes = base64.decode(audioContent);
 
       print("Enqueuing audio for: $trimmed");
-      if (_appContentState.conversationState != ConversationState.speaking &&
-          !isIntermediate)
+      if (!isIntermediate &&
+          _appContentState.conversationState != ConversationState.speaking) {
         return;
-      await _audioPlayerService?.enqueue(audioBytes);
+      }
+      await _audioPlayerService?.enqueue(audioBytes, token: sessionId);
     } catch (e) {
       Analyticshelper.updateResponseCount("TTSErrorCount", _appContentState.userUID);
       print("TTS error for '$trimmed': $e");
@@ -78,10 +94,17 @@ class GoogleTTSService implements TextToSpeechService {
   }
 
   @override
-  Future<void> speak2(String text, {bool isIntermediate = false}) async {
-    if (_appContentState.conversationState != ConversationState.speaking &&
-        !isIntermediate)
+  Future<void> speak2(
+    String text, {
+    bool isIntermediate = false,
+    int sessionId = -1,
+  }) async {
+    if (!_claimSession(sessionId)) return;
+
+    if (!isIntermediate &&
+        _appContentState.conversationState != ConversationState.speaking) {
       return;
+    }
 
     var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'speakGoogleTTS',
@@ -91,9 +114,6 @@ class GoogleTTSService implements TextToSpeechService {
       return;
     }
 
-    print('Resetting audio player');
-    _audioPlayerService?.reset();
-    _sessionId = _newSessionId();
     final currentSession = _sessionId;
 
     // Split text into sentences, then further split long sentences (>20 words)
@@ -118,9 +138,10 @@ class GoogleTTSService implements TextToSpeechService {
     for (final sentence in sentences) {
       final trimmed = sentence.trim();
       if (trimmed.isEmpty) continue;
-      if (_appContentState.conversationState != ConversationState.speaking &&
-          !isIntermediate)
+      if (!isIntermediate &&
+          _appContentState.conversationState != ConversationState.speaking) {
         return;
+      }
 
       print("Requesting TTS for: $trimmed");
 
@@ -139,31 +160,37 @@ class GoogleTTSService implements TextToSpeechService {
         final audioBytes = base64.decode(audioContent);
 
         print("Enqueuing audio for: $trimmed");
-        if (_appContentState.conversationState != ConversationState.speaking &&
-            !isIntermediate)
+        if (!isIntermediate &&
+            _appContentState.conversationState != ConversationState.speaking) {
           return;
-        await _audioPlayerService?.enqueue(audioBytes);
+        }
+        await _audioPlayerService?.enqueue(audioBytes, token: currentSession);
       } catch (e) {
         Analyticshelper.updateResponseCount("TTSErrorCount", _appContentState.userUID);
         print("TTS error for '$trimmed': $e");
       }
     }
+    _audioPlayerService?.endSession(currentSession);
   }
 
   @override
   Future<void> stop() async {
     print("Stopping playback");
 
-    _sessionId = _newSessionId(); // invalidate current session
-    // _audioPlayerService.reset(); // clear any queued audio
+    _sessionId = 0; // invalidate current session; tokens are strictly positive
     await _audioPlayerService?.stop();
   }
 
   @override
-  Future<int> startSession() async {
-    _sessionId = _newSessionId();
-    _audioPlayerService?.reset();
-    return _sessionId;
+  Future<int> startSession(int token) async {
+    _claimSession(token);
+    return token;
+  }
+
+  @override
+  Future<void> endSession(int token) async {
+    if (token != _sessionId) return;
+    _audioPlayerService?.endSession(token);
   }
 }
 

@@ -103,66 +103,6 @@
       "norm_label": "build.gradle.kts"
     },
     {
-      "label": "GeneratedPluginRegistrant.java",
-      "file_type": "code",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant",
-      "community": 37,
-      "norm_label": "generatedpluginregistrant.java"
-    },
-    {
-      "label": "GeneratedPluginRegistrant",
-      "file_type": "code",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant",
-      "community": 37,
-      "norm_label": "generatedpluginregistrant"
-    },
-    {
-      "label": "Keep",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "keep",
-      "community": 37,
-      "norm_label": "keep"
-    },
-    {
-      "label": "String",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_java_string",
-      "community": 37,
-      "norm_label": "string"
-    },
-    {
-      "label": ".registerWith()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L17",
-      "_origin": "ast",
-      "id": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant_registerwith",
-      "community": 37,
-      "norm_label": ".registerwith()"
-    },
-    {
-      "label": "FlutterEngine",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "flutterengine",
-      "community": 37,
-      "norm_label": "flutterengine"
-    },
-    {
       "label": "MainActivity.kt",
       "file_type": "code",
       "source_file": "android/app/src/main/kotlin/com/example/blind_assistant_app/MainActivity.kt",
@@ -231,145 +171,6 @@
       "id": "android_settings_gradle",
       "community": 32,
       "norm_label": "settings.gradle.kts"
-    },
-    {
-      "label": "Package.swift",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/Packages/.packages/FlutterFramework/Package.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_packages_packages_flutterframework_package",
-      "community": 39,
-      "norm_label": "package.swift"
-    },
-    {
-      "label": "PackageDescription",
-      "file_type": "code",
-      "type": "module",
-      "source_file": "macos/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift",
-      "source_location": "L7",
-      "_origin": "ast",
-      "id": "packagedescription",
-      "community": 39,
-      "norm_label": "packagedescription"
-    },
-    {
-      "label": "FlutterFramework.swift",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/Packages/.packages/FlutterFramework/Sources/FlutterFramework/FlutterFramework.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_packages_packages_flutterframework_sources_flutterframework_flutterframework",
-      "community": 44,
-      "norm_label": "flutterframework.swift"
-    },
-    {
-      "label": "Package.swift",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_package",
-      "community": 39,
-      "norm_label": "package.swift"
-    },
-    {
-      "label": "FlutterGeneratedPluginSwiftPackage.swift",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Sources/FlutterGeneratedPluginSwiftPackage/FlutterGeneratedPluginSwiftPackage.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_sources_fluttergeneratedpluginswiftpackage_fluttergeneratedpluginswiftpackage",
-      "community": 43,
-      "norm_label": "fluttergeneratedpluginswiftpackage.swift"
-    },
-    {
-      "label": "flutter_lldb_helper.py",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_flutter_lldb_helper",
-      "community": 38,
-      "norm_label": "flutter_lldb_helper.py"
-    },
-    {
-      "label": "handle_new_rx_page()",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L7",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_flutter_lldb_helper_handle_new_rx_page",
-      "community": 38,
-      "norm_label": "handle_new_rx_page()"
-    },
-    {
-      "label": "SBFrame",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "sbframe",
-      "community": 38,
-      "norm_label": "sbframe"
-    },
-    {
-      "label": "__lldb_init_module()",
-      "file_type": "code",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L24",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_flutter_lldb_helper_lldb_init_module",
-      "community": 38,
-      "norm_label": "__lldb_init_module()"
-    },
-    {
-      "label": "SBDebugger",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "sbdebugger",
-      "community": 38,
-      "norm_label": "sbdebugger"
-    },
-    {
-      "label": "Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.",
-      "file_type": "rationale",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L8",
-      "_origin": "ast",
-      "id": "ios_flutter_ephemeral_flutter_lldb_helper_rationale_8",
-      "community": 38,
-      "norm_label": "intercept notify_debugger_about_rx_pages and touch the pages."
-    },
-    {
-      "label": "flutter_export_environment.sh",
-      "file_type": "code",
-      "source_file": "ios/Flutter/flutter_export_environment.sh",
-      "source_location": "L1",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "_origin": "ast",
-      "id": "ios_flutter_flutter_export_environment",
-      "community": 41,
-      "norm_label": "flutter_export_environment.sh"
-    },
-    {
-      "label": "flutter_export_environment.sh script",
-      "file_type": "code",
-      "source_file": "ios/Flutter/flutter_export_environment.sh",
-      "source_location": "L1",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "_origin": "ast",
-      "id": "ios_flutter_flutter_export_environment_sh__entry",
-      "community": 41,
-      "norm_label": "flutter_export_environment.sh script"
     },
     {
       "label": "AppDelegate.swift",
@@ -462,56 +263,6 @@
       "id": "ios_runner_appdelegate_swift_bool",
       "community": 16,
       "norm_label": "bool"
-    },
-    {
-      "label": "GeneratedPluginRegistrant.h",
-      "file_type": "code",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_runner_generatedpluginregistrant_h_ios_runner_generatedpluginregistrant",
-      "community": 16,
-      "norm_label": "generatedpluginregistrant.h"
-    },
-    {
-      "label": "GeneratedPluginRegistrant",
-      "file_type": "code",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "ios_runner_generatedpluginregistrant_generatedpluginregistrant",
-      "community": 16,
-      "norm_label": "generatedpluginregistrant"
-    },
-    {
-      "label": "NSObject",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "nsobject",
-      "community": 16,
-      "norm_label": "nsobject"
-    },
-    {
-      "label": "+registerWithRegistry",
-      "file_type": "code",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L15",
-      "_origin": "ast",
-      "id": "ios_runner_generatedpluginregistrant_generatedpluginregistrant_registerwithregistry",
-      "community": 16,
-      "norm_label": "+registerwithregistry"
-    },
-    {
-      "label": "GeneratedPluginRegistrant.m",
-      "file_type": "code",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "community": 16,
-      "norm_label": "generatedpluginregistrant.m"
     },
     {
       "label": "Runner-Bridging-Header.h",
@@ -641,7 +392,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_helper_databasehelper_userstatusresponse",
-      "community": 6,
+      "community": 8,
       "norm_label": "userstatusresponse"
     },
     {
@@ -1455,6 +1206,16 @@
       "norm_label": "_generativemodel"
     },
     {
+      "label": "streamSessionId",
+      "file_type": "code",
+      "source_file": "lib/LLMResponse/agent_service.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_llmresponse_agent_service_streamsessionid",
+      "community": 2,
+      "norm_label": "streamsessionid"
+    },
+    {
       "label": "_chat",
       "file_type": "code",
       "source_file": "lib/LLMResponse/agent_service.dart",
@@ -1495,16 +1256,6 @@
       "norm_label": "appcontentstate"
     },
     {
-      "label": "_controller",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_controller",
-      "community": 2,
-      "norm_label": "_controller"
-    },
-    {
       "label": "chatHistory",
       "file_type": "code",
       "source_file": "lib/LLMResponse/agent_service.dart",
@@ -1523,56 +1274,6 @@
       "id": "list",
       "community": 4,
       "norm_label": "list"
-    },
-    {
-      "label": "url",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_url",
-      "community": 2,
-      "norm_label": "url"
-    },
-    {
-      "label": "body",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_body",
-      "community": 2,
-      "norm_label": "body"
-    },
-    {
-      "label": "response",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_response",
-      "community": 2,
-      "norm_label": "response"
-    },
-    {
-      "label": "Response",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "response",
-      "community": 2,
-      "norm_label": "response"
-    },
-    {
-      "label": "detail",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_detail",
-      "community": 2,
-      "norm_label": "detail"
     },
     {
       "label": "_getSystemPrompt",
@@ -1605,6 +1306,16 @@
       "norm_label": "reset"
     },
     {
+      "label": "generateResponse",
+      "file_type": "code",
+      "source_file": "lib/LLMResponse/agent_service.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_llmresponse_agent_service_generateresponse",
+      "community": 2,
+      "norm_label": "generateresponse"
+    },
+    {
       "label": "getResponseFromRender",
       "file_type": "code",
       "source_file": "lib/LLMResponse/agent_service.dart",
@@ -1613,16 +1324,6 @@
       "id": "lib_llmresponse_agent_service_getresponsefromrender",
       "community": 2,
       "norm_label": "getresponsefromrender"
-    },
-    {
-      "label": "send",
-      "file_type": "code",
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_llmresponse_agent_service_send",
-      "community": 2,
-      "norm_label": "send"
     },
     {
       "label": "chatHistoryCount",
@@ -1671,7 +1372,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "dart_convert",
-      "community": 3,
+      "community": 2,
       "norm_label": "dart:convert"
     },
     {
@@ -1711,7 +1412,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_http_http_dart",
-      "community": 3,
+      "community": 2,
       "norm_label": "package:http/http.dart"
     },
     {
@@ -1931,7 +1632,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_payment_payment_gatway_paymentgateway",
-      "community": 36,
+      "community": 6,
       "norm_label": "paymentgateway"
     },
     {
@@ -1941,7 +1642,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "statefulwidget",
-      "community": 36,
+      "community": 6,
       "norm_label": "statefulwidget"
     },
     {
@@ -1951,7 +1652,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_payment_payment_gatway_paymentgatewaystate",
-      "community": 36,
+      "community": 6,
       "norm_label": "_paymentgatewaystate"
     },
     {
@@ -2231,7 +1932,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_flutter_services_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:flutter/services.dart"
     },
     {
@@ -2241,7 +1942,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_ui_home_screen_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/ui/home_screen.dart"
     },
     {
@@ -2281,7 +1982,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_helper_databasehelper_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/helper/databasehelper.dart"
     },
     {
@@ -2521,7 +2222,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_statemanagement_button_state_provider_state",
-      "community": 36,
+      "community": 6,
       "norm_label": "state"
     },
     {
@@ -2663,56 +2364,6 @@
       "id": "lib_statemanagement_button_state_provider_isprocessinginput",
       "community": 0,
       "norm_label": "_isprocessinginput"
-    },
-    {
-      "label": "_interactionToken",
-      "file_type": "code",
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_statemanagement_button_state_provider_interactiontoken",
-      "community": 0,
-      "norm_label": "_interactiontoken"
-    },
-    {
-      "label": "_listeningToken",
-      "file_type": "code",
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_statemanagement_button_state_provider_listeningtoken",
-      "community": 0,
-      "norm_label": "_listeningtoken"
-    },
-    {
-      "label": "beginInteraction",
-      "file_type": "code",
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_statemanagement_button_state_provider_begininteraction",
-      "community": 0,
-      "norm_label": "begininteraction"
-    },
-    {
-      "label": "isCurrentInteraction",
-      "file_type": "code",
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_statemanagement_button_state_provider_iscurrentinteraction",
-      "community": 0,
-      "norm_label": "iscurrentinteraction"
-    },
-    {
-      "label": "invalidateInteraction",
-      "file_type": "code",
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_statemanagement_button_state_provider_invalidateinteraction",
-      "community": 0,
-      "norm_label": "invalidateinteraction"
     },
     {
       "label": "initialize",
@@ -2885,6 +2536,16 @@
       "norm_label": "setsmartviewmode"
     },
     {
+      "label": "unSetSmartViewMode",
+      "file_type": "code",
+      "source_file": "lib/StateManagement/button_state_provider.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_statemanagement_button_state_provider_unsetsmartviewmode",
+      "community": 0,
+      "norm_label": "unsetsmartviewmode"
+    },
+    {
       "label": "setAutoReadingMode",
       "file_type": "code",
       "source_file": "lib/StateManagement/button_state_provider.dart",
@@ -2893,6 +2554,16 @@
       "id": "lib_statemanagement_button_state_provider_setautoreadingmode",
       "community": 0,
       "norm_label": "setautoreadingmode"
+    },
+    {
+      "label": "unSetAutoReadingMode",
+      "file_type": "code",
+      "source_file": "lib/StateManagement/button_state_provider.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_statemanagement_button_state_provider_unsetautoreadingmode",
+      "community": 0,
+      "norm_label": "unsetautoreadingmode"
     },
     {
       "label": "setUploadedImageMode",
@@ -3035,16 +2706,6 @@
       "norm_label": "_playingsession"
     },
     {
-      "label": "_producerDone",
-      "file_type": "code",
-      "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_txt2speech_audioplayer_audio_player_producerdone",
-      "community": 4,
-      "norm_label": "_producerdone"
-    },
-    {
       "label": "bool get",
       "file_type": "code",
       "source_file": null,
@@ -3053,16 +2714,6 @@
       "id": "bool_get",
       "community": 4,
       "norm_label": "bool get"
-    },
-    {
-      "label": "int get",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "int_get",
-      "community": 4,
-      "norm_label": "int get"
     },
     {
       "label": "onQueueEmptyAndComplete",
@@ -3075,24 +2726,14 @@
       "norm_label": "onqueueemptyandcomplete"
     },
     {
-      "label": "beginSession",
+      "label": "reset",
       "file_type": "code",
       "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
       "source_location": null,
       "_origin": "ast",
-      "id": "lib_txt2speech_audioplayer_audio_player_beginsession",
+      "id": "lib_txt2speech_audioplayer_audio_player_reset",
       "community": 4,
-      "norm_label": "beginsession"
-    },
-    {
-      "label": "endSession",
-      "file_type": "code",
-      "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_txt2speech_audioplayer_audio_player_endsession",
-      "community": 4,
-      "norm_label": "endsession"
+      "norm_label": "reset"
     },
     {
       "label": "enqueue",
@@ -3151,7 +2792,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_txt2speech_models_flutter_tts_flutterttsservice",
-      "community": 19,
+      "community": 26,
       "norm_label": "flutterttsservice"
     },
     {
@@ -3225,16 +2866,6 @@
       "norm_label": "startsession"
     },
     {
-      "label": "endSession",
-      "file_type": "code",
-      "source_file": "lib/Txt2Speech/Models/flutter_tts.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_txt2speech_models_flutter_tts_endsession",
-      "community": 21,
-      "norm_label": "endsession"
-    },
-    {
       "label": "google_tts.dart",
       "file_type": "code",
       "source_file": "lib/Txt2Speech/Models/google_tts.dart",
@@ -3251,7 +2882,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_txt2speech_models_google_tts_googlettsservice",
-      "community": 19,
+      "community": 26,
       "norm_label": "googlettsservice"
     },
     {
@@ -3283,6 +2914,16 @@
       "id": "lib_txt2speech_models_google_tts_appcontentstate",
       "community": 3,
       "norm_label": "_appcontentstate"
+    },
+    {
+      "label": "_sessionCounter",
+      "file_type": "code",
+      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_txt2speech_models_google_tts_sessioncounter",
+      "community": 3,
+      "norm_label": "_sessioncounter"
     },
     {
       "label": "_sessionId",
@@ -3365,14 +3006,14 @@
       "norm_label": "response"
     },
     {
-      "label": "_claimSession",
+      "label": "_newSessionId",
       "file_type": "code",
       "source_file": "lib/Txt2Speech/Models/google_tts.dart",
       "source_location": null,
       "_origin": "ast",
-      "id": "lib_txt2speech_models_google_tts_claimsession",
+      "id": "lib_txt2speech_models_google_tts_newsessionid",
       "community": 3,
-      "norm_label": "_claimsession"
+      "norm_label": "_newsessionid"
     },
     {
       "label": "speak",
@@ -3415,16 +3056,6 @@
       "norm_label": "startsession"
     },
     {
-      "label": "endSession",
-      "file_type": "code",
-      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_txt2speech_models_google_tts_endsession",
-      "community": 3,
-      "norm_label": "endsession"
-    },
-    {
       "label": "getWAVFromGoogle",
       "file_type": "code",
       "source_file": "lib/Txt2Speech/Models/google_tts.dart",
@@ -3461,8 +3092,28 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_txt2speech_service_locator_texttospeechservice",
-      "community": 19,
+      "community": 26,
       "norm_label": "texttospeechservice"
+    },
+    {
+      "label": "locator",
+      "file_type": "code",
+      "source_file": "lib/Txt2Speech/service_locator.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "id": "lib_txt2speech_service_locator_locator",
+      "community": 19,
+      "norm_label": "locator"
+    },
+    {
+      "label": "GetIt",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "getit",
+      "community": 19,
+      "norm_label": "getit"
     },
     {
       "label": "speak",
@@ -3505,16 +3156,6 @@
       "norm_label": "startsession"
     },
     {
-      "label": "endSession",
-      "file_type": "code",
-      "source_file": "lib/Txt2Speech/service_locator.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_txt2speech_service_locator_endsession",
-      "community": 19,
-      "norm_label": "endsession"
-    },
-    {
       "label": "setupTTSService",
       "file_type": "code",
       "source_file": "lib/Txt2Speech/service_locator.dart",
@@ -3523,6 +3164,16 @@
       "id": "lib_txt2speech_service_locator_setupttsservice",
       "community": 19,
       "norm_label": "setupttsservice"
+    },
+    {
+      "label": "package:get_it/get_it.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "package_get_it_get_it_dart",
+      "community": 19,
+      "norm_label": "package:get_it/get_it.dart"
     },
     {
       "label": "package:papa_pro_vision/Txt2Speech/Models/flutter_tts.dart",
@@ -3671,7 +3322,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_registerpage_registration_page_registrationpage",
-      "community": 36,
+      "community": 6,
       "norm_label": "registrationpage"
     },
     {
@@ -3681,7 +3332,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_registerpage_registration_page_registrationpagestate",
-      "community": 36,
+      "community": 6,
       "norm_label": "_registrationpagestate"
     },
     {
@@ -3691,7 +3342,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "singletickerproviderstatemixin",
-      "community": 36,
+      "community": 6,
       "norm_label": "singletickerproviderstatemixin"
     },
     {
@@ -3741,7 +3392,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "texteditingcontroller",
-      "community": 26,
+      "community": 11,
       "norm_label": "texteditingcontroller"
     },
     {
@@ -3971,7 +3622,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "formstate",
-      "community": 26,
+      "community": 11,
       "norm_label": "formstate"
     },
     {
@@ -3991,7 +3642,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_auth_phone_auth_page_phoneauthpage",
-      "community": 36,
+      "community": 11,
       "norm_label": "phoneauthpage"
     },
     {
@@ -4001,7 +3652,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_auth_phone_auth_page_phoneauthpagestate",
-      "community": 36,
+      "community": 11,
       "norm_label": "_phoneauthpagestate"
     },
     {
@@ -4405,24 +4056,14 @@
       "norm_label": "_cancelrecording"
     },
     {
-      "label": "onModeTap",
+      "label": "onToggleListening",
       "file_type": "code",
       "source_file": "lib/UI/home_Screen.dart",
       "source_location": null,
       "_origin": "ast",
-      "id": "lib_ui_home_screen_onmodetap",
+      "id": "lib_ui_home_screen_ontogglelistening",
       "community": 1,
-      "norm_label": "onmodetap"
-    },
-    {
-      "label": "_startInteraction",
-      "file_type": "code",
-      "source_file": "lib/UI/home_Screen.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_ui_home_screen_startinteraction",
-      "community": 1,
-      "norm_label": "_startinteraction"
+      "norm_label": "ontogglelistening"
     },
     {
       "label": "clearImageBuffer",
@@ -4491,7 +4132,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_provider_provider_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:provider/provider.dart"
     },
     {
@@ -4541,7 +4182,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page",
-      "community": 26,
+      "community": 11,
       "norm_label": "profile_page.dart"
     },
     {
@@ -4551,7 +4192,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_profilepage",
-      "community": 36,
+      "community": 11,
       "norm_label": "profilepage"
     },
     {
@@ -4561,7 +4202,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_profilepagestate",
-      "community": 36,
+      "community": 11,
       "norm_label": "_profilepagestate"
     },
     {
@@ -4571,7 +4212,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_formkey",
-      "community": 26,
+      "community": 11,
       "norm_label": "_formkey"
     },
     {
@@ -4581,7 +4222,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_emergencycontactcontroller",
-      "community": 26,
+      "community": 11,
       "norm_label": "_emergencycontactcontroller"
     },
     {
@@ -4591,7 +4232,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_speechrate",
-      "community": 26,
+      "community": 11,
       "norm_label": "_speechrate"
     },
     {
@@ -4601,7 +4242,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_selectedlanguage",
-      "community": 26,
+      "community": 11,
       "norm_label": "_selectedlanguage"
     },
     {
@@ -4611,7 +4252,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_enabletranslation",
-      "community": 26,
+      "community": 11,
       "norm_label": "_enabletranslation"
     },
     {
@@ -4621,7 +4262,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_usefrontcamera",
-      "community": 26,
+      "community": 11,
       "norm_label": "_usefrontcamera"
     },
     {
@@ -4631,7 +4272,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_createstate",
-      "community": 26,
+      "community": 11,
       "norm_label": "createstate"
     },
     {
@@ -4641,7 +4282,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_initstate",
-      "community": 26,
+      "community": 11,
       "norm_label": "initstate"
     },
     {
@@ -4651,7 +4292,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_dispose",
-      "community": 26,
+      "community": 11,
       "norm_label": "dispose"
     },
     {
@@ -4661,7 +4302,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_loaduserdata",
-      "community": 26,
+      "community": 11,
       "norm_label": "_loaduserdata"
     },
     {
@@ -4671,7 +4312,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_saveuserdata",
-      "community": 26,
+      "community": 11,
       "norm_label": "_saveuserdata"
     },
     {
@@ -4681,7 +4322,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_ui_profile_page_build",
-      "community": 26,
+      "community": 11,
       "norm_label": "build"
     },
     {
@@ -4691,7 +4332,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "helper_deviceaudiohelper_dart",
-      "community": 26,
+      "community": 11,
       "norm_label": "../helper/deviceaudiohelper.dart"
     },
     {
@@ -5021,7 +4662,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main",
-      "community": 6,
+      "community": 8,
       "norm_label": "main.dart"
     },
     {
@@ -5041,7 +4682,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_main",
-      "community": 6,
+      "community": 8,
       "norm_label": "main"
     },
     {
@@ -5051,7 +4692,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_initializeapp",
-      "community": 6,
+      "community": 8,
       "norm_label": "initializeapp"
     },
     {
@@ -5061,7 +4702,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "lib_main_build",
-      "community": 6,
+      "community": 8,
       "norm_label": "build"
     },
     {
@@ -5071,7 +4712,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_ui_registerpage_alasinternet_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/ui/registerpage/alasinternet.dart"
     },
     {
@@ -5081,7 +4722,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_ui_registerpage_registration_page_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/ui/registerpage/registration_page.dart"
     },
     {
@@ -5091,7 +4732,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_ui_auth_phone_auth_page_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/ui/auth/phone_auth_page.dart"
     },
     {
@@ -5101,7 +4742,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_firebase_core_firebase_core_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:firebase_core/firebase_core.dart"
     },
     {
@@ -5111,7 +4752,7 @@
       "source_location": null,
       "_origin": "ast",
       "id": "package_papa_pro_vision_payment_payment_gatway_dart",
-      "community": 6,
+      "community": 8,
       "norm_label": "package:papa_pro_vision/payment/payment_gatway.dart"
     },
     {
@@ -5605,74 +5246,6 @@
       "id": "flutterpluginregistry",
       "community": 16,
       "norm_label": "flutterpluginregistry"
-    },
-    {
-      "label": "Package.swift",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/Packages/.packages/FlutterFramework/Package.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_packages_packages_flutterframework_package",
-      "community": 39,
-      "norm_label": "package.swift"
-    },
-    {
-      "label": "FlutterFramework.swift",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/Packages/.packages/FlutterFramework/Sources/FlutterFramework/FlutterFramework.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_packages_packages_flutterframework_sources_flutterframework_flutterframework",
-      "community": 46,
-      "norm_label": "flutterframework.swift"
-    },
-    {
-      "label": "Package.swift",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_package",
-      "community": 39,
-      "norm_label": "package.swift"
-    },
-    {
-      "label": "FlutterGeneratedPluginSwiftPackage.swift",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Sources/FlutterGeneratedPluginSwiftPackage/FlutterGeneratedPluginSwiftPackage.swift",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_sources_fluttergeneratedpluginswiftpackage_fluttergeneratedpluginswiftpackage",
-      "community": 45,
-      "norm_label": "fluttergeneratedpluginswiftpackage.swift"
-    },
-    {
-      "label": "flutter_export_environment.sh",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/flutter_export_environment.sh",
-      "source_location": "L1",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_flutter_export_environment",
-      "community": 42,
-      "norm_label": "flutter_export_environment.sh"
-    },
-    {
-      "label": "flutter_export_environment.sh script",
-      "file_type": "code",
-      "source_file": "macos/Flutter/ephemeral/flutter_export_environment.sh",
-      "source_location": "L1",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "_origin": "ast",
-      "id": "macos_flutter_ephemeral_flutter_export_environment_sh__entry",
-      "community": 42,
-      "norm_label": "flutter_export_environment.sh script"
     },
     {
       "label": "AppDelegate.swift",
@@ -6676,26 +6249,6 @@
       "norm_label": "child_content_"
     },
     {
-      "label": "CLAUDE.md",
-      "file_type": "document",
-      "source_file": "CLAUDE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "claude",
-      "community": 40,
-      "norm_label": "claude.md"
-    },
-    {
-      "label": "Graphify-first workflow",
-      "file_type": "document",
-      "source_file": "CLAUDE.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "claude_graphify_first_workflow",
-      "community": 40,
-      "norm_label": "graphify-first workflow"
-    },
-    {
       "label": "README.md",
       "file_type": "document",
       "source_file": "README.md",
@@ -6778,81 +6331,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L14",
-      "weight": 1.0,
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant",
-      "target": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant",
-      "target": "flutterengine",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L3",
-      "weight": 1.0,
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant",
-      "target": "keep",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L17",
-      "weight": 1.0,
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant",
-      "target": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant_registerwith",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L16",
-      "weight": 1.0,
-      "context": "field",
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant",
-      "target": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_java_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L14",
-      "weight": 1.0,
-      "context": "attribute",
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant",
-      "target": "keep",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
-      "source_location": "L17",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_java_io_flutter_plugins_generatedpluginregistrant_generatedpluginregistrant_registerwith",
-      "target": "flutterengine",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "android/app/src/main/kotlin/com/example/blind_assistant_app/MainActivity.kt",
       "source_location": "L5",
       "weight": 1.0,
@@ -6894,112 +6372,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/Packages/.packages/FlutterFramework/Package.swift",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_packages_packages_flutterframework_package",
-      "target": "packagedescription",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_package",
-      "target": "packagedescription",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "macos/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "macos_flutter_ephemeral_packages_fluttergeneratedpluginswiftpackage_package",
-      "target": "packagedescription",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "macos/Flutter/ephemeral/Packages/.packages/FlutterFramework/Package.swift",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "macos_flutter_ephemeral_packages_packages_flutterframework_package",
-      "target": "packagedescription",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_flutter_lldb_helper",
-      "target": "ios_flutter_ephemeral_flutter_lldb_helper_handle_new_rx_page",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L24",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_flutter_lldb_helper",
-      "target": "ios_flutter_ephemeral_flutter_lldb_helper_lldb_init_module",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_flutter_lldb_helper_handle_new_rx_page",
-      "target": "sbframe",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L8",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_flutter_lldb_helper_rationale_8",
-      "target": "ios_flutter_ephemeral_flutter_lldb_helper_handle_new_rx_page",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "parameter_type",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/ephemeral/flutter_lldb_helper.py",
-      "source_location": "L24",
-      "weight": 1.0,
-      "source": "ios_flutter_ephemeral_flutter_lldb_helper_lldb_init_module",
-      "target": "sbdebugger",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Flutter/flutter_export_environment.sh",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "ios_flutter_flutter_export_environment",
-      "target": "ios_flutter_flutter_export_environment_sh__entry",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "ios/Runner/AppDelegate.swift",
       "source_location": "L1",
       "weight": 1.0,
@@ -7026,17 +6398,6 @@
       "weight": 1.0,
       "source": "ios_runner_appdelegate",
       "target": "uikit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L10",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_h_ios_runner_generatedpluginregistrant",
-      "target": "flutter",
       "confidence_score": 1.0
     },
     {
@@ -7125,167 +6486,6 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L14",
-      "weight": 1.0,
-      "source": "ios_runner_generatedpluginregistrant_h_ios_runner_generatedpluginregistrant",
-      "target": "ios_runner_generatedpluginregistrant_generatedpluginregistrant",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L7",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "ios_runner_generatedpluginregistrant_h_ios_runner_generatedpluginregistrant",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L15",
-      "weight": 1.0,
-      "source": "ios_runner_generatedpluginregistrant_generatedpluginregistrant",
-      "target": "ios_runner_generatedpluginregistrant_generatedpluginregistrant_registerwithregistry",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.h",
-      "source_location": "L14",
-      "weight": 1.0,
-      "source": "ios_runner_generatedpluginregistrant_generatedpluginregistrant",
-      "target": "nsobject",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L105",
-      "weight": 1.0,
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "ios_runner_generatedpluginregistrant_generatedpluginregistrant",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L12",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "audioplayers_darwin",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L24",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "cloud_firestore",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L30",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "ffmpeg_kit_flutter_new_video",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L36",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "firebase_auth",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L42",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "firebase_core",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L54",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "flutter_tts",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L66",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "package_info_plus",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L72",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "path_provider_foundation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L96",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "shared_preferences_foundation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "source_file": "ios/Runner/GeneratedPluginRegistrant.m",
-      "source_location": "L102",
-      "weight": 1.0,
-      "context": "import",
-      "source": "ios_runner_generatedpluginregistrant_m_ios_runner_generatedpluginregistrant",
-      "target": "speech_to_text",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "ios/Runner/Runner-Bridging-Header.h",
@@ -7293,7 +6493,7 @@
       "weight": 1.0,
       "context": "import",
       "source": "ios_runner_runner_bridging_header",
-      "target": "cloud_firestore",
+      "target": "shared_preferences_foundation",
       "confidence_score": 1.0
     },
     {
@@ -8750,16 +7950,6 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_body"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_llmresponse_agent_service",
       "target": "lib_llmresponse_agent_service_chat"
     },
     {
@@ -8790,17 +7980,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_controller"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_detail"
+      "target": "lib_llmresponse_agent_service_generateresponse"
     },
     {
       "relation": "references",
@@ -8861,26 +8041,6 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_response"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_send"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_llmresponse_agent_service",
       "target": "lib_llmresponse_agent_service_sendgooglesearchmessage"
     },
     {
@@ -8911,18 +8071,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_llmresponse_agent_service",
-      "target": "lib_llmresponse_agent_service_url"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_llmresponse_agent_service",
-      "target": "lib_statemanagement_button_state_provider_conversationcontroller"
+      "target": "lib_llmresponse_agent_service_streamsessionid"
     },
     {
       "relation": "references",
@@ -9004,17 +8153,6 @@
       "weight": 1.0,
       "source": "lib_llmresponse_agent_service",
       "target": "package_papa_pro_vision_txt2speech_service_locator_dart"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/LLMResponse/agent_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_llmresponse_agent_service",
-      "target": "response"
     },
     {
       "relation": "references",
@@ -10155,16 +9293,6 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_statemanagement_button_state_provider",
-      "target": "lib_statemanagement_button_state_provider_begininteraction"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_statemanagement_button_state_provider",
       "target": "lib_statemanagement_button_state_provider_chathistorycount"
     },
     {
@@ -10275,36 +9403,6 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_statemanagement_button_state_provider",
-      "target": "lib_statemanagement_button_state_provider_interactiontoken"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_statemanagement_button_state_provider",
-      "target": "lib_statemanagement_button_state_provider_invalidateinteraction"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_statemanagement_button_state_provider",
-      "target": "lib_statemanagement_button_state_provider_iscurrentinteraction"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_statemanagement_button_state_provider",
       "target": "lib_statemanagement_button_state_provider_ishistorymode"
     },
     {
@@ -10316,16 +9414,6 @@
       "weight": 1.0,
       "source": "lib_statemanagement_button_state_provider",
       "target": "lib_statemanagement_button_state_provider_isprocessinginput"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/StateManagement/button_state_provider.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_statemanagement_button_state_provider",
-      "target": "lib_statemanagement_button_state_provider_listeningtoken"
     },
     {
       "relation": "defines",
@@ -10505,7 +9593,27 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_statemanagement_button_state_provider",
+      "target": "lib_statemanagement_button_state_provider_unsetautoreadingmode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/StateManagement/button_state_provider.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_statemanagement_button_state_provider",
       "target": "lib_statemanagement_button_state_provider_unsethistorymode"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/StateManagement/button_state_provider.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_statemanagement_button_state_provider",
+      "target": "lib_statemanagement_button_state_provider_unsetsmartviewmode"
     },
     {
       "relation": "defines",
@@ -10758,17 +9866,6 @@
       "target": "bool_get"
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_txt2speech_audioplayer_audio_player",
-      "target": "int_get"
-    },
-    {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -10796,27 +9893,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_audioplayer_audio_player",
-      "target": "lib_txt2speech_audioplayer_audio_player_beginsession"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_txt2speech_audioplayer_audio_player",
       "target": "lib_txt2speech_audioplayer_audio_player_dispose"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/AudioPlayer/audio_player.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_txt2speech_audioplayer_audio_player",
-      "target": "lib_txt2speech_audioplayer_audio_player_endsession"
     },
     {
       "relation": "defines",
@@ -10886,7 +9963,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_audioplayer_audio_player",
-      "target": "lib_txt2speech_audioplayer_audio_player_producerdone"
+      "target": "lib_txt2speech_audioplayer_audio_player_queue"
     },
     {
       "relation": "defines",
@@ -10896,7 +9973,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_audioplayer_audio_player",
-      "target": "lib_txt2speech_audioplayer_audio_player_queue"
+      "target": "lib_txt2speech_audioplayer_audio_player_reset"
     },
     {
       "relation": "defines",
@@ -10938,16 +10015,6 @@
       "weight": 1.0,
       "source": "lib_txt2speech_models_flutter_tts",
       "target": "lib_txt2speech_models_flutter_tts_appcontentstate"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/Models/flutter_tts.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_txt2speech_models_flutter_tts",
-      "target": "lib_txt2speech_models_flutter_tts_endsession"
     },
     {
       "relation": "defines",
@@ -11078,26 +10145,6 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_models_google_tts",
-      "target": "lib_txt2speech_models_google_tts_claimsession"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_txt2speech_models_google_tts",
-      "target": "lib_txt2speech_models_google_tts_endsession"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_txt2speech_models_google_tts",
       "target": "lib_txt2speech_models_google_tts_getwavfromgoogle"
     },
     {
@@ -11128,6 +10175,16 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_models_google_tts",
+      "target": "lib_txt2speech_models_google_tts_newsessionid"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_txt2speech_models_google_tts",
       "target": "lib_txt2speech_models_google_tts_prefs"
     },
     {
@@ -11139,6 +10196,16 @@
       "weight": 1.0,
       "source": "lib_txt2speech_models_google_tts",
       "target": "lib_txt2speech_models_google_tts_response"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/Txt2Speech/Models/google_tts.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_txt2speech_models_google_tts",
+      "target": "lib_txt2speech_models_google_tts_sessioncounter"
     },
     {
       "relation": "defines",
@@ -11231,6 +10298,17 @@
       "target": "lib_txt2speech_service_locator_texttospeechservice"
     },
     {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/Txt2Speech/service_locator.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_txt2speech_service_locator",
+      "target": "getit"
+    },
+    {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -11238,7 +10316,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_txt2speech_service_locator",
-      "target": "lib_txt2speech_service_locator_endsession"
+      "target": "lib_txt2speech_service_locator_locator"
     },
     {
       "relation": "defines",
@@ -11299,6 +10377,16 @@
       "weight": 1.0,
       "source": "lib_txt2speech_service_locator",
       "target": "lib_txt2speech_service_locator_texttospeechservice"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/Txt2Speech/service_locator.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_txt2speech_service_locator",
+      "target": "package_get_it_get_it_dart"
     },
     {
       "relation": "imports",
@@ -12226,7 +11314,7 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_ui_home_screen",
-      "target": "lib_ui_home_screen_onmodetap"
+      "target": "lib_ui_home_screen_ontogglelistening"
     },
     {
       "relation": "defines",
@@ -12247,16 +11335,6 @@
       "weight": 1.0,
       "source": "lib_ui_home_screen",
       "target": "lib_ui_home_screen_requestpermissions"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/UI/home_Screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_ui_home_screen",
-      "target": "lib_ui_home_screen_startinteraction"
     },
     {
       "relation": "defines",
@@ -13571,16 +12649,6 @@
       "weight": 1.0,
       "source": "macos_runner_mainflutterwindow_mainflutterwindow_awakefromnib",
       "target": "macos_flutter_generatedpluginregistrant_registergeneratedplugins"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "macos/Flutter/ephemeral/flutter_export_environment.sh",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "macos_flutter_ephemeral_flutter_export_environment",
-      "target": "macos_flutter_ephemeral_flutter_export_environment_sh__entry",
-      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15262,16 +14330,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "CLAUDE.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "claude",
-      "target": "claude_graphify_first_workflow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -15388,5 +14446,5 @@
       "source_file": "lib/UI/profile_page.dart"
     }
   ],
-  "built_at_commit": "1bf488da89a4e07a30a7771265eeb67aa6ac3b96"
+  "built_at_commit": "bce7f9f15b8c51aa14b35027fb2ea728e519ffcf"
 }

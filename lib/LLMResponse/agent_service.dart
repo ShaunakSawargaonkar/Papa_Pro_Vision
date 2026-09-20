@@ -16,9 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AgentService {
   late GenerativeModel _generativeModel;
-  int streamSessionId = -1;
   late ChatSession _chat;
   late AppContentState _appContentState;
+  final ConversationController _controller;
   List<Content> chatHistory = [];
 
   String _getSystemPrompt(
@@ -59,7 +59,8 @@ class AgentService {
     }
   }
 
-  AgentService(ConversationController controller) {
+  AgentService(ConversationController controller) : _controller = controller {
+    _appContentState = controller.state;
     controller.addListener(() {
       _appContentState = controller.state;
     });
@@ -77,13 +78,13 @@ class AgentService {
         'English';
     if (mode == InteractionMode.normal) {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3.5-flash-lite',
         apiKey: apiKey,
       );
       _chat = _generativeModel.startChat(history: chatHistory);
     } else {
       _generativeModel = GenerativeModel(
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3.5-flash-lite',
         apiKey: apiKey,
         systemInstruction: Content.system(
           _getSystemPrompt(mode, communicationLanguage, enableTranslation),
@@ -97,36 +98,6 @@ class AgentService {
     _chat = _generativeModel.startChat();
     chatHistory.clear();
   }
-
-  Future<String> generateResponse(Content content, String inputLanguage) async {
-    if (_appContentState.conversationState != ConversationState.processing) {
-      return "";
-    }
-    // Get Response From Gemini
-    try {
-      final response = await _chat.sendMessage(content);
-      Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
-
-      if (inputLanguage == 'en_IN') {
-        Analyticshelper.updateResponseCount("EnglishResponseCount", _appContentState.userUID);
-      } else {
-        Analyticshelper.updateResponseCount("MarathiResponseCount", _appContentState.userUID);
-      }
-      return Devicehelper.cleanAgentResponse(response.text!);
-    }
-    //Error logging
-    on GenerativeAIException catch (e) {
-      Analyticshelper.updateResponseCount("PromptErrorCount", _appContentState.userUID);
-      print("Error from AI Service: $e");
-      return "Error from AI Service: $e";
-    } catch (e) {
-      return "An unexpected error occurred: $e";
-    }
-  }
-
- // for TimeoutException
-// you already have: import 'dart:convert';  (json)
-// you already have: import 'package:http/http.dart' as http;
 
 Future<String> getResponseFromRender(String query, {String? userId}) async {
   final url = Uri.parse(
@@ -169,52 +140,6 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
   }
   throw Exception('Failed to search (${response.statusCode}): $detail');
 }
-
-  // Future<String> getResponseFromRender(String query, {String? userId}) async {
-  //   String encodedQuery = Uri.encodeComponent(query);
-
-  //   String urlString =
-  //       'https://vercelgooglesearch.onrender.com/search/$encodedQuery';
-
-  //   // Add user_id parameter if provided
-  //   if (userId != null) {
-  //     urlString += '?user_id=${Uri.encodeComponent(userId)}';
-  //   }
-
-  //   final url = Uri.parse(urlString);
-
-  //   print("URLStringgg Query: $urlString");
-
-  //   final response = await http.get(
-  //     url,
-  //     headers: {'Content-Type': 'application/json'},
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     return json.decode(response.body)['response'];
-  //   } else {
-  //     throw Exception('Failed to search: ${response.statusCode}');
-  //   }
-  // }
-  // Future<String> getResponseFromRender(String query) async {
-  //   String encodedQuery = Uri.encodeComponent(query);
-  //   print("Encoded Query: $encodedQuery");
-
-  //   final url = Uri.parse(
-  //     'https://vercelgooglesearch.onrender.com/search/$encodedQuery',
-  //   );
-
-  //   final response = await http.get(
-  //     url,
-  //     headers: {'Content-Type': 'application/json'},
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     return json.decode(response.body)['response'];
-  //   } else {
-  //     throw Exception('Failed to search: ${response.statusCode}');
-  //   }
-  // }
 
   int chatHistoryCount() {
     print("Insideeee chat history length: ${_chat.history.length}");
@@ -268,36 +193,12 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
     //Video content
     try {
       if (videoFile != null) {
-        // print("Inside video setting content - extracting frames at 4 FPS");
-
-        // // Extract frames from video at 4 FPS instead of sending entire video
-        // List<Uint8List> videoFrames = await Devicehelper.extractVideoFrames(
-        //   videoFile,
-        // );
-
-        // if (videoFrames.isNotEmpty) {
-        //   print(
-        //     "**************************Extracted ${videoFrames.length} frames from video",
-        //   );
-        //   List<Part> parts = [TextPart(prompt)];
-        //   for (int i = 0; i < videoFrames.length; i++) {
-        //     parts.add(DataPart('image/jpeg', videoFrames[i]));
-        //   }
-        //   content = Content.multi(parts);
-        //   print(
-        //     "*************************Created content with ${videoFrames.length} video frames at 4 FPS",
-        //   );
-        // } else {
-        // Fallback: if frame extraction fails, send video as before
-        print(
-          "*************************Frame extraction failed, falling back to full video ${videoFile.path}",
-        );
+        print("Inside video setting content ${videoFile.path}");
         final videoBytes = await videoFile.readAsBytes();
         content = Content.multi([
           DataPart('video/mp4', videoBytes),
           TextPart(prompt),
         ]);
-        // }
       }
       // Image content
       else if (imageBytes != null && imageBytes != Uint8List(0)) {
@@ -338,8 +239,11 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
     String communicationLanguage,
     bool enableTranslation,
   ) {
-    streamSessionId = -1;
-    chatHistory.add(Content.model([TextPart(_appContentState.agentResponse)]));
+    // History belongs to ChatSession, which records a turn itself once the
+    // request completes. Appending here pushed an unpaired — and on an early
+    // cancel, empty — model turn into the history that initialize() seeds the
+    // next chat with, which Gemini then rejects or answers incoherently from.
+    chatHistory = _chat.history.toList();
     initialize(apiKey, mode, communicationLanguage, enableTranslation);
     print('Stream stopped');
   }
@@ -349,6 +253,7 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
     Content content,
     TextToSpeechService? ttsService,
     Function onStartSpeaking, {
+    required int token,
     String inputLanguage = 'en_IN',
   }) async {
     try {
@@ -360,14 +265,17 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
         print("No internet connection. Cannot perform TTS.");
         return;
       }
+      if (!_controller.isCurrentInteraction(token)) {
+        print('[STREAM] Interaction $token superseded before start');
+        return;
+      }
 
       // Get the stream of responses
       final Stream<GenerateContentResponse> stream = _chat.sendMessageStream(
         content,
       );
-      chatHistory = _chat.history.toList();
 
-      streamSessionId = await ttsService?.startSession() ?? 0;
+      await ttsService?.startSession(token);
 
       Analyticshelper.updateResponseCount("ResponseCount", _appContentState.userUID);
 
@@ -385,8 +293,8 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
       // Iterate over the stream using await for so we can manage control flow directly.
       await for (final chunk in stream) {
         chunkCount++;
-        if (streamSessionId == -1) {
-          print('[STREAM] Stop requested – breaking loop at chunk $chunkCount');
+        if (!_controller.isCurrentInteraction(token)) {
+          print('[STREAM] Superseded – breaking loop at chunk $chunkCount');
           break; // Exit loop; any remaining chunks will be dropped.
         }
 
@@ -424,7 +332,7 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
                 '[][][][][TTS START #$speakCount] fromChunk=$chunkCount words=$wordCount len=${speakText.length}',
               );
               // Await so playback order matches text order.
-              await ttsService?.speak(speakText, sessionId: streamSessionId);
+              await ttsService?.speak(speakText, sessionId: token);
             } else {
               print('[TTS SKIP] Empty after cleaning');
             }
@@ -434,8 +342,10 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
         }
       }
 
+      final stillCurrent = _controller.isCurrentInteraction(token);
+
       // Flush remainder after stream ends or stop requested.
-      if (currentText.trim().isNotEmpty && streamSessionId != -1) {
+      if (currentText.trim().isNotEmpty && stillCurrent) {
         speakCount++;
         final speakText = Devicehelper.cleanAgentResponse(currentText).trim();
         if (speakText.isNotEmpty) {
@@ -447,9 +357,15 @@ Future<String> getResponseFromRender(String query, {String? userId}) async {
           print(
             '[TTS FINAL START #$speakCount] textLength=${speakText.length}',
           );
-          await ttsService?.speak(speakText, sessionId: streamSessionId);
+          await ttsService?.speak(speakText, sessionId: token);
           print('[TTS FINAL DONE #$speakCount]');
         }
+      }
+      if (stillCurrent) {
+        chatHistory = _chat.history.toList();
+        // Tells the player that a drained queue now genuinely means "finished",
+        // which is what eventually fires doneSpeaking().
+        await ttsService?.endSession(token);
       }
       print('[STREAM DONE] chunks=$chunkCount spoken=$speakCount');
     } catch (e) {

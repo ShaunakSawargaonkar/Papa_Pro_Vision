@@ -42,6 +42,21 @@ class ConversationController extends ChangeNotifier {
   // responsive because they never go through processInput.
   bool _isProcessingInput = false;
 
+  // Monotonic interaction token, minted once per user-initiated interaction and
+  // threaded through the LLM stream, the TTS service and the audio queue. It is
+  // the single source of truth for "is this work still wanted" — previously
+  // those three layers each kept their own counter and could disagree, which is
+  // how a superseded response ended up speaking over a newer one.
+  int _interactionToken = 0;
+  int _listeningToken = 0;
+
+  int beginInteraction() => ++_interactionToken;
+
+  bool isCurrentInteraction(int token) => token == _interactionToken;
+
+  /// Invalidates everything in flight without starting anything new.
+  void invalidateInteraction() => _interactionToken++;
+
   Future<void> initialize(String inputLanguage, bool enableTranslation, String userUID) async {
     _appContentState.userUID = userUID;
     _ttsService ??= setupTTSService('google', this);
@@ -74,13 +89,13 @@ class ConversationController extends ChangeNotifier {
               );
               if (state.isHistoryMode && !state.hasUploadedImage) {
                 print("Inside History file processing");
-                processInput(inputLanguage, historyMode: true);
+                processInput(inputLanguage, token: _listeningToken, historyMode: true);
               } else if (_imageBytes.isNotEmpty) {
                 print("Inside image file processing");
-                processInput(inputLanguage, imageBytes: _imageBytes);
+                processInput(inputLanguage, token: _listeningToken, imageBytes: _imageBytes);
               } else if (videoFile.path.isNotEmpty) {
                 print("Inside video file processing");
-                processInput(inputLanguage, videoFile: videoFile);
+                processInput(inputLanguage, token: _listeningToken, videoFile: videoFile);
               }
             }
           }
@@ -109,10 +124,15 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> processInput(
     String inputLanguage, {
+    required int token,
     bool historyMode = false,
     Uint8List? imageBytes,
     File? videoFile,
   }) async {
+    if (!isCurrentInteraction(token)) {
+      print('processInput ignored: interaction $token superseded');
+      return;
+    }
     // Re-entrancy guard set BEFORE any await so a rapid second tap (while the
     // internet check / image capture is still awaiting) cannot start a second
     // concurrent pipeline. Stop actions never call processInput, so they are
@@ -164,6 +184,7 @@ class ConversationController extends ChangeNotifier {
         await _ttsService?.speak(
           _textService.getProcessingResponseText(inputLanguage),
           isIntermediate: true,
+          sessionId: token,
         );
       }
       if (!state.isHistoryMode) {
@@ -217,7 +238,7 @@ class ConversationController extends ChangeNotifier {
           _appContentState.agentResponse = response;
           _appContentState.conversationState = ConversationState.speaking;
           notifyListeners();
-          await _ttsService?.speak2(response);
+          await _ttsService?.speak2(response, sessionId: token);
           resetAgentChat();
         }
       } else { 
@@ -226,6 +247,7 @@ class ConversationController extends ChangeNotifier {
           content,
           _ttsService,
           onStartSpeaking,
+          token: token,
           inputLanguage: inputLanguage,
         );
       }
@@ -302,7 +324,10 @@ class ConversationController extends ChangeNotifier {
     // DeviceAudioHelper.playVideoEndSound();
   }
 
-  Future<void> startListening(String inputLanguage) async {
+  Future<void> startListening(String inputLanguage, {required int token}) async {
+    // Captured so the speech-recognition callback processes the interaction it
+    // was started for, rather than whatever is current when speech ends.
+    _listeningToken = token;
     _appContentState.conversationState = ConversationState.listening;
     _appContentState.agentResponse = '';
     _appContentState.userRecognisedWords = '';
@@ -319,6 +344,7 @@ class ConversationController extends ChangeNotifier {
   }
 
   Future<void> stopSpeaking() async {
+    invalidateInteraction();
     _appContentState.conversationState = ConversationState.idle;
     SharedPreferences? prefs = await SharedPreferences.getInstance();
     if (_appContentState.interactionMode != InteractionMode.normal) {
@@ -340,6 +366,7 @@ class ConversationController extends ChangeNotifier {
   }
 
   Future<void> stopSpeakingForGoogleSearch() async {
+    invalidateInteraction();
     _appContentState.conversationState = ConversationState.idle;
     if (_appContentState.interactionMode != InteractionMode.normal) {
       _appContentState.interactionMode = InteractionMode.normal;
@@ -360,6 +387,7 @@ class ConversationController extends ChangeNotifier {
 
   Future<void> doneSpeaking() async {
     if (_appContentState.conversationState == ConversationState.speaking) {
+      invalidateInteraction();
       _appContentState.conversationState = ConversationState.idle;
       if (_appContentState.interactionMode != InteractionMode.normal) {
         SharedPreferences? prefs = await SharedPreferences.getInstance();
@@ -378,34 +406,39 @@ class ConversationController extends ChangeNotifier {
     }
   }
 
-  Future<void> setHistoryMode() async {
+  /// Returns false when the flag could not be applied, so callers can abandon
+  /// the interaction instead of starting one against the wrong mode.
+  Future<bool> setHistoryMode() async {
     var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'setHistoryMode',
     );
     if (!isInternetAvailable) {
       print("No internet connection. Cannot set history mode.");
-      return;
+      return false;
     }
     _appContentState.isHistoryMode = true;
     notifyListeners();
+    return true;
   }
 
-  Future<void> unsetHistoryMode() async {
+  Future<bool> unsetHistoryMode() async {
     var isInternetAvailable = await Devicehelper.hasInternetConnectionAndNotify(
       methodCallName: 'unsetHistoryMode',
     );
     if (!isInternetAvailable) {
       print("No internet connection. Cannot perform unsetHistoryMode.");
-      return;
+      return false;
     }
     _appContentState.isHistoryMode = false;
     notifyListeners();
+    return true;
   }
 
   Future<void> setSmartViewMode(
     String communicationLanguage,
-    bool enableTranslation,
-  ) async {
+    bool enableTranslation, {
+    required int token,
+  }) async {
     Analyticshelper.updateResponseCount("SmartViewModeCount", _appContentState.userUID);
     print('Toggle reading mode: ${_appContentState.interactionMode}');
     _appContentState.interactionMode = InteractionMode.smartView;
@@ -414,34 +447,21 @@ class ConversationController extends ChangeNotifier {
       enableTranslation,
       InteractionMode.smartView,
     );
-    _ttsService?.speak(
+    // Awaited so the announcement is queued before the response stream opens
+    // the same session; unawaited it could land in the middle of the answer.
+    await _ttsService?.speak(
       _textService.getSmartViewText(communicationLanguage, true),
       isIntermediate: true,
-    );
-    notifyListeners();
-  }
-
-  Future<void> unSetSmartViewMode(
-    String communicationLanguage,
-    bool enableTranslation,
-  ) async {
-    _appContentState.interactionMode = InteractionMode.normal;
-    initializeAgent(
-      communicationLanguage,
-      enableTranslation,
-      InteractionMode.normal,
-    );
-    await _ttsService?.speak(
-      _textService.getSmartViewText(communicationLanguage, false),
-      isIntermediate: true,
+      sessionId: token,
     );
     notifyListeners();
   }
 
   Future<void> setAutoReadingMode(
     String communicationLanguage,
-    bool enableTranslation,
-  ) async {
+    bool enableTranslation, {
+    required int token,
+  }) async {
     Analyticshelper.updateResponseCount("ReaderModeCount", _appContentState.userUID);
     _appContentState.interactionMode = InteractionMode.autoReading;
     initializeAgent(
@@ -452,22 +472,10 @@ class ConversationController extends ChangeNotifier {
     if (enableTranslation) {
       Analyticshelper.updateResponseCount("TranslationCount", _appContentState.userUID);
     }
-    _ttsService?.speak(
+    await _ttsService?.speak(
       _textService.getAutoReaderText(communicationLanguage, true),
       isIntermediate: true,
-    );
-    notifyListeners();
-  }
-
-  Future<void> unSetAutoReadingMode(
-    String communicationLanguage,
-    bool enableTranslation,
-  ) async {
-    _appContentState.interactionMode = InteractionMode.normal;
-    initializeAgent(
-      communicationLanguage,
-      enableTranslation,
-      InteractionMode.normal,
+      sessionId: token,
     );
     notifyListeners();
   }

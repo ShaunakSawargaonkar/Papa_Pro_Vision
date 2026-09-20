@@ -1,16 +1,16 @@
-# Graph Report - Papa_Pro_Vision  (2026-09-14)
+# Graph Report - Papa_Pro_Vision  (2026-07-01)
 
 ## Corpus Check
-- 82 files · ~93,348 words
+- 65 files · ~90,753 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 664 nodes · 828 edges · 47 communities (37 shown, 10 thin omitted)
+- 621 nodes · 781 edges · 36 communities (30 shown, 6 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1bf488da`
+- Built from commit: `bce7f9f1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,13 +47,6 @@
 - [[_COMMUNITY_Devicehelper.IsDevanagari|Devicehelper.IsDevanagari]]
 - [[_COMMUNITY_AgentService.CreateContentForResponse|AgentService.CreateContentForResponse]]
 - [[_COMMUNITY_String|String?]]
-- [[_COMMUNITY_state|state]]
-- [[_COMMUNITY_GeneratedPluginRegistrant|GeneratedPluginRegistrant]]
-- [[_COMMUNITY_handle_new_rx_page|handle_new_rx_page]]
-- [[_COMMUNITY_PackageDescription|PackageDescription]]
-- [[_COMMUNITY_CLAUDE|CLAUDE.md]]
-- [[_COMMUNITY_flutter_export_environment.sh|flutter_export_environment.sh]]
-- [[_COMMUNITY_flutter_export_environment.sh|flutter_export_environment.sh]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Win32Window` - 22 edges
@@ -65,7 +58,7 @@
 7. `OnCreate` - 7 edges
 8. `WindowClassRegistrar` - 7 edges
 9. `Destroy` - 7 edges
-10. `ConversationController` - 6 edges
+10. `state` - 6 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `wWinMain()` --calls--> `CreateAndAttachConsole()`  [INFERRED]
@@ -74,10 +67,10 @@
   windows/runner/win32_window.cpp → windows/runner/win32_window.h
 - `build` --references--> `ConversationController`  [EXTRACTED]
   lib/UI/home_Screen.dart → lib/StateManagement/button_state_provider.dart
+- `_PhoneAuthPageState` --inherits--> `state`  [EXTRACTED]
+  lib/UI/auth/phone_auth_page.dart → lib/StateManagement/button_state_provider.dart
 - `_HomeScreenState` --inherits--> `state`  [EXTRACTED]
   lib/UI/home_Screen.dart → lib/StateManagement/button_state_provider.dart
-- `my_application_activate()` --calls--> `fl_register_plugins()`  [INFERRED]
-  linux/runner/my_application.cc → linux/flutter/generated_plugin_registrant.cc
 
 ## Import Cycles
 - None detected.
@@ -90,43 +83,43 @@
 - **Home screen camera interaction widgets** — lib_ui_home_screen_homescreen, lib_ui_widgets_image_preview_imagepreview, lib_ui_widgets_mic_button_micbutton, lib_ui_widgets_side_bar_button_sidebarbutton [INFERRED 0.85]
 - **Screens sharing SharedPreferences settings state** — lib_ui_profile_page_profilepage, lib_ui_home_screen_homescreen, lib_ui_auth_phone_auth_page_phoneauthpage, lib_ui_registerpage_registration_page_registrationpage [INFERRED 0.75]
 
-## Communities (47 total, 10 thin omitted)
+## Communities (36 total, 6 thin omitted)
 
 ### Community 0 - "App State & Agent Orchestration"
 Cohesion: 0.04
-Nodes (50): AgentService?, AppContentState get, FileSharingHelper?, InteractionMode?, agentResponse, _agentService, AppContentState, beginInteraction (+42 more)
+Nodes (47): AgentService?, AppContentState get, FileSharingHelper?, InteractionMode?, agentResponse, _agentService, AppContentState, chatHistoryCount (+39 more)
 
 ### Community 1 - "Home Screen & Camera Capture"
 Cohesion: 0.07
-Nodes (27): cameraController, _cameras, _cancelRecording, _captureImage, clearImageBuffer, createState, dispose, _initialize (+19 more)
+Nodes (26): cameraController, _cameras, _cancelRecording, _captureImage, clearImageBuffer, createState, dispose, _initialize (+18 more)
 
 ### Community 2 - "LLM Chat & Device Helpers"
-Cohesion: 0.08
-Nodes (25): ChatSession, AgentService, _appContentState, body, _chat, chatHistory, chatHistoryCount, _controller (+17 more)
+Cohesion: 0.09
+Nodes (22): ChatSession, dart:convert, AgentService, _appContentState, _chat, chatHistory, chatHistoryCount, generateResponse (+14 more)
 
 ### Community 3 - "TTS Engines (Flutter/Google)"
-Cohesion: 0.08
-Nodes (23): AudioPlayerService?, dart:convert, apiKey, _appContentState, _audioPlayerService, body, _claimSession, endSession (+15 more)
+Cohesion: 0.09
+Nodes (21): AudioPlayerService?, apiKey, _appContentState, _audioPlayerService, body, getWAVFromGoogle, headers, _newSessionId (+13 more)
 
 ### Community 4 - "Device Audio & Sound Effects"
 Cohesion: 0.06
-Nodes (35): AudioPlayer, bool get, int get, _AudioManager, _audioPlayer, _currentSoundType, DeviceAudioHelper, dispose (+27 more)
+Nodes (32): AudioPlayer, bool get, _AudioManager, _audioPlayer, _currentSoundType, DeviceAudioHelper, dispose, _instance (+24 more)
 
 ### Community 5 - "Enums & Subscription Types"
 Cohesion: 0.08
 Nodes (25): ConversationState, dart:ui, MyApp, AlasInternetPage, build, AlasPage, build, message (+17 more)
 
 ### Community 6 - "Payment Gateway (Razorpay)"
-Cohesion: 0.05
-Nodes (42): UserStatusResponse, build, initializeApp, main, accentBlue, accentGreen, build, _buildPlanCard (+34 more)
+Cohesion: 0.06
+Nodes (36): accentBlue, accentGreen, build, _buildPlanCard, createState, dispose, _getDisplayPlans, _getResponsiveValues (+28 more)
 
 ### Community 7 - "Firestore Database Helper"
 Cohesion: 0.06
 Nodes (32): DocumentReference?, Analyticshelper, updateResponseCount, checkKilledAPKVersions, checkSubscriptionStatus, checkUserStatus, createUser, CreateUserResponse (+24 more)
 
 ### Community 8 - "Registration Screen"
-Cohesion: 0.08
-Nodes (25): _ageController, build, _buildFormField, _buildOrganizationForm, _buildUserDetailsForm, createState, dispose, _formKey (+17 more)
+Cohesion: 0.05
+Nodes (38): UserStatusResponse, build, initializeApp, main, _ageController, build, _buildFormField, _buildOrganizationForm (+30 more)
 
 ### Community 9 - "App Entry & Internet Gating"
 Cohesion: 0.18
@@ -140,8 +133,8 @@ Cohesion: 0.15
 Nodes (12): dart:async, dart:io, dispose, FileSharingHelper, initialize, _intentSub, intentSubListener, processSharedImage (+4 more)
 
 ### Community 11 - "Phone Auth Screen"
-Cohesion: 0.11
-Nodes (18): build, _buildFormField, _codeController, _codeSent, createState, dispose, _error, _formKey (+10 more)
+Cohesion: 0.06
+Nodes (37): FormState, ../Helper/DeviceAudioHelper.dart, build, _buildFormField, _codeController, _codeSent, createState, dispose (+29 more)
 
 ### Community 12 - "Pricing & Localized Text"
 Cohesion: 0.11
@@ -156,8 +149,8 @@ Cohesion: 0.06
 Nodes (53): PluginRegistry, Point, RECT, Size, unique_ptr, RegisterPlugins(), DartProject, HWND (+45 more)
 
 ### Community 16 - "GeneratedPluginRegistrant.swift"
-Cohesion: 0.06
-Nodes (35): Any, audioplayers_darwin, cloud_firestore, Cocoa, ffmpeg_kit_flutter_new_video, firebase_auth, firebase_core, Flutter (+27 more)
+Cohesion: 0.05
+Nodes (32): Any, audioplayers_darwin, cloud_firestore, Cocoa, ffmpeg_kit_flutter_new_video, firebase_auth, firebase_core, Flutter (+24 more)
 
 ### Community 17 - "my_application.cc"
 Cohesion: 0.10
@@ -168,16 +161,16 @@ Cohesion: 0.14
 Nodes (13): File, checkRegistration, cleanAgentResponse, Devicehelper, extractVideoFrames, getDeviceId, getOldUserDeviceId, hasInternetConnectionAndNotify (+5 more)
 
 ### Community 19 - "service_locator.dart"
-Cohesion: 0.15
-Nodes (12): FlutterTTSService, GoogleTTSService, endSession, setupTTSService, speak, speak2, startSession, stop (+4 more)
+Cohesion: 0.17
+Nodes (11): GetIt, locator, setupTTSService, speak, speak2, startSession, stop, package:get_it/get_it.dart (+3 more)
 
 ### Community 20 - "wWinMain"
 Cohesion: 0.24
 Nodes (9): _In_, _In_opt_, vector, wWinMain(), string, wchar_t, CreateAndAttachConsole(), GetCommandLineArguments() (+1 more)
 
 ### Community 21 - "flutter_tts.dart"
-Cohesion: 0.17
-Nodes (11): AppContentState, FlutterTts, _appContentState, endSession, _flutterTts, speak, speak2, startSession (+3 more)
+Cohesion: 0.18
+Nodes (10): AppContentState, FlutterTts, _appContentState, _flutterTts, speak, speak2, startSession, stop (+2 more)
 
 ### Community 22 - "manifest.json"
 Cohesion: 0.18
@@ -196,40 +189,28 @@ Cohesion: 0.40
 Nodes (5): ChangeNotifier, ConversationController, build, HomeScreen, _HomeScreenState
 
 ### Community 26 - "TextToSpeechService"
-Cohesion: 0.12
-Nodes (15): FormState, ../Helper/DeviceAudioHelper.dart, build, createState, dispose, _emergencyContactController, _enableTranslation, _formKey (+7 more)
-
-### Community 36 - "state"
-Cohesion: 0.24
-Nodes (11): PaymentGateway, _PaymentGatewayState, state, PhoneAuthPage, _PhoneAuthPageState, ProfilePage, _ProfilePageState, RegistrationPage (+3 more)
-
-### Community 37 - "GeneratedPluginRegistrant"
-Cohesion: 0.47
-Nodes (4): GeneratedPluginRegistrant, String, FlutterEngine, Keep
-
-### Community 38 - "handle_new_rx_page"
-Cohesion: 0.33
-Nodes (5): handle_new_rx_page(), __lldb_init_module(), Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages., SBDebugger, SBFrame
+Cohesion: 0.67
+Nodes (3): FlutterTTSService, GoogleTTSService, TextToSpeechService
 
 ## Knowledge Gaps
-- **340 isolated node(s):** `flutter_export_environment.sh script`, `+registerWithRegistry`, `Analyticshelper`, `updateResponseCount`, `ReferralKeyResponse` (+335 more)
+- **334 isolated node(s):** `Analyticshelper`, `updateResponseCount`, `ReferralKeyResponse`, `CreateUserResponse`, `KilledAPKVersionResponse` (+329 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `FlutterWindow` connect `Profile Screen` to `GeneratedPluginRegistrant.swift`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `MessageHandler` (e.g. with `Destroy` and `GetClientArea`) actually correct?**
   _`MessageHandler` has 4 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.`, `flutter_export_environment.sh script`, `+registerWithRegistry` to the rest of the system?**
-  _341 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Analyticshelper`, `updateResponseCount`, `ReferralKeyResponse` to the rest of the system?**
+  _334 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App State & Agent Orchestration` be split into smaller, more focused modules?**
-  _Cohesion score 0.0392156862745098 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.041666666666666664 - nodes in this community are weakly interconnected._
 - **Should `Home Screen & Camera Capture` be split into smaller, more focused modules?**
-  _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected._
 - **Should `LLM Chat & Device Helpers` be split into smaller, more focused modules?**
-  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
 - **Should `TTS Engines (Flutter/Google)` be split into smaller, more focused modules?**
-  _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._

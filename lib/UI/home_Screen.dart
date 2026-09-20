@@ -30,9 +30,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isInitializing = true;
   Timer? _longPressTimer;
   bool _timerCompleted = false;
-  // Synchronous guard for the START/capture path of onToggleListening. Set
-  // before any await so rapid double-taps during camera capture / speech setup
-  // cannot launch two capture+listen+process pipelines. The STOP path is never
+  // Synchronous guard for the START/capture path of onModeTap. Set before any
+  // await so rapid double-taps during camera capture / speech setup cannot
+  // launch two capture+listen+process pipelines. The STOP path is never
   // guarded, so the user can always cancel an in-progress interaction.
   bool _isStartingInteraction = false;
 
@@ -175,90 +175,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> onToggleListening(ConversationController controller) async {
+  /// Single entry point for every button that can both start and cancel an
+  /// interaction. Start-vs-cancel is decided BEFORE [prepare] runs: the old
+  /// order set the interaction mode and rebuilt the Gemini chat on every tap,
+  /// so a tap meant to cancel still tore the session down and recreated it
+  /// twice, and left an orphaned announcement in flight.
+  ///
+  /// [prepare] applies whatever mode this button selects and returns false to
+  /// abandon the interaction (e.g. the mode could not be applied offline).
+  Future<void> onModeTap(
+    ConversationController controller, {
+    Future<bool> Function(int token)? prepare,
+  }) async {
     print(
       'Before toggle: ${controller.state.conversationState} ${controller.state.interactionMode} ${controller.state.isHistoryMode}',
     );
 
-    // prefs = await SharedPreferences.getInstance();
-    // Image mode
-    print(prefs?.getString('inputLanguage'));
-
-    if (controller.state.conversationState == ConversationState.idle) {
-      // Ignore rapid re-taps while a start/capture is already underway. Set
-      // synchronously (before the first await) so it actually closes the race.
-      if (_isStartingInteraction) {
-        print('Ignoring rapid tap: interaction already starting');
-        return;
-      }
-      _isStartingInteraction = true;
-      try {
-        if (controller.state.interactionMode == InteractionMode.normal) {
-          //Capture image
-          Uint8List? imageBytes = Uint8List(0);
-          if (!controller.state.isHistoryMode &&
-              !controller.state.hasUploadedImage) {
-            imageBytes = await _captureImage(controller);
-            if (imageBytes != null) {
-              controller.setImageBytes(imageBytes);
-            }
-          } else {
-            if (controller.getImageBytes().isNotEmpty) {
-              if (controller.state.hasUploadedImage) {
-                Analyticshelper.updateResponseCount(
-                  "LLMInteractionWithUploadedImageCount",
-                  widget.userUID,
-                );
-              } else {
-                Analyticshelper.updateResponseCount(
-                  "LLMInteractionWithImageCount",
-                  widget.userUID,
-                );
-              }
-            } else {
-              Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
-            }
-          }
-          await controller.startListening(
-            prefs?.getString('inputLanguage') ?? 'en_IN',
-          );
-        }
-        // Video mode
-        else if (controller.state.interactionMode == InteractionMode.video) {
-          Analyticshelper.updateResponseCount("VideoModeCount", widget.userUID);
-          await controller.startListening(
-            prefs?.getString('inputLanguage') ?? 'en_IN',
-          );
-        }
-        // Reading modes
-        else {
-          // For non-normal interaction modes, process immediately
-          if (controller.state.hasUploadedImage) {
-            print('Processing uploaded image in reading modes');
-            await controller.processInput(
-              prefs?.getString('inputLanguage') ?? 'en_IN',
-              imageBytes: controller.getImageBytes(),
-            );
-          } else {
-            print('Capturing image in reading modes');
-            // Wait a bit for the background image capture to complete before processing
-            Uint8List? imageBytes = Uint8List(0);
-            imageBytes = await _captureImage(controller);
-            if (imageBytes != null) {
-              print('Setting image bytes ss');
-              controller.setImageBytes(imageBytes);
-            }
-
-            await controller.processInput(
-              prefs?.getString('inputLanguage') ?? 'en_IN',
-              imageBytes: imageBytes,
-            );
-          }
-        }
-      } finally {
-        _isStartingInteraction = false;
-      }
-    } else {
+    if (controller.state.conversationState != ConversationState.idle) {
       print('Stopping speaking');
       Analyticshelper.updateResponseCount("CancelledRequestCount", widget.userUID);
       if (controller.chatHistoryCount() == 0 && controller.state.isHistoryMode) {
@@ -268,10 +201,83 @@ class _HomeScreenState extends State<HomeScreen> {
         print("Insideee Stopping non google search speaking");
         await controller.stopSpeaking();
       }
+      return;
+    }
+
+    // Ignore rapid re-taps while a start/capture is already underway. Set
+    // synchronously (before the first await) so it actually closes the race.
+    if (_isStartingInteraction) {
+      print('Ignoring rapid tap: interaction already starting');
+      return;
+    }
+    _isStartingInteraction = true;
+    try {
+      final token = controller.beginInteraction();
+      if (prepare != null && !await prepare(token)) return;
+      if (!controller.isCurrentInteraction(token)) return;
+      await _startInteraction(controller, token);
+    } finally {
+      _isStartingInteraction = false;
     }
     print(
       'After toggle: ${controller.state.conversationState} ${controller.state.interactionMode}',
     );
+  }
+
+  Future<void> _startInteraction(
+    ConversationController controller,
+    int token,
+  ) async {
+    final inputLanguage = prefs?.getString('inputLanguage') ?? 'en_IN';
+
+    if (controller.state.interactionMode == InteractionMode.normal) {
+      //Capture image
+      if (!controller.state.isHistoryMode &&
+          !controller.state.hasUploadedImage) {
+        final imageBytes = await _captureImage(controller);
+        if (imageBytes != null) {
+          controller.setImageBytes(imageBytes);
+        }
+      } else if (controller.getImageBytes().isNotEmpty) {
+        Analyticshelper.updateResponseCount(
+          controller.state.hasUploadedImage
+              ? "LLMInteractionWithUploadedImageCount"
+              : "LLMInteractionWithImageCount",
+          widget.userUID,
+        );
+      } else {
+        Analyticshelper.updateResponseCount("JustLLMInteractionCount", widget.userUID);
+      }
+      await controller.startListening(inputLanguage, token: token);
+    }
+    // Video mode
+    else if (controller.state.interactionMode == InteractionMode.video) {
+      Analyticshelper.updateResponseCount("VideoModeCount", widget.userUID);
+      await controller.startListening(inputLanguage, token: token);
+    }
+    // Reading modes process immediately, without listening for a question.
+    else {
+      Uint8List? imageBytes;
+      if (controller.state.hasUploadedImage) {
+        print('Processing uploaded image in reading modes');
+        imageBytes = controller.getImageBytes();
+      } else {
+        print('Capturing image in reading modes');
+        imageBytes = await _captureImage(controller);
+        if (imageBytes == null) {
+          // Without a frame the reading prompt would be sent as text only and
+          // the model would confidently describe nothing.
+          print('Capture failed; abandoning reading interaction');
+          return;
+        }
+        controller.setImageBytes(imageBytes);
+      }
+      await controller.processInput(
+        inputLanguage,
+        token: token,
+        imageBytes: imageBytes,
+      );
+    }
   }
 
   void clearImageBuffer(ConversationController controller) async {
@@ -421,14 +427,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           // LEFT clickable border
                           SideBarButton(
                             buttonText: "Reader Mode",
-                            onTap: () async {
-                              await controller.unsetHistoryMode();
-                              await controller.setAutoReadingMode(
-                                prefs?.getString('inputLanguage') ?? 'en_IN',
-                                prefs?.getBool('enableTranslation') ?? false,
-                              );
-                              onToggleListening(controller);
-                            },
+                            onTap: () => onModeTap(
+                              controller,
+                              prepare: (token) async {
+                                if (!await controller.unsetHistoryMode()) {
+                                  return false;
+                                }
+                                await controller.setAutoReadingMode(
+                                  prefs?.getString('inputLanguage') ?? 'en_IN',
+                                  prefs?.getBool('enableTranslation') ?? false,
+                                  token: token,
+                                );
+                                return true;
+                              },
+                            ),
                             height: double.infinity,
                             largeFontSize: largeFontSize,
                             isLeft: true,
@@ -441,14 +453,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           // RIGHT clickable border
                           SideBarButton(
                             buttonText: "Smart View Mode",
-                            onTap: () async {
-                              await controller.unsetHistoryMode();
-                              controller.setSmartViewMode(
-                                prefs?.getString('inputLanguage') ?? 'en_IN',
-                                prefs?.getBool('enableTranslation') ?? false,
-                              );
-                              onToggleListening(controller);
-                            },
+                            onTap: () => onModeTap(
+                              controller,
+                              prepare: (token) async {
+                                if (!await controller.unsetHistoryMode()) {
+                                  return false;
+                                }
+                                await controller.setSmartViewMode(
+                                  prefs?.getString('inputLanguage') ?? 'en_IN',
+                                  prefs?.getBool('enableTranslation') ?? false,
+                                  token: token,
+                                );
+                                return true;
+                              },
+                            ),
                             height: double.infinity,
                             largeFontSize: largeFontSize,
                             isLeft: false,
@@ -474,10 +492,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Left half - entire area clickable
                     Expanded(
                       child: InkWell(
-                        onTap: () async => {
-                          await controller.setHistoryMode(),
-                          onToggleListening(controller),
-                        },
+                        onTap: () => onModeTap(
+                          controller,
+                          prepare: (_) => controller.setHistoryMode(),
+                        ),
                         child: Container(
                           color: Colors.transparent,
                           child: Center(
@@ -501,10 +519,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Right half - entire area clickable
                     Expanded(
                       child: GestureDetector(
-                        onTap: () async => {
-                          await controller.unsetHistoryMode(),
-                          onToggleListening(controller),
-                        },
+                        onTap: () => onModeTap(
+                          controller,
+                          prepare: (_) => controller.unsetHistoryMode(),
+                        ),
                         onLongPressStart: (details) async {
                           await controller.unsetHistoryMode();
                           await _startRecording(controller);
@@ -518,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (controller.state.conversationState ==
                                   ConversationState.videoRecording) {
                                 await _stopRecording(controller);
-                                onToggleListening(controller);
+                                onModeTap(controller);
                               }
                             },
                           );
@@ -532,7 +550,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (!_timerCompleted) {
                             print("User lifted finger before 3 seconds");
                             await _stopRecording(controller);
-                            onToggleListening(controller);
+                            onModeTap(controller);
                           }
 
                           // Reset flag for next interaction
