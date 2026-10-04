@@ -5,7 +5,7 @@ import 'package:papa_pro_vision/Helper/DeviceHelper.dart';
 import 'package:papa_pro_vision/Txt2Speech/AudioPlayer/audio_player.dart';
 import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:papa_pro_vision/secrets.dart';
+import 'package:papa_pro_vision/Helper/ApiKeyHelper.dart';
 import 'package:papa_pro_vision/StateManagement/button_state_provider.dart';
 import 'package:papa_pro_vision/enums.dart';
 
@@ -167,15 +167,15 @@ class GoogleTTSService implements TextToSpeechService {
   }
 }
 
-final String apiKey = Secrets.googleApiKey;
-
 Future<String> getWAVFromGoogle(String text, String lang) async {
   print("Inside GoogleTTSService with text: $text");
+
+  await ApiKeyHelper.ensureLoaded();
 
   final prefs = await SharedPreferences.getInstance();
   double speechRate = prefs.getDouble('speechRate') ?? 1.0;
   final url = Uri.parse(
-    'https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey',
+    'https://texttospeech.googleapis.com/v1/text:synthesize?key=${ApiKeyHelper.textToSpeechApiKey}',
   );
 
   final headers = {'Content-Type': 'application/json'};

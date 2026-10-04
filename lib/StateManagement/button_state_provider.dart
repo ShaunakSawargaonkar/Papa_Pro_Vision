@@ -10,7 +10,7 @@ import 'package:papa_pro_vision/Txt2Speech/service_locator.dart';
 import 'package:papa_pro_vision/text_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:papa_pro_vision/secrets.dart';
+import 'package:papa_pro_vision/Helper/ApiKeyHelper.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 class AppContentState {
@@ -46,9 +46,10 @@ class ConversationController extends ChangeNotifier {
     _appContentState.userUID = userUID;
     _ttsService ??= setupTTSService('google', this);
     if (_agentService == null) {
+      await ApiKeyHelper.ensureLoaded();
       _agentService = AgentService(this);
       _agentService?.initialize(
-        Secrets.geminiApiKey,
+        ApiKeyHelper.geminiApiKey,
         InteractionMode.normal,
         TextService.inputLanguageToCommunicationLanguage[inputLanguage] ??
             'English',
@@ -272,7 +273,7 @@ class ConversationController extends ChangeNotifier {
       'Initializing agent for ${interactionMode} ${inputLanguage} ${enableTranslation}',
     );
     _agentService?.initialize(
-      Secrets.geminiApiKey,
+      ApiKeyHelper.geminiApiKey,
       interactionMode,
       inputLanguage,
       enableTranslation,
@@ -326,7 +327,7 @@ class ConversationController extends ChangeNotifier {
     }
     _appContentState.userRecognisedWords = '';
     _agentService?.stopStream(
-      Secrets.geminiApiKey,
+      ApiKeyHelper.geminiApiKey,
       InteractionMode.normal,
       TextService.inputLanguageToCommunicationLanguage[prefs.getString(
                 'inputLanguage',

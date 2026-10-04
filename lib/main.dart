@@ -11,12 +11,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:papa_pro_vision/Payment/payment_gatway.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:papa_pro_vision/Helper/ApiKeyHelper.dart';
 import 'package:papa_pro_vision/Helper/DatabaseHelper.dart';
 import 'package:papa_pro_vision/enums.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await ApiKeyHelper.loadApiKeys();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(
     ChangeNotifierProvider(
